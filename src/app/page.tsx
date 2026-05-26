@@ -9,6 +9,7 @@ import {
   BarChart3,
   Search,
   RefreshCw,
+  Megaphone,
 } from "lucide-react";
 import { SubCardSearch } from "@/components/sub-card-search";
 
@@ -56,6 +57,13 @@ const subCards = [
     descricao: "Auditoria de conteúdo de empreendimentos",
     icone: RefreshCw,
     cor: "text-orange-600",
+  },
+  {
+    href: "/midia-paga",
+    titulo: "Análise de Mídia Paga",
+    descricao: "Análise de campanhas de mídia paga",
+    icone: Megaphone,
+    cor: "text-pink-600",
   },
 ];
 
