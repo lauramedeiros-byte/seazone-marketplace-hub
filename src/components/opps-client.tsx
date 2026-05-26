@@ -78,6 +78,8 @@ export function OppsClient({ semanas: initial }: Props) {
   const [bulkOppText, setBulkOppText] = useState("");
   const [bulkError, setBulkError] = useState<string | null>(null);
   const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
+  const [editingOpp, setEditingOpp] = useState<string | null>(null);
+  const [editOppData, setEditOppData] = useState({ nome: "", preco: "", condicoes: "" });
 
   const activeSemana = semanas[activeWeekIdx];
 
@@ -373,6 +375,79 @@ export function OppsClient({ semanas: initial }: Props) {
           : s
       )
     );
+  };
+
+  const handleStartEditOpp = (item: OppItem) => {
+    setEditingOpp(item.id);
+    setEditOppData({
+      nome: item.nomeEmpreendimento,
+      preco: item.preco || "",
+      condicoes: item.condicoes || "",
+    });
+  };
+
+  const handleSaveEditOpp = async (item: OppItem) => {
+    const result = await fetch('/api/opps', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update-texto',
+        id: item.id,
+        field: 'nomeEmpreendimento',
+        value: editOppData.nome,
+      }),
+    });
+
+    if (result.ok) {
+      await fetch('/api/opps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update-texto',
+          id: item.id,
+          field: 'preco',
+          value: editOppData.preco,
+        }),
+      });
+
+      await fetch('/api/opps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update-texto',
+          id: item.id,
+          field: 'condicoes',
+          value: editOppData.condicoes,
+        }),
+      });
+
+      setSemanas((prev) =>
+        prev.map((s, i) =>
+          i === activeWeekIdx
+            ? {
+                ...s,
+                items: s.items.map((it) =>
+                  it.id === item.id
+                    ? {
+                        ...it,
+                        nomeEmpreendimento: editOppData.nome,
+                        preco: editOppData.preco || null,
+                        condicoes: editOppData.condicoes || null,
+                      }
+                    : it
+                ),
+              }
+            : s
+        )
+      );
+    }
+
+    setEditingOpp(null);
+  };
+
+  const handleCancelEditOpp = () => {
+    setEditingOpp(null);
+    setEditOppData({ nome: "", preco: "", condicoes: "" });
   };
 
   const destaques = activeSemana?.items.filter((i) => i.destaque) ?? [];
@@ -714,43 +789,82 @@ export function OppsClient({ semanas: initial }: Props) {
                 {naoDestaques.map((item) => (
                   <Card key={item.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{item.nomeEmpreendimento}</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {item.localizacao && (
-                              <span className="text-xs text-gray-500">{item.localizacao}</span>
-                            )}
-                            {item.preco && (
-                              <span className="text-xs font-mono bg-gray-100 px-1 rounded">{item.preco}</span>
-                            )}
-                            {item.condicoes && (
-                              <span className="text-xs text-gray-600">{item.condicoes}</span>
-                            )}
+                      {editingOpp === item.id ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editOppData.nome}
+                            onChange={(e) => setEditOppData({ ...editOppData, nome: e.target.value })}
+                            placeholder="Nome do empreendimento"
+                            className="text-sm"
+                          />
+                          <Input
+                            value={editOppData.preco}
+                            onChange={(e) => setEditOppData({ ...editOppData, preco: e.target.value })}
+                            placeholder="Preço (ex: R$ 263.871,91)"
+                            className="text-sm"
+                          />
+                          <Input
+                            value={editOppData.condicoes}
+                            onChange={(e) => setEditOppData({ ...editOppData, condicoes: e.target.value })}
+                            placeholder="Condições (ex: 6x, ágio zero)"
+                            className="text-sm"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" onClick={handleCancelEditOpp}>
+                              Cancelar
+                            </Button>
+                            <Button size="sm" onClick={() => handleSaveEditOpp(item)}>
+                              Salvar
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 ml-2">
-                          {destaques.length < 2 && (
+                      ) : (
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{item.nomeEmpreendimento}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {item.localizacao && (
+                                <span className="text-xs text-gray-500">{item.localizacao}</span>
+                              )}
+                              {item.preco && (
+                                <span className="text-xs font-mono bg-gray-100 px-1 rounded">{item.preco}</span>
+                              )}
+                              {item.condicoes && (
+                                <span className="text-xs text-gray-600">{item.condicoes}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 ml-2">
                             <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleToggleDestaque(item)}
-                              className="text-yellow-600 border-yellow-300"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleStartEditOpp(item)}
+                              className="text-gray-400 hover:text-blue-600"
                             >
-                              <Star className="w-4 h-4" />
-                              Selecionar
+                              <Edit2 className="w-4 h-4" />
                             </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteOpp(item)}
-                            className="text-gray-400 hover:text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                            {destaques.length < 2 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleToggleDestaque(item)}
+                                className="text-yellow-600 border-yellow-300"
+                              >
+                                <Star className="w-4 h-4" />
+                                Selecionar
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteOpp(item)}
+                              className="text-gray-400 hover:text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
