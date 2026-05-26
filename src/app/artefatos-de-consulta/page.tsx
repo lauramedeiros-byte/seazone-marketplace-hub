@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { BackButton } from "@/components/back-button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -8,80 +10,109 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star } from "lucide-react";
 
 const links = [
   {
     url: "https://marketplacevendas.lovable.app/",
     titulo: "Cotas de Marketplace",
     descricao:
-      "Aqui encontramos todas as cotas de marketplace disponíveis, reservadas ou em negociação, além do valor de venda, de entrada, a flexibilidade do parcelamento e o número da cota.",
+      "Todas as cotas disponíveis, reservadas ou em negociação, além do valor de venda, de entrada, a flexibilidade do parcelamento e o número da cota.",
     icone: ShoppingCart,
+    cor: "bg-emerald-50 text-emerald-600 border-emerald-100",
   },
   {
     url: "https://alerta-preco-mktplace.netlify.app/",
-    titulo: "Farol de Criativos — Obsolescência",
+    titulo: "Farol de Criativos",
     descricao:
-      "Este é o farol de criativos ativos em mídia paga; ele sinaliza caso um criativo esteja ficando obsoleto (exemplo: o valor \"a partir de\" não contempla mais as cotas disponíveis para venda).",
+      "Farol de criativos ativos em mídia paga; sinaliza criativos obsoletos (exemplo: valor \"a partir de\" desatualizado).",
     icone: AlertTriangle,
+    cor: "bg-amber-50 text-amber-600 border-amber-100",
   },
   {
     url: "https://spotlight-project-manager.lovable.app/",
-    titulo: "Spotlight — Projeções e Status de Obras",
+    titulo: "Spotlight — Projeções",
     descricao:
-      "Neste tem todos os empreendimentos e suas respectivas projeções de faturamento ao ano, além de informações de endereço, diferenciais daquele SPOT e status da obra/entrega dele.",
+      "Todos os empreendimentos com projeções de faturamento, endereço, diferenciais e status da obra/entrega.",
     icone: Building2,
+    cor: "bg-violet-50 text-violet-600 border-violet-100",
   },
   {
     url: "https://revendas.seazone.com.br/24595c970b3481318ec8ff86132dd6ef?v=24595c970b34814d9cc7000cada90be0",
-    titulo: "Revendas — Fotos e Apresentações",
+    titulo: "Revendas — Fotos",
     descricao:
-      "Hub de informações de cada empreendimento; costumo usar para pegar fotos dos empreendimentos de forma fácil e apresentações.",
+      "Hub de informações de empreendimentos; uso principal: pegar fotos e apresentações.",
     icone: Image,
+    cor: "bg-pink-50 text-pink-600 border-pink-100",
   },
   {
     url: "https://growth-seazone.lovable.app/campaign-analytics",
     titulo: "Growth — Criativos em Campanha",
     descricao:
-      "Aqui é onde vejo os criativos ativos em campanha de mídia paga de Marketplace.",
+      "Criativos ativos em campanha de mídia paga de Marketplace.",
     icone: Megaphone,
+    cor: "bg-blue-50 text-blue-600 border-blue-100",
   },
   {
     url: "https://saleszone-prod.seazone.dev/mia/erros",
-    titulo: "SalesZone — Erros MIA (WhatsApp)",
+    titulo: "SalesZone — Erros MIA",
     descricao:
-      "Aqui é onde conferimos quantos erros deu dos envios da MIA (WhatsApp) em disparo de campanhas por frente.",
+      "Quantidade de erros nos envios da MIA (WhatsApp) por frente de campanha.",
     icone: AlertTriangle,
+    cor: "bg-red-50 text-red-600 border-red-100",
   },
   {
     url: "https://seazone-fd92b9.pipedrive.com/progress/insights/report/145311418e24c1b247cdfb337678405e",
-    titulo: "Pipedrive — Origem dos WONs Orgânicos",
+    titulo: "Pipedrive — WONs Orgânicos",
     descricao:
-      "Painel do Pipedrive que a Gabrielly Nogueira montou para acompanharmos origem dos WONs orgânicos.",
+      "Painel da Gabrielly Nogueira: origem dos WONs orgânicos.",
     icone: Users,
+    cor: "bg-cyan-50 text-cyan-600 border-cyan-100",
   },
   {
     url: "https://docs.google.com/spreadsheets/d/1u_CtCo3J85SHqh80gy7x2kye-7wiW0QLUjC9hmrilmc/edit?gid=0#gid=0",
-    titulo: "Google Sheets — Preços \"A Partir De\"",
+    titulo: "Google Sheets — \"A Partir De\"",
     descricao:
-      "Aqui é onde a gente acompanha os valores \"a partir de\" de cada empreendimento.",
+      "Acompanhamento dos valores \"a partir de\" de cada empreendimento.",
     icone: DollarSign,
+    cor: "bg-green-50 text-green-600 border-green-100",
   },
   {
     url: "https://seazone-insight-hub.lovable.app/",
-    titulo: "Insight Hub — Big Numbers SZI/SZS",
+    titulo: "Insight Hub — Big Numbers",
     descricao:
-      "Aqui são os big numbers de SZI e SZS + cases de sucesso.",
+      "Big numbers de SZI e SZS + cases de sucesso.",
     icone: TrendingUp,
+    cor: "bg-indigo-50 text-indigo-600 border-indigo-100",
+  },
+  {
+    url: "https://docs.google.com/spreadsheets/d/1M-e-h-UeA3X-PxlDbXlOxn_l8zbJndL9k4_F0Ces-KM/edit?gid=0#gid=0",
+    titulo: "Google Sheets — Pontos Fortes",
+    descricao:
+      "Pontos fortes de marketplace.",
+    icone: Star,
+    cor: "bg-yellow-50 text-yellow-600 border-yellow-100",
   },
 ];
 
 export default function ArtefatosPage() {
+  const [busca, setBusca] = useState("");
+
+  const filtrados = useMemo(() => {
+    if (!busca.trim()) return links;
+    const q = busca.toLowerCase();
+    return links.filter(
+      (l) =>
+        l.titulo.toLowerCase().includes(q) ||
+        l.descricao.toLowerCase().includes(q)
+    );
+  }, [busca]);
+
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <BackButton />
 
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">
           Artefatos de Consulta
         </h1>
@@ -90,41 +121,66 @@ export default function ArtefatosPage() {
         </p>
       </div>
 
-      <div className="space-y-4">
-        {links.map((link) => {
-          const Icon = link.icone;
-          return (
-            <a
-              key={link.url}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block group"
-            >
-              <Card className="hover:border-blue-300 hover:shadow-md transition-all">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 shrink-0">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        {link.titulo}
-                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                      </CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-sm leading-relaxed ml-12">
-                    {link.descricao}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </a>
-          );
-        })}
+      {/* Barra de busca */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Buscar artefato..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="pl-10 h-10"
+        />
       </div>
+
+      {/* Grid de 2 colunas */}
+      {filtrados.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <p>Nenhum artefato encontrado.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {filtrados.map((link) => {
+            const Icon = link.icone;
+            return (
+              <a
+                key={link.url}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
+                <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all h-full border-l-4 border-l-transparent hover:border-l-4">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2.5 rounded-lg shrink-0 ${link.cor}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                          {link.titulo}
+                          <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                        </CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-xs leading-relaxed ml-12">
+                      {link.descricao}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+      {filtrados.length > 0 && filtrados.length < links.length && (
+        <p className="text-sm text-gray-400 mt-4 text-center">
+          Mostrando {filtrados.length} de {links.length} artefatos
+        </p>
+      )}
     </div>
   );
 }
