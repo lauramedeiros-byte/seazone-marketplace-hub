@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function POST(request: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     const { nomeEmpreendimento } = await request.json();
 
