@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { ComponentType } from "lucide-react";
+import type { ComponentType } from "react";
+import { type LucideIcon } from "lucide-react";
 
 interface CardDef {
   href: string;
   titulo: string;
   descricao: string;
-  icone: ComponentType<{ className?: string }>;
+  icone: LucideIcon;
   cor: string;
 }
 

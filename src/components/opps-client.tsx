@@ -154,7 +154,7 @@ export function OppsClient({ semanas: initial }: Props) {
         prev.map((s, i) =>
           i === activeWeekIdx
             ? {
-                s,
+                ...s,
                 items: s.items.map((it) =>
                   it.id === item.id ? { ...it, [field]: value } : it
                 ),
@@ -170,7 +170,7 @@ export function OppsClient({ semanas: initial }: Props) {
   const handleToggleDisparado = async (item: OppItem) => {
     await updateOppItem(item.id, {
       Disparado: !item.Disparado,
-      dataDisparo: !item.Disparado ? new Date() : null}) as any;
+      dataDisparo: !item.Disparado ? new Date() : undefined});
     setSemanas((prev) =>
       prev.map((s, i) =>
         i === activeWeekIdx

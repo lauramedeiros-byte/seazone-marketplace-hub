@@ -66,9 +66,9 @@ export function BriefingsClient({ briefings: initial }: Props) {
     try {
       await createBriefing({
         titulo: newForm.titulo,
-        empresa: newForm.empresa || undefined,
-        canal: newForm.canal || undefined,
-        codigoProtecao: newForm.codigoProtecao || undefined,
+        empresa: newForm.empresa || null,
+        canal: newForm.canal || null,
+        codigoProtecao: newForm.codigoProtecao || null,
         userId: user.id,
       });
       setBriefings((prev) => [

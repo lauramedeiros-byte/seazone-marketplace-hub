@@ -122,9 +122,9 @@ export function BriefingDetailClient({ briefing: initial }: Props) {
       }
       await updateBriefing(briefing.id, {
         titulo: form.titulo,
-        empresa: form.empresa || undefined,
-        canal: form.canal || undefined,
-        codigoProtecao: form.codigoProtecao || undefined,
+        empresa: form.empresa || null,
+        canal: form.canal || null,
+        codigoProtecao: form.codigoProtecao || null,
         formularioJson: parsedJson,
       });
       setBriefing((prev) =>

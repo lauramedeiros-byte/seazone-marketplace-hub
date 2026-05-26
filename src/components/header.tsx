@@ -2,8 +2,6 @@
 
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function Header() {
   const { user, isLoaded } = useUser();
@@ -28,14 +26,7 @@ export function Header() {
                   {user.firstName}
                 </span>
               </div>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: "w-8 h-8",
-                  },
-                }}
-              />
+              <UserButton />
             </div>
           )}
 

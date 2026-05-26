@@ -218,29 +218,36 @@ export async function addLostHistorico(
 export async function createBriefing(
   data: {
     titulo: string;
-    empresa?: string;
-    canal?: string;
-    codigoProtecao?: string;
+    empresa?: string | null;
+    canal?: string | null;
+    codigoProtecao?: string | null;
     userId: string;
   }
 ) {
-  await db.briefing.create({ data });
+  const createData = {
+    titulo: data.titulo,
+    empresa: data.empresa ?? null,
+    canal: data.canal ?? null,
+    codigoProtecao: data.codigoProtecao ?? null,
+    criadoPorId: data.userId,
+  };
+  await db.briefing.create({ data: createData });
   revalidatePath("/briefings");
 }
 
 export async function updateBriefing(
   id: string,
-  data: Partial<{
-    titulo: string;
-    empresa: string;
-    canal: string;
-    formularioJson: unknown;
-    status: string;
-    codigoProtecao: string;
-    dataPublicacao: Date;
-  }>
+  data: {
+    titulo?: string;
+    empresa?: string | null;
+    canal?: string | null;
+    formularioJson?: unknown;
+    status?: string;
+    codigoProtecao?: string | null;
+    dataPublicacao?: Date | null;
+  }
 ) {
-  await db.briefing.update({ where: { id }, data });
+  await db.briefing.update({ where: { id }, data: data as never });
   revalidatePath("/briefings");
   revalidatePath(`/briefings/${id}`);
 }
@@ -262,7 +269,7 @@ export async function createMeta(
     userId: string;
   }
 ) {
-  await db.meta.create({
+  const meta = await db.meta.create({
     data: {
       trimestre: data.trimestre,
       metaNome: data.metaNome,
@@ -273,19 +280,20 @@ export async function createMeta(
     },
   });
   revalidatePath("/acompanhamento-de-metas");
+  return meta;
 }
 
 export async function updateMeta(
   id: string,
-  data: Partial<{
-    metaNome: string;
-    tipo: string;
-    valorMeta: number;
-    valorAtual: number;
-    metricasPeriodicas: unknown;
-  }>
+  data: {
+    metaNome?: string;
+    tipo?: string;
+    valorMeta?: number;
+    valorAtual?: number;
+    metricasPeriodicas?: unknown;
+  }
 ) {
-  await db.meta.update({ where: { id }, data });
+  await db.meta.update({ where: { id }, data: data as never });
   revalidatePath("/acompanhamento-de-metas");
 }
 
@@ -306,15 +314,16 @@ export async function createArtefato(
     userId: string;
   }
 ) {
+  const createData = {
+    tipo: data.tipo,
+    titulo: data.titulo,
+    descricao: data.descricao ?? null,
+    descricaoDados: data.descricaoDados ?? null,
+    configuracaoJson: data.configuracaoJson ?? undefined,
+    criadoPorId: data.userId,
+  };
   const artefato = await db.artefatoConfig.create({
-    data: {
-      tipo: data.tipo,
-      titulo: data.titulo,
-      descricao: data.descricao,
-      descricaoDados: data.descricaoDados,
-      configuracaoJson: data.configuracaoJson,
-      criadoPorId: data.userId,
-    },
+    data: createData as never,
   });
   revalidatePath("/artefatos-de-consulta");
   return artefato;
@@ -322,15 +331,15 @@ export async function createArtefato(
 
 export async function updateArtefato(
   id: string,
-  data: Partial<{
-    tipo: string;
-    titulo: string;
-    descricao: string;
-    descricaoDados: string;
-    configuracaoJson: unknown;
-  }>
+  data: {
+    tipo?: string;
+    titulo?: string;
+    descricao?: string | null;
+    descricaoDados?: string | null;
+    configuracaoJson?: unknown;
+  }
 ) {
-  await db.artefatoConfig.update({ where: { id }, data });
+  await db.artefatoConfig.update({ where: { id }, data: data as never });
   revalidatePath("/artefatos-de-consulta");
 }
 
