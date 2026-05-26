@@ -75,6 +75,7 @@ export function OppsClient({ semanas: initial }: Props) {
   const [editEmail, setEditEmail] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [addingOpp, setAddingOpp] = useState(false);
+  const [bulkOppText, setBulkOppText] = useState("");
 
   const activeSemana = semanas[activeWeekIdx];
 
@@ -125,6 +126,72 @@ export function OppsClient({ semanas: initial }: Props) {
       );
       setNewOpp({ nome: "", localizacao: "", preco: "", condicoes: "" });
       window.location.reload();
+    } finally {
+      setAddingOpp(false);
+    }
+  };
+
+  function parseBulkOpp(line: string): { nome: string; preco: string | null; condicoes: string } {
+    // Formato: "Nome - Código: Preço ; Condições" ou "Nome - Código: condição especial"
+    let nome = line.trim();
+    let preco: string | null = null;
+    let condicoes = "";
+
+    // Extrai preço após ": " (formato "Nome - Código: R$ xxx")
+    const precoMatch = nome.match(/:\s*(R\$\s*[\d\.,]+)/);
+    if (precoMatch) {
+      preco = precoMatch[1];
+      // Remove o preço do nome
+      nome = nome.substring(0, nome.indexOf(":")).trim();
+    }
+
+    // Extrai condições após ";" ou após o preço
+    if (line.includes(";")) {
+      const parts = line.split(";");
+      if (parts.length > 1) {
+        condicoes = parts.slice(1).map(p => p.trim()).filter(p => p && !p.match(/^R\$/)).join("; ");
+      }
+    }
+
+    return { nome, preco, condicoes };
+  }
+
+  const handleAddBulkOpps = async () => {
+    if (!bulkOppText.trim() || !activeSemana) return;
+    setAddingOpp(true);
+    try {
+      const lines = bulkOppText.split("\n").filter(l => l.trim());
+      let added = 0;
+
+      for (const line of lines) {
+        const { nome, preco, condicoes } = parseBulkOpp(line);
+        if (!nome.trim()) continue;
+
+        const result = await fetch('/api/opps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create',
+            semanaId: activeSemana.id,
+            nomeEmpreendimento: nome.trim(),
+            localizacao: null,
+            preco: preco,
+            condicoes: condicoes || null,
+            userId: user?.id,
+          }),
+        });
+
+        if (result.ok) {
+          added++;
+        }
+      }
+
+      setBulkOppText("");
+      if (added > 0) {
+        window.location.reload();
+      } else {
+        alert("Nenhuma opp foi adicionada. Verifique o formato.");
+      }
     } finally {
       setAddingOpp(false);
     }
@@ -372,39 +439,29 @@ export function OppsClient({ semanas: initial }: Props) {
         </Card>
       )}
 
-      {/* Adicionar nova opp */}
+      {/* Adicionar novas opps em lote */}
       <Card className="mb-6">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Adicionar Oportunidade</CardTitle>
+          <CardTitle className="text-base">Colar Opps da Semana</CardTitle>
+          <p className="text-xs text-gray-500 mt-1">
+            Cole a lista de opps no formato: Nome - Código: Preço ; Condições
+          </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Input
-              placeholder="Nome (ex: Canasvieiras Spot - 211)"
-              value={newOpp.nome}
-              onChange={(e) => setNewOpp((p) => ({ ...p, nome: e.target.value }))}
-              onKeyDown={(e) => e.key === "Enter" && handleAddOpp()}
-            />
-            <Input
-              placeholder="Localização"
-              value={newOpp.localizacao}
-              onChange={(e) => setNewOpp((p) => ({ ...p, localizacao: e.target.value }))}
-            />
-            <Input
-              placeholder="Preço (ex: R$ 263.871,91)"
-              value={newOpp.preco}
-              onChange={(e) => setNewOpp((p) => ({ ...p, preco: e.target.value }))}
-            />
-            <Input
-              placeholder="Condições (ex: 6x, ágio zero)"
-              value={newOpp.condicoes}
-              onChange={(e) => setNewOpp((p) => ({ ...p, condicoes: e.target.value }))}
-            />
-          </div>
+          <Textarea
+            placeholder={`Cole aqui as opps, uma por linha:\nExemplo:\nSantinho Spot - 309B: R$ 289.000,02 ; ágio zero; parcela entrada até 3x\nCanasvieiras Spot - 211: R$ 263.871,91; aceita parcelamento; 7% abaixo do valor de mercado`}
+            value={bulkOppText}
+            onChange={(e) => setBulkOppText(e.target.value)}
+            rows={6}
+            className="text-sm font-mono"
+          />
           <div className="flex justify-end mt-3">
-            <Button onClick={handleAddOpp} disabled={addingOpp || !newOpp.nome.trim()}>
+            <Button
+              onClick={handleAddBulkOpps}
+              disabled={addingOpp || !bulkOppText.trim()}
+            >
               <Plus className="w-4 h-4" />
-              Adicionar
+              {addingOpp ? "Adicionando..." : "Adicionar Opps"}
             </Button>
           </div>
         </CardContent>
