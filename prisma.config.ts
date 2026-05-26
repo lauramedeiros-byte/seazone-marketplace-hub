@@ -1,8 +1,7 @@
 import "dotenv/config";
+import { config } from "dotenv";
 import { defineConfig } from "prisma/config";
 
-// Load dotenv properly
-import { config } from "dotenv";
 config();
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -12,7 +11,6 @@ if (!databaseUrl) {
 }
 
 export default defineConfig({
-  earlyAccess: true,
   schema: "./prisma/schema.prisma",
   datasource: {
     url: databaseUrl,
