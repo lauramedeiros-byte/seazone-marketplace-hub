@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, TextCursorInput, AlertTriangle, CheckCircle2, Image as ImageIcon, Save } from "lucide-react";
+import { Plus, Trash2, TextCursorInput, AlertTriangle, CheckCircle2, Image as ImageIcon, Save, Search } from "lucide-react";
 import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento, createRepescagemNumero, updateRepescagemNumero, deleteRepescagemNumero } from "@/lib/actions";
 
 interface Numero {
@@ -46,6 +46,15 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
   const [newEmpNome, setNewEmpNome] = useState("");
   const [addingNum, setAddingNum] = useState<string | null>(null);
   const [newNumCampo, setNewNumCampo] = useState("");
+  const [busca, setBusca] = useState("");
+
+  const empreendimentosFiltrados = useMemo(() => {
+    if (!busca.trim()) return empreendimentos;
+    const q = busca.toLowerCase();
+    return empreendimentos.filter(e =>
+      e.nomeEmpreendimento.toLowerCase().includes(q)
+    );
+  }, [empreendimentos, busca]);
 
   const handleCreateEmpreendimento = async () => {
     if (!newEmpNome.trim()) return;
@@ -145,6 +154,18 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
         </p>
       </div>
 
+      {/* Barra de busca */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Buscar empreendimento..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="pl-10 h-10"
+        />
+      </div>
+
       {/* Form adicionar empreendimento */}
       <Card className="mb-6">
         <CardContent className="p-4">
@@ -167,15 +188,16 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       </Card>
 
       {/* Lista de empreendimentos */}
-      {empreendimentos.length === 0 ? (
+      {empreendimentosFiltrados.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <TextCursorInput className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhum empreendimento cadastrado.</p>
-          <p className="text-sm">Adicione acima para começar.</p>
+          <p>{busca ? "Nenhum empreendimento encontrado." : "Nenhum empreendimento cadastrado."}</p>
+          {!busca && <p className="text-sm">Adicione acima para começar.</p>}
         </div>
       ) : (
         <div className="space-y-4">
-          {empreendimentos.map((emp) => (
+          <p className="text-sm text-gray-500">{empreendimentosFiltrados.length} de {empreendimentos.length} empreendimentos</p>
+          {empreendimentosFiltrados.map((emp) => (
             <Card key={emp.id} className="overflow-hidden">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
