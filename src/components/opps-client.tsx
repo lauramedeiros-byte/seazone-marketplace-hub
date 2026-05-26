@@ -76,6 +76,8 @@ export function OppsClient({ semanas: initial }: Props) {
   const [saving, setSaving] = useState<string | null>(null);
   const [addingOpp, setAddingOpp] = useState(false);
   const [bulkOppText, setBulkOppText] = useState("");
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
 
   const activeSemana = semanas[activeWeekIdx];
 
@@ -198,30 +200,42 @@ export function OppsClient({ semanas: initial }: Props) {
   const handleAddBulkOpps = async () => {
     if (!bulkOppText.trim() || !activeSemana) return;
     setAddingOpp(true);
+    setBulkError(null);
+    setBulkSuccess(null);
     try {
       const lines = bulkOppText.split("\n").filter(l => l.trim());
       let added = 0;
       const errors: string[] = [];
+      const parsed: { nome: string; preco: string | null; condicoes: string; original: string }[] = [];
 
       for (const line of lines) {
         const { nome, preco, condicoes } = parseBulkOpp(line);
-        console.log("Parsed:", { nome, preco, condicoes, line });
 
         if (!nome || nome.length < 2) {
-          errors.push(`Não consegui entender: ${line.substring(0, 50)}`);
+          errors.push(`Não consegui entender: "${line.substring(0, 50)}..."`);
           continue;
         }
 
+        parsed.push({ nome, preco, condicoes, original: line });
+      }
+
+      if (errors.length > 0 && parsed.length === 0) {
+        setBulkError(`Não consegui entender nenhuma linha:\n${errors.join("\n")}`);
+        return;
+      }
+
+      // Create all opps
+      for (const p of parsed) {
         const result = await fetch('/api/opps', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'create',
             semanaId: activeSemana.id,
-            nomeEmpreendimento: nome.trim(),
+            nomeEmpreendimento: p.nome.trim(),
             localizacao: null,
-            preco: preco,
-            condicoes: condicoes || null,
+            preco: p.preco,
+            condicoes: p.condicoes || null,
             userId: user?.id,
           }),
         });
@@ -230,15 +244,17 @@ export function OppsClient({ semanas: initial }: Props) {
           added++;
         } else {
           const data = await result.json();
-          errors.push(`${nome}: ${data.error || "erro"}`);
+          errors.push(`${p.nome}: ${data.error || "erro"}`);
         }
       }
 
       setBulkOppText("");
       if (added > 0) {
-        window.location.reload();
-      } else {
-        alert(`Nenhuma opp foi adicionada.\n\nErros:\n${errors.join("\n")}`);
+        setBulkSuccess(`${added} opps adicionadas com sucesso!`);
+        setTimeout(() => window.location.reload(), 1500);
+      }
+      if (errors.length > 0) {
+        setBulkError(`Erros:\n${errors.join("\n")}`);
       }
     } finally {
       setAddingOpp(false);
@@ -492,14 +508,24 @@ export function OppsClient({ semanas: initial }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Colar Opps da Semana</CardTitle>
           <p className="text-xs text-gray-500 mt-1">
-            Cole a lista de opps no formato: Nome - Código: Preço ; Condições
+            Cole a lista de opps, uma por linha. O sistema extrai o nome, preço e condições automaticamente.
           </p>
         </CardHeader>
         <CardContent>
+          {bulkError && (
+            <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700 whitespace-pre-wrap">{bulkError}</p>
+            </div>
+          )}
+          {bulkSuccess && (
+            <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-700">{bulkSuccess}</p>
+            </div>
+          )}
           <Textarea
             placeholder={`Cole aqui as opps, uma por linha:\nExemplo:\nSantinho Spot - 309B: R$ 289.000,02 ; ágio zero; parcela entrada até 3x\nCanasvieiras Spot - 211: R$ 263.871,91; aceita parcelamento; 7% abaixo do valor de mercado`}
             value={bulkOppText}
-            onChange={(e) => setBulkOppText(e.target.value)}
+            onChange={(e) => { setBulkOppText(e.target.value); setBulkError(null); setBulkSuccess(null); }}
             rows={6}
             className="text-sm font-mono"
           />
