@@ -132,55 +132,67 @@ export function OppsClient({ semanas: initial }: Props) {
   };
 
   function parseBulkOpp(line: string): { nome: string; preco: string | null; condicoes: string } {
-    let nome = line.trim();
+    let texto = line.trim();
     let preco: string | null = null;
-    let condicoes = "";
+    let condicoes: string[] = [];
 
-    // Extract price - any R$ value with numbers
-    const precoMatch = nome.match(/R\$\s*[\d\.,]+/);
+    // Extract price - find R$ followed by numbers
+    const precoMatch = texto.match(/(R\$\s*[\d\.,]+)/);
     if (precoMatch) {
-      preco = precoMatch[0];
+      preco = precoMatch[1].trim();
     }
 
-    // Extract conditions - keywords that indicate features
-    const conditionKeywords = [
-      "ágio zero", "lançamento", "entrega", "vista mar", "garden",
-      "parcelamento", "parcelas", "abaixo do", "abaixo de", "abaixo",
+    // Keywords for conditions
+    const keywords = [
+      "ágio zero", "lançamento", "condição de lançamento", "condição lançamento",
+      "entrega", "vista mar", "vista lateral", "garden", "garten",
+      "parcelamento", "parcelas", "abaixo do mercado", "abaixo de mercado", "abaixo",
       "6x", "10x", "3x", "5x", "8x", "até 3x", "até 6x", "até 8x", "até 10x",
       "aceita", "previsão", "obra", "obras", "distrato", "beira-mar",
-      "condição", "condições", "menor", "maior", "flexível", "flexivel",
-      "entrada", "checkout", "chekout", "cota mais", "cabana", "faturamento",
+      "menor", "maior", "flexível", "flexivel", "flex",
+      "checkout", "chekout", "cota mais", "cabana", "faturamento",
+      "localização", "localizacao", "certeza", "certeza de parcelamento",
     ];
 
-    const lowerLine = nome.toLowerCase();
-    const foundConditions: string[] = [];
-
-    for (const keyword of conditionKeywords) {
-      if (lowerLine.includes(keyword)) {
-        // Find the context around the keyword
-        const idx = lowerLine.indexOf(keyword);
-        const start = Math.max(0, idx - 5);
-        const end = Math.min(nome.length, idx + keyword.length + 15);
-        let context = nome.substring(start, end).trim();
-        // Clean up
-        context = context.replace(/^[^a-zA-Zà-źÀ-Ź]*/, "").replace(/[^a-zA-Zà-źÀ-Ź0-9\s\.,\-R$%]+$/, "");
-        if (context && context.length > 2 && !foundConditions.includes(context)) {
-          foundConditions.push(context);
+    // Find keywords in text
+    const lowerTexto = texto.toLowerCase();
+    for (const kw of keywords) {
+      if (lowerTexto.includes(kw)) {
+        const idx = lowerTexto.indexOf(kw);
+        const start = Math.max(0, idx - 10);
+        const end = Math.min(texto.length, idx + kw.length + 20);
+        let context = texto.substring(start, end).trim();
+        // Remove price from context if present
+        context = context.replace(/R\$\s*[\d\.,]+/g, "").trim();
+        if (context && context.length > 3) {
+          // Clean trailing punctuation
+          context = context.replace(/[;:\-]\s*$/, "").trim();
+          if (!condicoes.includes(context)) {
+            condicoes.push(context);
+          }
         }
       }
     }
 
-    // Build conditions string from found keywords with context
-    condicoes = foundConditions.join("; ");
+    // Nome is the whole line, cleaned
+    let nome = texto
+      .replace(/R\$\s*[\d\.,]+/g, "") // remove price
+      .replace(/\s*;\s*/g, " ")       // remove semicolons
+      .replace(/\s*:\s*/g, " - ")     // replace colon with dash
+      .replace(/^\s*-\s*/, "")         // remove leading dash
+      .replace(/\s+/g, " ")            // normalize spaces
+      .trim();
 
-    // Clean nome - remove price and extra info
-    nome = nome.replace(/R\$\s*[\d\.,]+/g, "").trim();
-    // Remove multiple spaces
-    nome = nome.replace(/\s+/g, " ").trim();
-    // Remove trailing semicolons and colons
-    nome = nome.replace(/[:;]\s*$/, "").trim();
+    // If nome is empty or too short, use original
+    if (nome.length < 3) {
+      nome = texto.split(/[;:]/)[0].trim();
+    }
 
-    return { nome, preco, condicoes };
+    return {
+      nome: nome.substring(0, 100), // limit nome length
+      preco,
+      condicoes: condicoes.join("; ")
+    };
   }
 
   const handleAddBulkOpps = async () => {
@@ -189,10 +201,16 @@ export function OppsClient({ semanas: initial }: Props) {
     try {
       const lines = bulkOppText.split("\n").filter(l => l.trim());
       let added = 0;
+      const errors: string[] = [];
 
       for (const line of lines) {
         const { nome, preco, condicoes } = parseBulkOpp(line);
-        if (!nome.trim()) continue;
+        console.log("Parsed:", { nome, preco, condicoes, line });
+
+        if (!nome || nome.length < 2) {
+          errors.push(`Não consegui entender: ${line.substring(0, 50)}`);
+          continue;
+        }
 
         const result = await fetch('/api/opps', {
           method: 'POST',
@@ -210,6 +228,9 @@ export function OppsClient({ semanas: initial }: Props) {
 
         if (result.ok) {
           added++;
+        } else {
+          const data = await result.json();
+          errors.push(`${nome}: ${data.error || "erro"}`);
         }
       }
 
@@ -217,7 +238,7 @@ export function OppsClient({ semanas: initial }: Props) {
       if (added > 0) {
         window.location.reload();
       } else {
-        alert("Nenhuma opp foi adicionada. Verifique o formato.");
+        alert(`Nenhuma opp foi adicionada.\n\nErros:\n${errors.join("\n")}`);
       }
     } finally {
       setAddingOpp(false);
