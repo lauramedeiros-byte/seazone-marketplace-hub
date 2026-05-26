@@ -482,21 +482,37 @@ export function OppsClient({ semanas: initial }: Props) {
         </p>
       </div>
 
-      {/* Link para Opps Mônica */}
-      <Card className="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-        <CardContent className="p-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-700">Opps Mônica (Comunidade)</p>
-            <p className="text-xs text-gray-500">Preencha as opps para a comunidade da Mônica</p>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <a href="https://opps-seazone.vercel.app/#marketplace" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-4 h-4" />
-              Abrir Opps Mônica
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Links úteis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Opps Mônica (Comunidade)</p>
+              <p className="text-xs text-gray-500">Preencha as opps para a comunidade</p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://opps-seazone.vercel.app/#marketplace" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4" />
+                Abrir
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Transformar Opps</p>
+              <p className="text-xs text-gray-500">Converte opps para formato da Mônica</p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://claude.ai/artifacts/latest/63177553-77d0-4911-89d2-01a5114de546" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4" />
+                Abrir
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Seletor de semana e histórico */}
       <div className="flex items-center justify-between mb-6">
