@@ -26,6 +26,29 @@ export async function updateRepescagemTexto(
   revalidatePath("/respescagem");
 }
 
+export async function updateRepescagemImagem(
+  id: string,
+  linkImagem: string
+) {
+  await db.repescagemEmpreendimento.update({
+    where: { id },
+    data: { linkImagem, dataUltimaAtualizacao: new Date() },
+  });
+  revalidatePath("/respescagem");
+}
+
+export async function updateRepescagemTextoEImagem(
+  id: string,
+  textoConteudo: string,
+  linkImagem: string
+) {
+  await db.repescagemEmpreendimento.update({
+    where: { id },
+    data: { textoConteudo, linkImagem, dataUltimaAtualizacao: new Date() },
+  });
+  revalidatePath("/respescagem");
+}
+
 export async function deleteRepescagemEmpreendimento(id: string) {
   await db.repescagemEmpreendimento.delete({ where: { id } });
   revalidatePath("/respescagem");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, TextCursorInput, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { createRepescagemEmpreendimento, updateRepescagemTexto, deleteRepescagemEmpreendimento, createRepescagemNumero, updateRepescagemNumero, deleteRepescagemNumero } from "@/lib/actions";
+import { Plus, Trash2, TextCursorInput, AlertTriangle, CheckCircle2, Image as ImageIcon, Save } from "lucide-react";
+import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento, createRepescagemNumero, updateRepescagemNumero, deleteRepescagemNumero } from "@/lib/actions";
 
 interface Numero {
   id: string;
@@ -26,6 +26,7 @@ interface Empreendimento {
   id: string;
   nomeEmpreendimento: string;
   textoConteudo: string | null;
+  linkImagem: string | null;
   dataUltimaAtualizacao: Date | null;
   numeros: Numero[];
 }
@@ -39,6 +40,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
   const [empreendimentos, setEmpreendimentos] = useState(initial);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editTexto, setEditTexto] = useState<Record<string, string>>({});
+  const [editImagem, setEditImagem] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [addingEmp, setAddingEmp] = useState(false);
   const [newEmpNome, setNewEmpNome] = useState("");
@@ -51,6 +53,8 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     try {
       await createRepescagemEmpreendimento(newEmpNome.trim(), user?.id);
       setNewEmpNome("");
+      // Refresh the list
+      window.location.reload();
     } finally {
       setAddingEmp(false);
     }
@@ -62,17 +66,21 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     setEmpreendimentos((prev) => prev.filter((e) => e.id !== id));
   };
 
-  const handleSaveTexto = async (id: string) => {
-    const texto = editTexto[id];
-    if (texto === undefined) return;
+  const handleSave = async (id: string) => {
+    const texto = editTexto[id] ?? empreendimentos.find(e => e.id === id)?.textoConteudo ?? "";
+    const imagem = editImagem[id] ?? empreendimentos.find(e => e.id === id)?.linkImagem ?? "";
     setSaving(id);
     try {
-      await updateRepescagemTexto(id, texto);
+      await updateRepescagemTextoEImagem(id, texto, imagem);
       setEmpreendimentos((prev) =>
         prev.map((e) =>
-          e.id === id ? { ...e, textoConteudo: texto } : e
+          e.id === id
+            ? { ...e, textoConteudo: texto, linkImagem: imagem, dataUltimaAtualizacao: new Date() }
+            : e
         )
       );
+      setEditTexto((prev) => ({ ...prev, [id]: undefined }));
+      setEditImagem((prev) => ({ ...prev, [id]: undefined }));
     } finally {
       setSaving(null);
     }
@@ -85,6 +93,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       await createRepescagemNumero(empreendimentoId, newNumCampo.trim(), user?.id);
       setNewNumCampo("");
       setAddingNum(null);
+      window.location.reload();
     } catch {
       setAddingNum(null);
     }
@@ -112,6 +121,15 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     );
   };
 
+  const getTexto = (emp: Empreendimento) =>
+    editTexto[emp.id] !== undefined ? editTexto[emp.id] : emp.textoConteudo ?? "";
+
+  const getImagem = (emp: Empreendimento) =>
+    editImagem[emp.id] !== undefined ? editImagem[emp.id] : emp.linkImagem ?? "";
+
+  const hasChanges = (emp: Empreendimento) =>
+    editTexto[emp.id] !== undefined || editImagem[emp.id] !== undefined;
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <BackButton />
@@ -119,8 +137,8 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Repescagem</h1>
         <p className="text-gray-500">
-          Auditoria de conteúdo de empreendimentos — compare números com a
-          planilha fonte e atualize os textos
+          Conteúdo de empreendimentos para mídia — textos e imagens para
+          disparo de campanhas
         </p>
       </div>
 
@@ -139,7 +157,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
             />
             <Button onClick={handleCreateEmpreendimento} disabled={addingEmp || !newEmpNome.trim()}>
               <Plus className="w-4 h-4" />
-              Adicionar Empreendimento
+              Adicionar
             </Button>
           </div>
         </CardContent>
@@ -170,6 +188,9 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
                     <CardTitle className="text-base">
                       {emp.nomeEmpreendimento}
                     </CardTitle>
+                    {emp.linkImagem && (
+                      <ImageIcon className="w-4 h-4 text-blue-500" />
+                    )}
                     {emp.numeros.some((n) => n.sinalizador === "alterado") && (
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
                     )}
@@ -199,43 +220,68 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
 
               {expandedId === emp.id && (
                 <CardContent className="space-y-4">
+                  {/* Imagem */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">
+                      Link da Imagem
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="Cole aqui o link da imagem para o disparo..."
+                      value={getImagem(emp)}
+                      onChange={(e) =>
+                        setEditImagem((prev) => ({
+                          ...prev,
+                          [emp.id]: e.target.value,
+                        }))
+                      }
+                      className="text-sm"
+                    />
+                    {getImagem(emp) && (
+                      <div className="mt-2">
+                        <img
+                          src={getImagem(emp)}
+                          alt="Preview"
+                          className="max-h-32 rounded-lg border border-gray-200"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   {/* Texto do empreendimento */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 block mb-1">
                       Texto do Empreendimento
                     </label>
                     <Textarea
-                      value={
-                        editTexto[emp.id] !== undefined
-                          ? editTexto[emp.id]
-                          : emp.textoConteudo ?? ""
-                      }
+                      value={getTexto(emp)}
                       onChange={(e) =>
                         setEditTexto((prev) => ({
                           ...prev,
                           [emp.id]: e.target.value,
                         }))
                       }
-                      rows={6}
+                      rows={8}
                       placeholder="Cole aqui o texto de marketing do empreendimento..."
                       className="text-sm"
                     />
-                    <div className="flex justify-end mt-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleSaveTexto(emp.id)}
-                        disabled={
-                          saving === emp.id ||
-                          editTexto[emp.id] === emp.textoConteudo
-                        }
-                      >
-                        {saving === emp.id ? "Salvando..." : "Salvar texto"}
-                      </Button>
-                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => handleSave(emp.id)}
+                      disabled={saving === emp.id || !hasChanges(emp)}
+                    >
+                      <Save className="w-4 h-4" />
+                      {saving === emp.id ? "Salvando..." : "Salvar Tudo"}
+                    </Button>
                   </div>
 
                   {/* Farol de números */}
-                  <div>
+                  <div className="pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-sm font-medium text-gray-700">
                         Números para Auditar

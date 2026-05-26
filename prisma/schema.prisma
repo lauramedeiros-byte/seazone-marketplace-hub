@@ -26,6 +26,7 @@ model RepescagemEmpreendimento {
   id                    String   @id @default(cuid())
   nomeEmpreendimento    String
   textoConteudo         String?
+  linkImagem             String?
   dataUltimaAtualizacao DateTime?
   atualizadoPor         String?
   criadoPorId           String?
