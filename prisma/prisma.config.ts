@@ -1,9 +1,14 @@
 import path from "node:path";
 import type { PrismaConfig } from "prisma";
 
-export default {
+const config: PrismaConfig = {
   schema: path.join("prisma", "schema.prisma"),
-  datasource: {
-    url: process.env.DATABASE_URL!,
-  },
-} satisfies PrismaConfig;
+};
+
+if (process.env.DATABASE_URL) {
+  config.datasource = {
+    url: process.env.DATABASE_URL,
+  };
+}
+
+export default config;
