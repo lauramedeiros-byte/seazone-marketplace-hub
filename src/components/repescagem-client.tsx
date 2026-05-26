@@ -39,8 +39,8 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
   const { user } = useUser();
   const [empreendimentos, setEmpreendimentos] = useState(initial);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [editTexto, setEditTexto] = useState<Record<string, string>>({});
-  const [editImagem, setEditImagem] = useState<Record<string, string>>({});
+  const [editTexto, setEditTexto] = useState<Record<string, string | undefined>>({});
+  const [editImagem, setEditImagem] = useState<Record<string, string | undefined>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [addingEmp, setAddingEmp] = useState(false);
   const [newEmpNome, setNewEmpNome] = useState("");
