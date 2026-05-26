@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
@@ -22,14 +22,12 @@ import {
   Trash2,
   MessageSquare,
   Mail,
-  ExternalLink,
+  Check,
+  Trophy,
+  History,
+  Edit2,
+  X,
 } from "lucide-react";
-import {
-  createOppItem,
-  updateOppItem,
-  deleteOppItem,
-  updateOppSemanaObservacoes,
-} from "@/lib/actions";
 
 interface OppItem {
   id: string;
@@ -39,6 +37,7 @@ interface OppItem {
   condicoes: string | null;
   destaque: boolean;
   tipoDestaque: string | null;
+  justificativa: string | null;
   textoWhatsapp: string | null;
   textoEmail: string | null;
   observacoes: string | null;
@@ -63,7 +62,9 @@ export function OppsClient({ semanas: initial }: Props) {
   const { user } = useUser();
   const [semanas, setSemanas] = useState(initial);
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
-  const [addingOpp, setAddingOpp] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [editingJustificativa, setEditingJustificativa] = useState<string | null>(null);
+  const [editJustificativaText, setEditJustificativaText] = useState("");
   const [newOpp, setNewOpp] = useState({
     nome: "",
     localizacao: "",
@@ -73,6 +74,7 @@ export function OppsClient({ semanas: initial }: Props) {
   const [editWhatsapp, setEditWhatsapp] = useState<Record<string, string>>({});
   const [editEmail, setEditEmail] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [addingOpp, setAddingOpp] = useState(false);
 
   const activeSemana = semanas[activeWeekIdx];
 
@@ -80,8 +82,12 @@ export function OppsClient({ semanas: initial }: Props) {
     const start = new Date(d);
     const end = new Date(d);
     end.setDate(start.getDate() + 6);
-    const opts = { day: "2-digit", month: "short" } as const;
+    const opts = { day: "2-digit", month: "short", year: "numeric" } as const;
     return `${start.toLocaleDateString("pt-BR", opts)} – ${end.toLocaleDateString("pt-BR", opts)}`;
+  };
+
+  const formatShortDate = (d: Date) => {
+    return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   };
 
   const goPrev = () => setActiveWeekIdx((i) => Math.max(0, i - 1));
@@ -91,13 +97,25 @@ export function OppsClient({ semanas: initial }: Props) {
     if (!newOpp.nome.trim() || !activeSemana) return;
     setAddingOpp(true);
     try {
-      const item = await createOppItem(activeSemana.id, {
-        nomeEmpreendimento: newOpp.nome.trim(),
-        localizacao: newOpp.localizacao || undefined,
-        preco: newOpp.preco || undefined,
-        condicoes: newOpp.condicoes || undefined,
-        userId: user?.id,
+      const result = await fetch('/api/opps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          semanaId: activeSemana.id,
+          nomeEmpreendimento: newOpp.nome.trim(),
+          localizacao: newOpp.localizacao || null,
+          preco: newOpp.preco || null,
+          condicoes: newOpp.condicoes || null,
+          userId: user?.id,
+        }),
       });
+      const data = await result.json();
+      if (!result.ok) {
+        alert(data.error || "Erro ao criar");
+        return;
+      }
+      const item = data.item;
       setSemanas((prev) =>
         prev.map((s, i) =>
           i === activeWeekIdx
@@ -112,9 +130,25 @@ export function OppsClient({ semanas: initial }: Props) {
   };
 
   const handleToggleDestaque = async (item: OppItem) => {
-    if (!activeSemana) return;
+    const currentDestaques = semanas[activeWeekIdx].items.filter((i) => i.destaque).length;
+
+    if (!item.destaque && currentDestaques >= 2) {
+      alert("Máximo de 2 oportunidades selecionadas por semana");
+      return;
+    }
+
+    const result = await fetch('/api/opps', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'toggle-destaque', id: item.id }),
+    });
+    const data = await result.json();
+    if (!result.ok) {
+      alert(data.error || "Erro ao atualizar");
+      return;
+    }
+
     const newDestaque = !item.destaque;
-    await updateOppItem(item.id, { destaque: newDestaque });
     setSemanas((prev) =>
       prev.map((s, i) =>
         i === activeWeekIdx
@@ -129,6 +163,29 @@ export function OppsClient({ semanas: initial }: Props) {
     );
   };
 
+  const handleSaveJustificativa = async (item: OppItem) => {
+    if (!editJustificativaText.trim()) return;
+    await fetch('/api/opps', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update-justificativa', id: item.id, justificativa: editJustificativaText.trim() }),
+    });
+    setSemanas((prev) =>
+      prev.map((s, i) =>
+        i === activeWeekIdx
+          ? {
+              ...s,
+              items: s.items.map((it) =>
+                it.id === item.id ? { ...it, justificativa: editJustificativaText.trim() } : it
+              ),
+            }
+          : s
+      )
+    );
+    setEditingJustificativa(null);
+    setEditJustificativaText("");
+  };
+
   const handleUpdateTexto = (
     id: string,
     field: "textoWhatsapp" | "textoEmail",
@@ -141,7 +198,7 @@ export function OppsClient({ semanas: initial }: Props) {
     }
   };
 
-  const handleSaveTextoAll = async (
+  const handleSaveTexto = async (
     item: OppItem,
     field: "textoWhatsapp" | "textoEmail"
   ) => {
@@ -149,7 +206,11 @@ export function OppsClient({ semanas: initial }: Props) {
     if (value === undefined) return;
     setSaving(item.id);
     try {
-      await updateOppItem(item.id, { [field]: value });
+      await fetch('/api/opps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update-texto', id: item.id, field, value }),
+      });
       setSemanas((prev) =>
         prev.map((s, i) =>
           i === activeWeekIdx
@@ -167,33 +228,13 @@ export function OppsClient({ semanas: initial }: Props) {
     }
   };
 
-  const handleToggleDisparado = async (item: OppItem) => {
-    await updateOppItem(item.id, {
-      Disparado: !item.Disparado,
-      dataDisparo: !item.Disparado ? new Date() : undefined});
-    setSemanas((prev) =>
-      prev.map((s, i) =>
-        i === activeWeekIdx
-          ? {
-              ...s,
-              items: s.items.map((it) =>
-                it.id === item.id
-                  ? {
-                      ...it,
-                      Disparado: !it.Disparado,
-                      dataDisparo: !it.Disparado ? new Date() : null,
-                    }
-                  : it
-              ),
-            }
-          : s
-      )
-    );
-  };
-
   const handleDeleteOpp = async (item: OppItem) => {
     if (!confirm("Excluir esta oportunidade?")) return;
-    await deleteOppItem(item.id);
+    await fetch('/api/opps', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', id: item.id }),
+    });
     setSemanas((prev) =>
       prev.map((s, i) =>
         i === activeWeekIdx
@@ -206,21 +247,23 @@ export function OppsClient({ semanas: initial }: Props) {
   const destaques = activeSemana?.items.filter((i) => i.destaque) ?? [];
   const naoDestaques = activeSemana?.items.filter((i) => !i.destaque) ?? [];
 
-  const debouncedSave = useCallback(
-    (id: string, field: "textoWhatsapp" | "textoEmail", debouncedValue: string) => {
-      const timeout = setTimeout(() => {
-        handleSaveTextoAll(
-          { id } as OppItem,
-          field
-        );
-      }, 800);
-      return () => clearTimeout(timeout);
-    },
-    []
-  );
+  // History: all weeks with selected opps
+  const historyData = useMemo(() => {
+    return semanas
+      .filter((s) => s.items.some((i) => i.destaque))
+      .map((s) => ({
+        week: formatShortDate(new Date(s.weekStart)),
+        fullWeek: formatWeek(new Date(s.weekStart)),
+        selected: s.items.filter((i) => i.destaque).map((i) => ({
+          name: i.nomeEmpreendimento,
+          justificativa: i.justificativa,
+        })),
+      }))
+      .sort((a, b) => new Date(b.fullWeek).getTime() - new Date(a.fullWeek).getTime());
+  }, [semanas]);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <BackButton />
 
       <div className="mb-6">
@@ -228,232 +271,361 @@ export function OppsClient({ semanas: initial }: Props) {
           Opps da Semana
         </h1>
         <p className="text-gray-500">
-          Registro semanal das oportunidades em destaque — selecione as 2
-          melhores e crie textos
+          Selecione as 2 melhores oportunidades da semana e crie os textos
         </p>
       </div>
 
-      {/* Seletor de semana */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="icon" onClick={goPrev} disabled={activeWeekIdx === 0}>
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-        <span className="font-medium text-gray-700 min-w-[200px] text-center">
-          {activeSemana ? formatWeek(new Date(activeSemana.weekStart)) : "—"}
-        </span>
+      {/* Seletor de semana e histórico */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" onClick={goPrev} disabled={activeWeekIdx === 0}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span className="font-medium text-gray-700 min-w-[200px] text-center">
+            {activeSemana ? formatWeek(new Date(activeSemana.weekStart)) : "—"}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goNext}
+            disabled={activeWeekIdx >= semanas.length - 1}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
         <Button
-          variant="outline"
-          size="icon"
-          onClick={goNext}
-          disabled={activeWeekIdx >= semanas.length - 1}
+          variant={showHistory ? "default" : "outline"}
+          size="sm"
+          onClick={() => setShowHistory(!showHistory)}
         >
-          <ChevronRight className="w-4 h-4" />
+          <History className="w-4 h-4" />
+          {showHistory ? "Ocultar histórico" : "Ver histórico"}
         </Button>
       </div>
 
-      {/* Form adicionar opp */}
+      {/* Histórico */}
+      {showHistory && (
+        <Card className="mb-6 bg-gray-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <History className="w-4 h-4" />
+              Histórico de Opps Selecionadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {historyData.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">
+                Nenhuma opp selecionada ainda
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {historyData.map((entry, idx) => (
+                  <div key={idx} className="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+                    <p className="font-medium text-sm text-gray-700 mb-1">{entry.fullWeek}</p>
+                    <div className="flex gap-4">
+                      {entry.selected.map((sel, selIdx) => (
+                        <div key={selIdx} className="flex-1 bg-white rounded-lg p-2 border">
+                          <p className="font-medium text-sm text-blue-600">{sel.name}</p>
+                          {sel.justificativa && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{sel.justificativa}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Resumo da semana */}
+      {activeSemana && (
+        <Card className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">
+                    {activeSemana.items.length} oportunidades esta semana
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {destaques.length === 2
+                      ? "2 selecionadas para destaque"
+                      : destaques.length > 0
+                      ? `${destaques.length} de 2 selecionadas`
+                      : "Nenhuma selecionada"}
+                  </p>
+                </div>
+                {destaques.length === 2 && (
+                  <Badge variant="success" className="flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    Completo
+                  </Badge>
+                )}
+              </div>
+              <Trophy className="w-6 h-6 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Adicionar nova opp */}
       <Card className="mb-6">
-        <CardContent className="p-4 space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Adicionar Oportunidade</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Input
-              placeholder="Nome do empreendimento..."
+              placeholder="Nome (ex: Canasvieiras Spot - 211)"
               value={newOpp.nome}
               onChange={(e) => setNewOpp((p) => ({ ...p, nome: e.target.value }))}
               onKeyDown={(e) => e.key === "Enter" && handleAddOpp()}
             />
             <Input
-              placeholder="Localização..."
+              placeholder="Localização"
               value={newOpp.localizacao}
               onChange={(e) => setNewOpp((p) => ({ ...p, localizacao: e.target.value }))}
             />
             <Input
-              placeholder="Preço (ex: R$ 500k)..."
+              placeholder="Preço (ex: R$ 263.871,91)"
               value={newOpp.preco}
               onChange={(e) => setNewOpp((p) => ({ ...p, preco: e.target.value }))}
             />
             <Input
-              placeholder="Condições..."
+              placeholder="Condições (ex: 6x, ágio zero)"
               value={newOpp.condicoes}
               onChange={(e) => setNewOpp((p) => ({ ...p, condicoes: e.target.value }))}
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-3">
             <Button onClick={handleAddOpp} disabled={addingOpp || !newOpp.nome.trim()}>
               <Plus className="w-4 h-4" />
-              Adicionar Opp
+              Adicionar
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Em destaque */}
-      {destaques.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-            Em Destaque ({destaques.length})
-          </h2>
-          <div className="space-y-3">
-            {destaques.map((item) => (
-              <Card key={item.id} className="border-blue-200 bg-blue-50">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-base">{item.nomeEmpreendimento}</CardTitle>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {item.localizacao && (
-                          <Badge variant="secondary">{item.localizacao}</Badge>
-                        )}
-                        {item.preco && (
-                          <Badge variant="secondary">{item.preco}</Badge>
-                        )}
-                        {item.condicoes && (
-                          <Badge variant="outline">{item.condicoes}</Badge>
+      {/* Lista de todas as opps */}
+      {activeSemana?.items.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>Nenhuma oportunidade cadastrada esta semana.</p>
+          <p className="text-sm">Adicione acima as 8 opps recebidas.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Em destaque (selecionadas) */}
+          {destaques.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-yellow-500" />
+                Selecionadas ({destaques.length}/2)
+              </h2>
+              <div className="space-y-4">
+                {destaques.map((item, idx) => (
+                  <Card key={item.id} className="border-yellow-300 bg-gradient-to-r from-yellow-50 to-orange-50">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">
+                            #{idx + 1}
+                          </span>
+                          <div>
+                            <CardTitle className="text-lg">{item.nomeEmpreendimento}</CardTitle>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {item.localizacao && (
+                                <Badge variant="secondary">{item.localizacao}</Badge>
+                              )}
+                              {item.preco && (
+                                <Badge variant="secondary" className="font-mono">{item.preco}</Badge>
+                              )}
+                              {item.condicoes && (
+                                <Badge variant="outline">{item.condicoes}</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleDestaque(item)}
+                            className="text-yellow-600"
+                          >
+                            <StarOff className="w-4 h-4" />
+                            Remover
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Justificativa */}
+                      <div className="bg-white rounded-lg p-3 border">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                            <Edit2 className="w-3 h-3" />
+                            Justificativa da escolha
+                          </label>
+                          {editingJustificativa === item.id ? (
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="ghost" onClick={() => handleSaveJustificativa(item)}>
+                                <Check className="w-3 h-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditingJustificativa(null)}>
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingJustificativa(item.id);
+                                setEditJustificativaText(item.justificativa || "");
+                              }}
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
+                        {editingJustificativa === item.id ? (
+                          <Textarea
+                            value={editJustificativaText}
+                            onChange={(e) => setEditJustificativaText(e.target.value)}
+                            placeholder="Por que você escolheu esta opp? (ex: 41% abaixo do mercado, entrega esse ano...)"
+                            rows={3}
+                            className="text-sm"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                            {item.justificativa || "Clique em editar para adicionar a justificativa..."}
+                          </p>
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge variant={item.Disparado ? "success" : "warning"}>
-                        {item.Disparado ? "Disparado" : "Pendente"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleDisparado(item)}
-                        className="text-xs"
-                      >
-                        {item.Disparado ? "Marcar pendente" : "Marcar disparado"}
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {/* WhatsApp */}
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <MessageSquare className="w-4 h-4 text-green-600" />
-                      <label className="text-sm font-medium text-gray-700">Texto WhatsApp</label>
-                    </div>
-                    <Textarea
-                      value={
-                        editWhatsapp[item.id] !== undefined
-                          ? editWhatsapp[item.id]
-                          : item.textoWhatsapp ?? ""
-                      }
-                      onChange={(e) => handleUpdateTexto(item.id, "textoWhatsapp", e.target.value)}
-                      rows={3}
-                      placeholder="Texto para WhatsApp..."
-                      className="text-sm"
-                    />
-                    <div className="flex justify-end mt-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSaveTextoAll(item, "textoWhatsapp")}
-                        disabled={saving === item.id}
-                      >
-                        Salvar
-                      </Button>
-                    </div>
-                  </div>
-                  {/* E-mail */}
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Mail className="w-4 h-4 text-blue-600" />
-                      <label className="text-sm font-medium text-gray-700">Texto E-mail</label>
-                    </div>
-                    <Textarea
-                      value={
-                        editEmail[item.id] !== undefined
-                          ? editEmail[item.id]
-                          : item.textoEmail ?? ""
-                      }
-                      onChange={(e) => handleUpdateTexto(item.id, "textoEmail", e.target.value)}
-                      rows={3}
-                      placeholder="Texto para e-mail..."
-                      className="text-sm"
-                    />
-                    <div className="flex justify-end mt-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSaveTextoAll(item, "textoEmail")}
-                        disabled={saving === item.id}
-                      >
-                        Salvar
-                      </Button>
-                    </div>
-                  </div>
-                  {/* Remover destaque */}
-                  <div className="flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleToggleDestaque(item)}
-                    >
-                      <StarOff className="w-4 h-4" />
-                      Remover destaque
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Demais opps */}
-      {naoDestaques.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-            Demais Oportunidades
-          </h2>
-          <div className="space-y-2">
-            {naoDestaques.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="p-4 flex items-start gap-3">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.nomeEmpreendimento}</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {item.localizacao && (
-                        <span className="text-xs text-gray-500">{item.localizacao}</span>
-                      )}
-                      {item.preco && (
-                        <span className="text-xs text-gray-500">{item.preco}</span>
-                      )}
-                      {item.condicoes && (
-                        <span className="text-xs text-gray-500">{item.condicoes}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleToggleDestaque(item)}
-                    >
-                      <Star className="w-4 h-4" />
-                      Destacar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteOpp(item)}
-                      className="text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+                      {/* WhatsApp */}
+                      <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-green-700 flex items-center gap-1">
+                            <MessageSquare className="w-4 h-4" />
+                            Texto WhatsApp
+                          </label>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSaveTexto(item, "textoWhatsapp")}
+                            disabled={saving === item.id}
+                            className="text-green-700 border-green-300"
+                          >
+                            Salvar
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={
+                            editWhatsapp[item.id] !== undefined
+                              ? editWhatsapp[item.id]
+                              : item.textoWhatsapp ?? ""
+                          }
+                          onChange={(e) => handleUpdateTexto(item.id, "textoWhatsapp", e.target.value)}
+                          placeholder="Cole aqui o texto de WhatsApp..."
+                          rows={6}
+                          className="text-sm bg-white"
+                        />
+                      </div>
 
-      {activeSemana?.items.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          <Plus className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhuma oportunidade cadastrada esta semana.</p>
+                      {/* E-mail */}
+                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-blue-700 flex items-center gap-1">
+                            <Mail className="w-4 h-4" />
+                            Texto E-mail
+                          </label>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSaveTexto(item, "textoEmail")}
+                            disabled={saving === item.id}
+                            className="text-blue-700 border-blue-300"
+                          >
+                            Salvar
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={
+                            editEmail[item.id] !== undefined
+                              ? editEmail[item.id]
+                              : item.textoEmail ?? ""
+                          }
+                          onChange={(e) => handleUpdateTexto(item.id, "textoEmail", e.target.value)}
+                          placeholder="Cole aqui o texto de e-mail..."
+                          rows={6}
+                          className="text-sm bg-white"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Demais opps (não selecionadas) */}
+          {naoDestaques.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Outras Oportunidades ({naoDestaques.length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {naoDestaques.map((item) => (
+                  <Card key={item.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{item.nomeEmpreendimento}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {item.localizacao && (
+                              <span className="text-xs text-gray-500">{item.localizacao}</span>
+                            )}
+                            {item.preco && (
+                              <span className="text-xs font-mono bg-gray-100 px-1 rounded">{item.preco}</span>
+                            )}
+                            {item.condicoes && (
+                              <span className="text-xs text-gray-600">{item.condicoes}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 ml-2">
+                          {destaques.length < 2 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleToggleDestaque(item)}
+                              className="text-yellow-600 border-yellow-300"
+                            >
+                              <Star className="w-4 h-4" />
+                              Selecionar
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteOpp(item)}
+                            className="text-gray-400 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

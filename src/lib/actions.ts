@@ -149,6 +149,7 @@ export async function updateOppItem(
     condicoes: string;
     destaque: boolean;
     tipoDestaque: string;
+    justificativa: string;
     textoWhatsapp: string;
     textoEmail: string;
     observacoes: string;

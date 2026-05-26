@@ -68,6 +68,7 @@ model OppItem {
   condicoes          String?
   destaque           Boolean   @default(false)
   tipoDestaque       String?
+  justificativa      String?
   textoWhatsapp      String?
   textoEmail         String?
   observacoes        String?
