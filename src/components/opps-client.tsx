@@ -132,26 +132,53 @@ export function OppsClient({ semanas: initial }: Props) {
   };
 
   function parseBulkOpp(line: string): { nome: string; preco: string | null; condicoes: string } {
-    // Formato: "Nome - Código: Preço ; Condições" ou "Nome - Código: condição especial"
     let nome = line.trim();
     let preco: string | null = null;
     let condicoes = "";
 
-    // Extrai preço após ": " (formato "Nome - Código: R$ xxx")
-    const precoMatch = nome.match(/:\s*(R\$\s*[\d\.,]+)/);
+    // Extract price - any R$ value with numbers
+    const precoMatch = nome.match(/R\$\s*[\d\.,]+/);
     if (precoMatch) {
-      preco = precoMatch[1];
-      // Remove o preço do nome
-      nome = nome.substring(0, nome.indexOf(":")).trim();
+      preco = precoMatch[0];
     }
 
-    // Extrai condições após ";" ou após o preço
-    if (line.includes(";")) {
-      const parts = line.split(";");
-      if (parts.length > 1) {
-        condicoes = parts.slice(1).map(p => p.trim()).filter(p => p && !p.match(/^R\$/)).join("; ");
+    // Extract conditions - keywords that indicate features
+    const conditionKeywords = [
+      "ágio zero", "lançamento", "entrega", "vista mar", "garden",
+      "parcelamento", "parcelas", "abaixo do", "abaixo de", "abaixo",
+      "6x", "10x", "3x", "5x", "8x", "até 3x", "até 6x", "até 8x", "até 10x",
+      "aceita", "previsão", "obra", "obras", "distrato", "beira-mar",
+      "condição", "condições", "menor", "maior", "flexível", "flexivel",
+      "entrada", "checkout", "chekout", "cota mais", "cabana", "faturamento",
+    ];
+
+    const lowerLine = nome.toLowerCase();
+    const foundConditions: string[] = [];
+
+    for (const keyword of conditionKeywords) {
+      if (lowerLine.includes(keyword)) {
+        // Find the context around the keyword
+        const idx = lowerLine.indexOf(keyword);
+        const start = Math.max(0, idx - 5);
+        const end = Math.min(nome.length, idx + keyword.length + 15);
+        let context = nome.substring(start, end).trim();
+        // Clean up
+        context = context.replace(/^[^a-zA-Zà-źÀ-Ź]*/, "").replace(/[^a-zA-Zà-źÀ-Ź0-9\s\.,\-R$%]+$/, "");
+        if (context && context.length > 2 && !foundConditions.includes(context)) {
+          foundConditions.push(context);
+        }
       }
     }
+
+    // Build conditions string from found keywords with context
+    condicoes = foundConditions.join("; ");
+
+    // Clean nome - remove price and extra info
+    nome = nome.replace(/R\$\s*[\d\.,]+/g, "").trim();
+    // Remove multiple spaces
+    nome = nome.replace(/\s+/g, " ").trim();
+    // Remove trailing semicolons and colons
+    nome = nome.replace(/[:;]\s*$/, "").trim();
 
     return { nome, preco, condicoes };
   }
