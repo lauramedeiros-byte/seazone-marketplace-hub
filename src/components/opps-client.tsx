@@ -124,6 +124,7 @@ export function OppsClient({ semanas: initial }: Props) {
         )
       );
       setNewOpp({ nome: "", localizacao: "", preco: "", condicoes: "" });
+      window.location.reload();
     } finally {
       setAddingOpp(false);
     }
