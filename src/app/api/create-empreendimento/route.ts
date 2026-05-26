@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-
     const { nomeEmpreendimento } = await request.json();
 
     if (!nomeEmpreendimento?.trim()) {
@@ -16,12 +13,15 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log("Criando empreendimento:", nomeEmpreendimento);
+
     const result = await db.repescagemEmpreendimento.create({
       data: {
         nomeEmpreendimento: nomeEmpreendimento.trim(),
-        criadoPorId: userId || null,
       },
     });
+
+    console.log("Criado com ID:", result.id);
 
     revalidatePath("/respescagem");
 
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Erro ao criar empreendimento:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erro interno" },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
