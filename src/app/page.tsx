@@ -1,65 +1,100 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  Target,
+  FileText,
+  Inbox,
+  TrendingUp,
+  BarChart3,
+  Search,
+  RefreshCw,
+} from "lucide-react";
+import { SubCardSearch } from "@/components/sub-card-search";
 
-export default function Home() {
+const subCards = [
+  {
+    href: "/acompanhamento-de-metas",
+    titulo: "Acompanhamento de Metas",
+    descricao: "Visualize e acompanhe suas metas trimestrais",
+    icone: Target,
+    cor: "text-green-600",
+  },
+  {
+    href: "/artefatos-de-consulta",
+    titulo: "Artefatos de Consulta",
+    descricao: "Cotas, empreendimentos, faróis de criativos e mais",
+    icone: Search,
+    cor: "text-purple-600",
+  },
+  {
+    href: "/briefings",
+    titulo: "Briefings",
+    descricao: "Gerencie briefs de campanha com proteção por código",
+    icone: FileText,
+    cor: "text-amber-600",
+  },
+  {
+    href: "/losts",
+    titulo: "Losts",
+    descricao:
+      "Agrupamento de motivos, criação de conteúdo e registro de disparos",
+    icone: Inbox,
+    cor: "text-red-600",
+  },
+  {
+    href: "/opps-da-semana",
+    titulo: "Opps da Semana",
+    descricao:
+      "Registro semanal das oportunidades em destaque e textos criados",
+    icone: TrendingUp,
+    cor: "text-blue-600",
+  },
+  {
+    href: "/respescagem",
+    titulo: "Repescagem",
+    descricao: "Auditoria de conteúdo de empreendimentos",
+    icone: RefreshCw,
+    cor: "text-orange-600",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+          Marketplace Hub
+        </h1>
+        <p className="text-gray-500">
+          Centralizador de tarefas — Product Marketing
+        </p>
+      </div>
+
+      <SubCardSearch cards={subCards} />
+
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {subCards.map((card) => {
+          const Icon = card.icone;
+          return (
+            <Link key={card.href} href={card.href}>
+              <div className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all p-5 cursor-pointer h-full">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2.5 rounded-lg bg-gray-50 ${card.cor}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {card.titulo}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-0.5 leading-relaxed">
+                      {card.descricao}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

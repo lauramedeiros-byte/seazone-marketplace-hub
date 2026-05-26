@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+
+  repescagemEmpreendimentos RepescagemEmpreendimento[]
+  oppSemanas               OppSemana[]
+  oppItems                  OppItem[]
+  lostGrupos                LostGrupo[]
+  lostDisparos              LostDisparo[]
+  lostHistoricos            LostHistorico[]
+  briefings                 Briefing[]
+  metas                      Meta[]
+  artefatos                  ArtefatoConfig[]
+}
+
+model RepescagemEmpreendimento {
+  id                    String   @id @default(cuid())
+  nomeEmpreendimento    String
+  textoConteudo         String?
+  dataUltimaAtualizacao DateTime?
+  atualizadoPor         String?
+  criadoPorId           String?
+  criadoPor             User?    @relation(fields: [criadoPorId], references: [id])
+  criadoEm              DateTime @default(now())
+  atualizadoEm         DateTime @updatedAt
+  numeros               RepescagemNumero[]
+}
+
+model RepescagemNumero {
+  id               String   @id @default(cuid())
+  campoNome        String
+  valorAtual       String?
+  dataChecksum     DateTime?
+  sinalizador      String?
+  empreendimentoId String
+  empreendimento   RepescagemEmpreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  criadoEm        DateTime @default(now())
+}
+
+model OppSemana {
+  id          String     @id @default(cuid())
+  weekStart   DateTime   @unique
+  metaSemana  Float?
+  observacoes String?
+  criadoPorId String?
+  criadoPor  User?      @relation(fields: [criadoPorId], references: [id])
+  criadoEm    DateTime   @default(now())
+  items       OppItem[]
+}
+
+model OppItem {
+  id                 String    @id @default(cuid())
+  nomeEmpreendimento String
+  localizacao        String?
+  preco              String?
+  condicoes          String?
+  destaque           Boolean   @default(false)
+  tipoDestaque       String?
+  textoWhatsapp      String?
+  textoEmail         String?
+  observacoes        String?
+  Disparado          Boolean   @default(false)
+  dataDisparo        DateTime?
+  comentarioDisparo  String?
+  semanaId           String
+  semana             OppSemana @relation(fields: [semanaId], references: [id], onDelete: Cascade)
+  criadoPorId        String?
+  criadoPor          User?     @relation(fields: [criadoPorId], references: [id])
+  criadoEm           DateTime  @default(now())
+  atualizadoEm       DateTime  @updatedAt
+}
+
+model LostGrupo {
+  id         String        @id @default(cuid())
+  nomeMotivo String
+  Disparos   LostDisparo[]
+  criadoPorId String?
+  criadoPor  User?         @relation(fields: [criadoPorId], references: [id])
+  criadoEm   DateTime      @default(now())
+  atualizadoEm DateTime   @updatedAt
+}
+
+model LostDisparo {
+  id                    String         @id @default(cuid())
+  dataDisparo           DateTime?
+  dataRangeInicio       DateTime?
+  dataRangeFim          DateTime?
+  etapaFiltro           String?
+  textoEmail            String?
+  textoWhatsapp         String?
+  statusDisparo         String         @default("rascunho")
+  comentarioNaoDisparo  String?
+  Disparado             Boolean        @default(false)
+  comentarioDisparo    String?
+  grupoId               String
+  grupo                 LostGrupo      @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  criadoPorId           String?
+  criadoPor             User?          @relation(fields: [criadoPorId], references: [id])
+  criadoEm              DateTime       @default(now())
+  atualizadoEm          DateTime       @updatedAt
+  historico             LostHistorico[]
+}
+
+model LostHistorico {
+  id         String       @id @default(cuid())
+  tipoEvento String
+  comentario String?
+  dataEvento DateTime     @default(now())
+  disparoId  String
+  disparo    LostDisparo  @relation(fields: [disparoId], references: [id], onDelete: Cascade)
+  criadoPorId String?
+  criadoPor  User?        @relation(fields: [criadoPorId], references: [id])
+}
+
+model Briefing {
+  id             String    @id @default(cuid())
+  titulo          String
+  empresa         String?
+  canal           String?
+  formularioJson  Json?
+  status          String    @default("rascunho")
+  codigoProtecao  String?
+  criadoPorId     String
+  criadoPor       User      @relation(fields: [criadoPorId], references: [id])
+  criadoEm        DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+  dataPublicacao  DateTime?
+}
+
+model Meta {
+  id                 String   @id @default(cuid())
+  trimestre          String
+  metaNome            String
+  tipo               String
+  valorMeta          Float
+  valorAtual         Float    @default(0)
+  metricasPeriodicas Json?
+  criadoPorId        String
+  criadoPor          User     @relation(fields: [criadoPorId], references: [id])
+  criadoEm           DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
+}
+
+model ArtefatoConfig {
+  id                String   @id @default(cuid())
+  tipo              String
+  titulo            String
+  descricao         String?
+  descricaoDados    String?
+  configuracaoJson  Json?
+  criadoPorId       String
+  criadoPor         User     @relation(fields: [criadoPorId], references: [id])
+  criadoEm          DateTime @default(now())
+  atualizadoEm     DateTime @updatedAt
+}
