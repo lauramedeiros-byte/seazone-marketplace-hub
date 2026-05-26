@@ -42,6 +42,8 @@ model RepescagemNumero {
   valorAtual       String?
   dataChecksum     DateTime?
   sinalizador      String?
+  verificado       Boolean  @default(false)
+  dataVerificado   DateTime?
   empreendimentoId String
   empreendimento   RepescagemEmpreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
   criadoEm        DateTime @default(now())

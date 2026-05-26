@@ -78,6 +78,28 @@ export async function deleteRepescagemNumero(id: string) {
   revalidatePath("/respescagem");
 }
 
+export async function toggleVerificadoNumero(id: string, verificado: boolean) {
+  await db.repescagemNumero.update({
+    where: { id },
+    data: {
+      verificado,
+      dataVerificado: verificado ? new Date() : null,
+    },
+  });
+  revalidatePath("/respescagem");
+}
+
+export async function resetarAuditoria(empreendimentoId: string) {
+  await db.repescagemNumero.updateMany({
+    where: { empreendimentoId },
+    data: {
+      verificado: false,
+      dataVerificado: null,
+    },
+  });
+  revalidatePath("/respescagem");
+}
+
 // ── Opps da Semana ─────────────────────────────────────────────────────────
 
 export async function getOrCreateOppSemana(weekStart: Date) {
