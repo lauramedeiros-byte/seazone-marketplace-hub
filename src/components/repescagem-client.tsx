@@ -60,13 +60,15 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     if (!newEmpNome.trim()) return;
     setAddingEmp(true);
     try {
+      console.log("Criando:", newEmpNome.trim(), "userId:", user?.id);
       await createRepescagemEmpreendimento(newEmpNome.trim(), user?.id || undefined);
       setNewEmpNome("");
       // Refresh the list
       window.location.reload();
-    } catch (error) {
-      console.error("Erro ao criar:", error);
-      alert("Erro ao criar empreendimento. Tente novamente.");
+    } catch (error: unknown) {
+      console.error("Erro completo:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert("Erro ao criar empreendimento: " + errorMessage);
     } finally {
       setAddingEmp(false);
     }
