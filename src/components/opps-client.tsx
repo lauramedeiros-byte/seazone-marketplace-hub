@@ -27,6 +27,7 @@ import {
   History,
   Edit2,
   X,
+  ExternalLink,
 } from "lucide-react";
 
 interface OppItem {
@@ -480,6 +481,22 @@ export function OppsClient({ semanas: initial }: Props) {
           Selecione as 2 melhores oportunidades da semana e crie os textos
         </p>
       </div>
+
+      {/* Link para Opps Mônica */}
+      <Card className="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-700">Opps Mônica (Comunidade)</p>
+            <p className="text-xs text-gray-500">Preencha as opps para a comunidade da Mônica</p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href="https://opps-seazone.vercel.app/#marketplace" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4" />
+              Abrir Opps Mônica
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Seletor de semana e histórico */}
       <div className="flex items-center justify-between mb-6">
