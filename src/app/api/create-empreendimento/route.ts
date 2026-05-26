@@ -13,15 +13,11 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("Criando empreendimento:", nomeEmpreendimento);
-
     const result = await db.repescagemEmpreendimento.create({
       data: {
         nomeEmpreendimento: nomeEmpreendimento.trim(),
       },
     });
-
-    console.log("Criado com ID:", result.id);
 
     revalidatePath("/respescagem");
 
