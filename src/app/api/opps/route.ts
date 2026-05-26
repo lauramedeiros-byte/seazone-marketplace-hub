@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     switch (action) {
       case "create": {
-        const { semanaId, nomeEmpreendimento, localizacao, preco, condicoes, userId } = data;
+        const { semanaId, nomeEmpreendimento, localizacao, preco, condicoes } = data;
         const item = await db.oppItem.create({
           data: {
             semanaId,
@@ -16,7 +16,6 @@ export async function POST(request: Request) {
             localizacao: localizacao || null,
             preco: preco || null,
             condicoes: condicoes || null,
-            criadoPorId: userId || null,
           },
         });
         return NextResponse.json({ success: true, item });

@@ -236,7 +236,6 @@ export function OppsClient({ semanas: initial }: Props) {
             localizacao: null,
             preco: p.preco,
             condicoes: p.condicoes || null,
-            userId: user?.id,
           }),
         });
 
