@@ -51,10 +51,13 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     if (!newEmpNome.trim()) return;
     setAddingEmp(true);
     try {
-      await createRepescagemEmpreendimento(newEmpNome.trim(), user?.id);
+      await createRepescagemEmpreendimento(newEmpNome.trim(), user?.id || undefined);
       setNewEmpNome("");
       // Refresh the list
       window.location.reload();
+    } catch (error) {
+      console.error("Erro ao criar:", error);
+      alert("Erro ao criar empreendimento. Tente novamente.");
     } finally {
       setAddingEmp(false);
     }
