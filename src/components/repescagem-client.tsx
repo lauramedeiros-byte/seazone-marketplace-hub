@@ -60,10 +60,15 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     if (!newEmpNome.trim()) return;
     setAddingEmp(true);
     try {
-      console.log("Criando:", newEmpNome.trim(), "userId:", user?.id);
-      await createRepescagemEmpreendimento(newEmpNome.trim(), user?.id || undefined);
+      // Don't pass userId - let the database handle it
+      const result = await fetch('/api/create-empreendimento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nomeEmpreendimento: newEmpNome.trim() }),
+      });
+      const data = await result.json();
+      if (!result.ok) throw new Error(data.error || 'Erro desconhecido');
       setNewEmpNome("");
-      // Refresh the list
       window.location.reload();
     } catch (error: unknown) {
       console.error("Erro completo:", error);
