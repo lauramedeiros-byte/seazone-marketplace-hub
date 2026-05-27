@@ -122,7 +122,7 @@ export function BriefingsClient({ briefings: initial }: Props) {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Briefings</h1>
         <p className="text-gray-500">
-          Gerencie briefs de campanha — rascunhos, ativos e arquivados
+          Centralizador de briefings — Pontos fortes, fábrica e briefs de campanha
         </p>
       </div>
 
@@ -142,7 +142,23 @@ export function BriefingsClient({ briefings: initial }: Props) {
         </CardContent>
       </Card>
 
-      {/* Criar novo */}
+      {/* Pontos Fortes e Briefings */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-gray-900">Pontos fortes e informações para briefing</p>
+            <p className="text-xs text-gray-500 mt-0.5">Aqui você encontra todos os pontos fortes de cada empreendimento, os do's e dont's e perfil de hóspede de cada um.</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-gray-900">Briefings</p>
+            <p className="text-xs text-gray-500 mt-0.5">Aqui você encontra a lista de briefings de mídia paga ou orgânicos de Marketplace, baseados nos Pontos Fortes de cada um.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Criar novo briefing (demo) */}
       <Card className="mb-6">
         <CardContent className="p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
