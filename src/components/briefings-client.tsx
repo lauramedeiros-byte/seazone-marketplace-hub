@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import {
   Plus,
   Trash2,
@@ -127,35 +128,45 @@ export function BriefingsClient({ briefings: initial }: Props) {
       </div>
 
       {/* Link para Fábrica de Briefings */}
-      <Card className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+      <Card className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer">
         <CardContent className="p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-700">Fábrica de Briefings</p>
             <p className="text-xs text-gray-500">Briefings reais de Marketplace e SZI</p>
           </div>
-          <Button variant="outline" size="sm" asChild>
-            <a href="https://fabrica-briefings.vercel.app/" target="_blank" rel="noopener noreferrer">
+          <a href="https://fabrica-briefings.vercel.app/" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" size="sm">
               <ExternalLink className="w-4 h-4" />
               Abrir
-            </a>
-          </Button>
+            </Button>
+          </a>
         </CardContent>
       </Card>
 
       {/* Pontos Fortes e Briefings */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-gray-900">Pontos fortes e informações para briefing</p>
-            <p className="text-xs text-gray-500 mt-0.5">Aqui você encontra todos os pontos fortes de cada empreendimento, os do's e dont's e perfil de hóspede de cada um.</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-gray-900">Briefings</p>
-            <p className="text-xs text-gray-500 mt-0.5">Aqui você encontra a lista de briefings de mídia paga ou orgânicos de Marketplace, baseados nos Pontos Fortes de cada um.</p>
-          </CardContent>
-        </Card>
+        <Link href="/pontos-fortes">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Pontos fortes e informações para briefing</p>
+                <p className="text-xs text-gray-500 mt-0.5">Aqui você encontra todos os pontos fortes de cada empreendimento, os do's e dont's e perfil de hóspede de cada um.</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-blue-500 shrink-0" />
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/briefings-lista">
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 hover:border-green-400 hover:shadow-md transition-all cursor-pointer">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Briefings</p>
+                <p className="text-xs text-gray-500 mt-0.5">Aqui você encontra a lista de briefings de mídia paga ou orgânicos de Marketplace, baseados nos Pontos Fortes de cada um.</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-green-500 shrink-0" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Criar novo briefing (demo) */}
