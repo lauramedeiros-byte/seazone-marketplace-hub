@@ -23,6 +23,7 @@ import {
   Unlock,
   FileText,
   CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import { createBriefing, updateBriefing, deleteBriefing } from "@/lib/actions";
 
@@ -124,6 +125,22 @@ export function BriefingsClient({ briefings: initial }: Props) {
           Gerencie briefs de campanha — rascunhos, ativos e arquivados
         </p>
       </div>
+
+      {/* Link para Fábrica de Briefings */}
+      <Card className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-700">Fábrica de Briefings</p>
+            <p className="text-xs text-gray-500">Briefings reais de Marketplace e SZI</p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href="https://fabrica-briefings.vercel.app/" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4" />
+              Abrir
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Criar novo */}
       <Card className="mb-6">
