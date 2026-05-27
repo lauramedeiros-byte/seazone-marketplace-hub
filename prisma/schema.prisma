@@ -166,3 +166,10 @@ model ArtefatoConfig {
   criadoEm          DateTime @default(now())
   atualizadoEm     DateTime @updatedAt
 }
+
+model LostBoard {
+  id         String   @id @default(cuid())
+  boardData  Json     // groups, cards, sections, abordagens
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}

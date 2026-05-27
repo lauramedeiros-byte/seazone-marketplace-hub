@@ -316,400 +316,253 @@ function TagInput({ allTags, onAdd }: { allTags: string[]; onAdd: (tag: string) 
   );
 }
 
-// ─── Message editor ────────────────────────────────────────────────────────────
-function MessageEditor({
-  msg,
+// ─── Abordagem (historico) ────────────────────────────────────────────────────
+interface Abordagem {
+  id: string;
+  texto: string;
+  data: string; // YYYY-MM-DD
+  link?: string; // URL do documento/conteúdo
+}
+
+function formatDate(dateStr: string) {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+// ─── Painel de histórico de abordagem ─────────────────────────────────────────
+function AbordagemPanel({
+  groupId,
+  abordagens,
   onChange,
-  onDelete,
 }: {
-  msg: Message;
-  allTags: string[];
-  onChange: (msg: Message) => void;
-  onDelete: (id: string) => void;
-  onAddTag?: (tag: string) => void;
+  groupId: string;
+  abordagens: Record<string, Abordagem[]>;
+  onChange: (abordagens: Record<string, Abordagem[]>) => void;
 }) {
-  const isEmail = msg.type === "email";
-  const typeColor = isEmail
-    ? { bg: "#f0fdf4", border: "#86efac", text: "#15803d" }
-    : { bg: "#fff7ed", border: "#fdba74", text: "#c2410c" };
-  const [showComment, setShowComment] = useState(!!msg.comment);
-  const [imagePreview, setImagePreview] = useState<string | null>(msg.image || null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const items = abordagens[groupId] || [];
+  const ctr = useRef(Date.now());
+  const [showForm, setShowForm] = useState(false);
+  const [novoTexto, setNovoTexto] = useState("");
+  const [novaData, setNovaData] = useState(new Date().toISOString().split("T")[0]);
+  const [novoLink, setNovoLink] = useState("");
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const b64 = ev.target?.result as string;
-      setImagePreview(b64);
-      onChange({ ...msg, image: b64 });
+  const addAbordagem = () => {
+    if (!novoTexto.trim()) return;
+    const nova: Abordagem = {
+      id: `ab_${ctr.current++}`,
+      texto: novoTexto.trim(),
+      data: novaData,
+      link: novoLink.trim() || undefined,
     };
-    reader.readAsDataURL(file);
+    onChange({ ...abordagens, [groupId]: [...items, nova] });
+    setNovoTexto("");
+    setNovaData(new Date().toISOString().split("T")[0]);
+    setNovoLink("");
+    setShowForm(false);
   };
 
-  const removeImage = () => {
-    setImagePreview(null);
-    onChange({ ...msg, image: null });
+  const deleteAbordagem = (id: string) => {
+    onChange({ ...abordagens, [groupId]: items.filter((a) => a.id !== id) });
   };
+
+  const updateAbordagem = (id: string, texto: string) => {
+    onChange({ ...abordagens, [groupId]: items.map((a) => (a.id === id ? { ...a, texto } : a)) });
+  };
+
+  // Ordena por data mais recente primeiro
+  const sorted = [...items].sort((a, b) => (b.data > a.data ? 1 : -1));
 
   return (
-    <div
-      style={{
-        border: `1px solid ${typeColor.border}`,
-        borderRadius: 10,
-        background: typeColor.bg,
-        padding: 12,
-        marginBottom: 10,
-        overflow: "hidden",
-      }}
-    >
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-        <DragHandle />
-        <span
-          style={{
-            padding: "3px 10px",
-            borderRadius: 99,
-            fontSize: 11,
-            fontWeight: 600,
-            background: typeColor.border,
-            color: typeColor.text,
-            flexShrink: 0,
-          }}
-        >
-          {isEmail ? "✉ E-mail" : "💬 WhatsApp"}
-        </span>
-        <span
-          style={{
-            fontSize: 11,
-            color: "#94a3b8",
-            flex: 1,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 3,
-            alignItems: "center",
-          }}
-        >
-          {msg.comment && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 3,
-                background: "#fef9c3",
-                color: "#854d0e",
-                border: "1px solid #fde047",
-                borderRadius: 99,
-                padding: "1px 7px",
-                fontSize: 11,
-                cursor: "pointer",
-              }}
-              onClick={() => setShowComment((v) => !v)}
-              title="Ver comentário"
-            >
-              💬 {msg.comment.slice(0, 30)}
-              {msg.comment.length > 30 ? "..." : ""}
-            </span>
-          )}
-        </span>
-        <button
-          onClick={() => onDelete(msg.id)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "#94a3b8",
-            fontSize: 18,
-            lineHeight: 1,
-            padding: "0 2px",
-            flexShrink: 0,
-          }}
-          title="Remover mensagem"
-        >
-          ×
-        </button>
-      </div>
-
-      {/* Subject (email only) */}
-      {isEmail && (
-        <div style={{ marginBottom: 8 }}>
-          <input
-            value={msg.subject || ""}
-            onChange={(e) => onChange({ ...msg, subject: e.target.value })}
-            placeholder="Assunto do e-mail..."
-            style={{
-              width: "100%",
-              display: "block",
-              padding: "6px 10px",
-              border: `1px solid ${C.border}`,
-              borderRadius: 6,
-              fontSize: 12,
-              outline: "none",
-              background: C.surface,
-              boxSizing: "border-box",
-              wordBreak: "break-word",
-              minWidth: 0,
-            }}
-          />
-        </div>
+    <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px", background: "#fafbff" }}>
+      {items.length === 0 && !showForm && (
+        <p style={{ fontSize: 12, color: "#94a3b8", textAlign: "center", marginBottom: 8 }}>
+          Nenhuma abordagem registrada ainda.
+        </p>
       )}
 
-      {/* Content */}
-      <textarea
-        value={msg.content}
-        onChange={(e) => onChange({ ...msg, content: e.target.value })}
-        placeholder={isEmail ? "Corpo do e-mail..." : "Mensagem WhatsApp..."}
-        rows={4}
-        style={{
-          width: "100%",
-          padding: "7px 10px",
-          border: `1px solid ${C.border}`,
-          borderRadius: 6,
-          fontSize: 12,
-          resize: "vertical",
-          outline: "none",
-          background: C.surface,
-          lineHeight: 1.5,
-          boxSizing: "border-box",
-        }}
-      />
-
-      {/* Image preview */}
-      {imagePreview && (
+      {/* Lista de abordagens */}
+      {sorted.map((ab) => (
         <div
+          key={ab.id}
           style={{
-            marginTop: 8,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
             background: C.surface,
             border: `1px solid ${C.border}`,
             borderRadius: 8,
-            padding: 8,
+            padding: 10,
+            marginBottom: 8,
           }}
         >
-          <img
-            src={imagePreview}
-            alt="Imagem da mensagem"
-            style={{
-              width: 64,
-              height: 64,
-              objectFit: "cover",
-              borderRadius: 6,
-              border: `1px solid ${C.border}`,
-            }}
-          />
-          <div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>Imagem anexada</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: C.blue, background: C.blueSoft, padding: "2px 8px", borderRadius: 99 }}>
+              📅 {formatDate(ab.data)}
+            </span>
             <button
-              onClick={removeImage}
-              style={{
-                marginTop: 4,
-                padding: "3px 10px",
-                borderRadius: 6,
-                border: `1px solid #fca5a5`,
-                background: "#fef2f2",
-                color: "#dc2626",
-                fontSize: 11,
-                cursor: "pointer",
-              }}
+              onClick={() => deleteAbordagem(ab.id)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#cbd5e1", fontSize: 14 }}
+              onMouseOver={(e) => (e.currentTarget.style.color = "#ef4444")}
+              onMouseOut={(e) => (e.currentTarget.style.color = "#cbd5e1")}
+              title="Remover"
             >
-              Remover imagem
+              ×
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <button
-          onClick={() => fileRef.current?.click()}
-          style={{
-            padding: "5px 12px",
-            borderRadius: 7,
-            border: `1px solid #cbd5e1`,
-            background: C.surface,
-            color: "#64748b",
-            fontSize: 11,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-          }}
-          title="Inserir imagem"
-        >
-          🖼️ Imagem
-        </button>
-        <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
-        <button
-          onClick={() => setShowComment((v) => !v)}
-          style={{
-            padding: "5px 12px",
-            borderRadius: 7,
-            border: `1px solid #cbd5e1`,
-            background: msg.comment ? "#fef9c3" : C.surface,
-            color: msg.comment ? "#854d0e" : "#64748b",
-            fontSize: 11,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          {msg.comment ? "💬 Ver comentário" : "💬 Comentar"}
-        </button>
-      </div>
-
-      {/* Comment area */}
-      {showComment && (
-        <div style={{ marginTop: 8 }}>
           <textarea
-            value={msg.comment || ""}
-            onChange={(e) => onChange({ ...msg, comment: e.target.value })}
-            placeholder="Adicione um comentário sobre esta mensagem..."
+            value={ab.texto}
+            onChange={(e) => updateAbordagem(ab.id, e.target.value)}
+            placeholder="Descreva a abordagem feita para este grupo..."
             rows={2}
             style={{
               width: "100%",
-              padding: "7px 10px",
-              border: `1px solid #fde047`,
+              padding: "6px 8px",
+              border: `1px solid ${C.border}`,
               borderRadius: 6,
               fontSize: 12,
               resize: "vertical",
               outline: "none",
-              background: "#fef9c3",
-              lineHeight: 1.5,
+              background: C.surfaceAlt,
+              lineHeight: 1.4,
               boxSizing: "border-box",
-              color: "#854d0e",
+              color: "#374151",
             }}
           />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Messages panel ────────────────────────────────────────────────────────────
-function MessagesPanel({
-  groupId,
-  messages,
-  allTags,
-  onChange,
-}: {
-  groupId: string;
-  messages: Record<string, Message[]>;
-  allTags: string[];
-  onChange: (messages: Record<string, Message[]>) => void;
-}) {
-  const msgs = messages[groupId] || [];
-  const msgCtr = useRef(Date.now());
-  const [dragMsg, setDragMsg] = useState<string | null>(null);
-
-  const addMsg = (type: "email" | "whatsapp") => {
-    const newMsg: Message = {
-      id: `msg_${msgCtr.current++}`,
-      type,
-      content: "",
-      subject: "",
-      tags: [],
-      comment: "",
-      image: null,
-    };
-    onChange({ ...messages, [groupId]: [...msgs, newMsg] });
-  };
-
-  const updateMsg = (updated: Message) => {
-    onChange({ ...messages, [groupId]: msgs.map((m) => (m.id === updated.id ? updated : m)) });
-  };
-
-  const deleteMsg = (id: string) => {
-    onChange({ ...messages, [groupId]: msgs.filter((m) => m.id !== id) });
-  };
-
-  const handleMsgDragStart = (msgId: string) => setDragMsg(msgId);
-  const handleMsgDragEnd = () => setDragMsg(null);
-
-  const handleMsgDrop = (targetId: string) => {
-    if (!dragMsg || dragMsg === targetId) {
-      setDragMsg(null);
-      return;
-    }
-    const arr = [...msgs];
-    const fromIdx = arr.findIndex((m) => m.id === dragMsg);
-    const toIdx = arr.findIndex((m) => m.id === targetId);
-    if (fromIdx === -1 || toIdx === -1) {
-      setDragMsg(null);
-      return;
-    }
-    const [moved] = arr.splice(fromIdx, 1);
-    arr.splice(toIdx, 0, moved);
-    onChange({ ...messages, [groupId]: arr });
-    setDragMsg(null);
-  };
-
-  return (
-    <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 12px 4px", background: "#fafbff" }}>
-      {msgs.length === 0 && (
-        <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 10, textAlign: "center" }}>
-          Nenhuma mensagem neste grupo ainda. Adicione abaixo.
-        </p>
-      )}
-      {msgs.map((msg) => (
-        <div
-          key={msg.id}
-          draggable
-          onDragStart={() => handleMsgDragStart(msg.id)}
-          onDragEnd={handleMsgDragEnd}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleMsgDrop(msg.id);
-          }}
-          style={{ opacity: dragMsg === msg.id ? 0.4 : 1, transition: "opacity .15s" }}
-        >
-          <MessageEditor msg={msg} allTags={allTags} onChange={updateMsg} onDelete={deleteMsg} />
+          {ab.link && (
+            <a
+              href={ab.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 11, color: C.blue, display: "flex", alignItems: "center", gap: 4, marginTop: 6, textDecoration: "none" }}
+            >
+              🔗 {ab.link.length > 50 ? ab.link.substring(0, 50) + "..." : ab.link}
+            </a>
+          )}
         </div>
       ))}
-      <div style={{ display: "flex", gap: 6, paddingBottom: 8 }}>
-        <button
-          onClick={() => addMsg("email")}
+
+      {/* Formulário novo */}
+      {showForm ? (
+        <div
           style={{
-            padding: "5px 12px",
-            borderRadius: 7,
-            border: `1px solid #86efac`,
-            background: "#f0fdf4",
-            color: "#15803d",
+            background: C.surface,
+            border: `2px solid ${C.blue}`,
+            borderRadius: 10,
+            padding: 12,
+          }}
+        >
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4 }}>
+              Data da abordagem
+            </label>
+            <input
+              type="date"
+              value={novaData}
+              onChange={(e) => setNovaData(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 10px",
+                border: `1px solid ${C.border}`,
+                borderRadius: 6,
+                fontSize: 12,
+                outline: "none",
+                background: C.surface,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4 }}>
+              Descrição da abordagem
+            </label>
+            <textarea
+              value={novoTexto}
+              onChange={(e) => setNovoTexto(e.target.value)}
+              placeholder="Ex: Enviamos e-mail com oferta especial de taxa para leads com perfil financeiro compatível..."
+              rows={3}
+              style={{
+                width: "100%",
+                padding: "6px 10px",
+                border: `1px solid ${C.border}`,
+                borderRadius: 6,
+                fontSize: 12,
+                resize: "vertical",
+                outline: "none",
+                background: C.surface,
+                lineHeight: 1.4,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4 }}>
+              Link do documento (opcional)
+            </label>
+            <input
+              type="url"
+              value={novoLink}
+              onChange={(e) => setNovoLink(e.target.value)}
+              placeholder="https://docs.google.com/..."
+              style={{
+                width: "100%",
+                padding: "6px 10px",
+                border: `1px solid ${C.border}`,
+                borderRadius: 6,
+                fontSize: 12,
+                outline: "none",
+                background: C.surface,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={addAbordagem}
+              disabled={!novoTexto.trim()}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 7,
+                border: "none",
+                background: novoTexto.trim() ? C.blue : "#cbd5e1",
+                color: "#fff",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: novoTexto.trim() ? "pointer" : "not-allowed",
+              }}
+            >
+              Salvar abordagem
+            </button>
+            <button
+              onClick={() => { setShowForm(false); setNovoTexto(""); }}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 7,
+                border: `1px solid ${C.border}`,
+                background: C.surface,
+                color: "#64748b",
+                fontSize: 12,
+                cursor: "pointer",
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowForm(true)}
+          style={{
+            width: "100%",
+            padding: "8px",
+            borderRadius: 8,
+            border: `1.5px dashed ${C.blue}`,
+            background: "transparent",
+            color: C.blue,
             fontSize: 12,
-            fontWeight: 500,
+            fontWeight: 600,
             cursor: "pointer",
           }}
         >
-          + E-mail
+          + Registrar nova abordagem
         </button>
-        <button
-          onClick={() => addMsg("whatsapp")}
-          style={{
-            padding: "5px 12px",
-            borderRadius: 7,
-            border: `1px solid #fdba74`,
-            background: "#fff7ed",
-            color: "#c2410c",
-            fontSize: 12,
-            fontWeight: 500,
-            cursor: "pointer",
-          }}
-        >
-          + WhatsApp
-        </button>
-      </div>
-      {msgs.length > 1 && (
-        <p style={{ fontSize: 10, color: "#94a3b8", textAlign: "center", marginBottom: 4 }}>
-          ⠿ Arraste as mensagens para reordenar a sequência de envio
-        </p>
       )}
     </div>
   );
@@ -725,9 +578,8 @@ function GroupBox({
   onRename,
   onDelete,
   onMoveSection,
-  messages,
-  onMessagesChange,
-  allTags,
+  abordagens,
+  onAbordagensChange,
   section,
 }: {
   group: Group;
@@ -738,16 +590,14 @@ function GroupBox({
   onRename: (gid: string, label: string) => void;
   onDelete: (gid: string) => void;
   onMoveSection: (gid: string, newSection: string) => void;
-  messages: Record<string, Message[]>;
-  onMessagesChange: (messages: Record<string, Message[]>) => void;
-  allTags: string[];
-  onAddTag?: (tag: string) => void;
+  abordagens: Record<string, Abordagem[]>;
+  onAbordagensChange: (abordagens: Record<string, Abordagem[]>) => void;
   section: string;
 }) {
   const [over, setOver] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(group.label);
-  const [showMsgs, setShowMsgs] = useState(false);
+  const [showAbordagens, setShowAbordagens] = useState(false);
   const renameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -761,7 +611,7 @@ function GroupBox({
     onRename(group.id, renameVal.trim() || group.label);
     setRenaming(false);
   };
-  const msgCount = (messages[group.id] || []).length;
+  const abordagemCount = (abordagens[group.id] || []).length;
   const sectionColor = getSectionColor(section);
   const sectionBorderColor = getSectionBorderColor(section);
 
@@ -967,9 +817,9 @@ function GroupBox({
         })}
       </div>
 
-      {/* Messages toggle */}
+      {/* Abordagens toggle */}
       <button
-        onClick={() => setShowMsgs((v) => !v)}
+        onClick={() => setShowAbordagens((v) => !v)}
         style={{
           display: "flex",
           alignItems: "center",
@@ -981,16 +831,16 @@ function GroupBox({
           background: "none",
           border: "none",
           borderTop: `1px solid ${C.border}`,
-          color: msgCount > 0 ? C.blue : "#94a3b8",
+          color: abordagemCount > 0 ? C.blue : "#94a3b8",
           width: "100%",
           textAlign: "left",
         }}
       >
         <span>
-          {showMsgs ? "▾" : "▸"} &nbsp;
-          {msgCount > 0 ? `${msgCount} mensagem${msgCount > 1 ? "s" : ""}` : "Mensagens"}
+          {showAbordagens ? "▾" : "▸"} &nbsp;
+          {abordagemCount > 0 ? `${abordagemCount} abordagem${abordagemCount > 1 ? "s" : ""}` : "Abordagens"}
         </span>
-        {msgCount > 0 && (
+        {abordagemCount > 0 && (
           <span
             style={{
               background: C.blueSoft,
@@ -1001,12 +851,12 @@ function GroupBox({
               fontSize: 10,
             }}
           >
-            {msgCount}
+            {abordagemCount}
           </span>
         )}
       </button>
 
-      {showMsgs && <MessagesPanel groupId={group.id} messages={messages} allTags={allTags} onChange={onMessagesChange} />}
+      {showAbordagens && <AbordagemPanel groupId={group.id} abordagens={abordagens} onChange={onAbordagensChange} />}
     </div>
   );
 }
@@ -1088,8 +938,7 @@ function DataSources() {
 // ─── Main board component ──────────────────────────────────────────────────────
 export function LostsClient() {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [messages, setMessages] = useState<Record<string, Message[]>>({});
-  const [allTags, setAllTags] = useState<string[]>([]);
+  const [abordagens, setAbordagens] = useState<Record<string, Abordagem[]>>({});
   const [loading, setLoading] = useState(true);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragFrom, setDragFrom] = useState<string | null>(null);
@@ -1099,12 +948,11 @@ export function LostsClient() {
   // ── Load from localStorage ─────────────────────────────────────────────────
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("lost_board_v1");
+      const saved = localStorage.getItem("lost_board_v2");
       if (saved) {
         const data = JSON.parse(saved);
         setGroups(data.groups || DEFAULT_GROUPS);
-        setMessages(data.messages || {});
-        setAllTags(data.tags || []);
+        setAbordagens(data.abordagens || {});
       } else {
         setGroups(DEFAULT_GROUPS);
       }
@@ -1114,21 +962,33 @@ export function LostsClient() {
     setLoading(false);
   }, []);
 
-  // ── Save to localStorage ────────────────────────────────────────────────────
+  // ── Save to localStorage and database ────────────────────────────────────────
   const scheduleSave = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
+    saveTimer.current = setTimeout(async () => {
+      const data = { groups, abordagens };
+      // Save to localStorage
       try {
-        localStorage.setItem("lost_board_v1", JSON.stringify({ groups, messages, tags: allTags }));
+        localStorage.setItem("lost_board_v2", JSON.stringify(data));
       } catch {
         console.error("Erro ao salvar no localStorage");
       }
-    }, 500);
-  }, [groups, messages, allTags]);
+      // Save to database
+      try {
+        await fetch("/api/lost-board", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+      } catch {
+        console.error("Erro ao salvar no banco de dados");
+      }
+    }, 1000);
+  }, [groups, abordagens]);
 
   useEffect(() => {
     if (!loading) scheduleSave();
-  }, [groups, messages, allTags, loading, scheduleSave]);
+  }, [groups, abordagens, loading, scheduleSave]);
 
   // ── Drag and drop ─────────────────────────────────────────────────────────
   const handleDragStart = useCallback((cid: string, gid: string) => {
@@ -1183,6 +1043,7 @@ export function LostsClient() {
         );
       }
       setGroups(next);
+      // Note: abordagens are preserved by group ID, so deleting a group keeps its history
     },
     [groups]
   );
@@ -1365,9 +1226,8 @@ export function LostsClient() {
                   onRename={renameGroup}
                   onDelete={deleteGroup}
                   onMoveSection={moveGroupSection}
-                  messages={messages}
-                  onMessagesChange={setMessages}
-                  allTags={allTags}
+                  abordagens={abordagens}
+                  onAbordagensChange={setAbordagens}
                 />
               ))}
             </div>
@@ -1465,9 +1325,8 @@ export function LostsClient() {
                   onRename={renameGroup}
                   onDelete={deleteGroup}
                   onMoveSection={moveGroupSection}
-                  messages={messages}
-                  onMessagesChange={setMessages}
-                  allTags={allTags}
+                  abordagens={abordagens}
+                  onAbordagensChange={setAbordagens}
                 />
               ))}
             </div>
@@ -1564,9 +1423,8 @@ export function LostsClient() {
                   onRename={renameGroup}
                   onDelete={deleteGroup}
                   onMoveSection={moveGroupSection}
-                  messages={messages}
-                  onMessagesChange={setMessages}
-                  allTags={allTags}
+                  abordagens={abordagens}
+                  onAbordagensChange={setAbordagens}
                 />
               ))}
             </div>
