@@ -45,6 +45,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(emp);
     }
 
+    if (action === "create-empreendimentos-bulk") {
+      const results = [];
+      for (const nome of data.nomes) {
+        try {
+          const emp = await db.empreendimento.create({ data: { nome } });
+          results.push(emp);
+        } catch (e) {
+          // Ignora duplicados
+        }
+      }
+      return NextResponse.json(results);
+    }
+
     if (action === "update-empreendimento") {
       const emp = await db.empreendimento.update({
         where: { id: data.id },
