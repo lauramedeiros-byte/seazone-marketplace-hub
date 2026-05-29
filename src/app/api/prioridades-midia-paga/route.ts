@@ -143,7 +143,12 @@ export async function POST(request: NextRequest) {
           data: { estruturaId: estrutura.id, nome: `V${v}` },
         });
       }
-      return NextResponse.json(estrutura);
+      // Return estrutura com variacoes
+      const estruturaCompleta = await db.midiaPagaEstrutura.findUnique({
+        where: { id: estrutura.id },
+        include: { variacoes: true },
+      });
+      return NextResponse.json(estruturaCompleta);
     }
 
     if (action === "add-variacao") {

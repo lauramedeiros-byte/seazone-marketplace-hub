@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,11 +82,26 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
   const [showAddEmpreendimento, setShowAddEmpreendimento] = useState(false);
   const [newEmpreendimentoName, setNewEmpreendimentoName] = useState("");
   const [formatosAbertos, setFormatosAbertos] = useState<Record<string, boolean>>({});
-  const [editingMes, setEditingMes] = useState<{ estrategia?: string; campanhasAtivas?: string; briefingsZerados?: string }>({});
+  const [editingMes, setEditingMes] = useState<{ estrategia?: string; campanhasAtivas?: string; briefingsZerados?: string }>({
+    estrategia: initialMeses[0]?.estrategia || "",
+    campanhasAtivas: initialMeses[0]?.campanhasAtivas || "",
+    briefingsZerados: initialMeses[0]?.briefingsZerados || "",
+  });
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchEmpreendimento, setSearchEmpreendimento] = useState("");
 
   const activeMes = meses[activeMesIdx];
+
+  // Sincroniza editingMes quando muda de mês
+  useEffect(() => {
+    if (activeMes) {
+      setEditingMes({
+        estrategia: activeMes.estrategia || "",
+        campanhasAtivas: activeMes.campanhasAtivas || "",
+        briefingsZerados: activeMes.briefingsZerados || "",
+      });
+    }
+  }, [activeMes]);
 
   const formatMes = (mes: string) => {
     const [year, month] = mes.split("-");
@@ -272,11 +287,12 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
   };
 
   const handleAddEstrutura = async (formatoId: string) => {
-    const existingNames = activeMes?.priorities
+    // Encontra o próximo número de estrutura para este formato
+    const formato = activeMes?.priorities
       .flatMap(p => p.formatos)
-      .flatMap(f => f.estruturas)
-      .map(e => e.nome) || [];
-    const nextNum = existingNames.filter(n => n.startsWith("E")).length + 1;
+      .find(f => f.id === formatoId);
+
+    const nextNum = formato ? formato.estruturas.length + 1 : 1;
     const newName = `E${nextNum}`;
 
     const result = await fetch("/api/prioridades-midia-paga", {
@@ -285,18 +301,25 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
       body: JSON.stringify({ action: "add-estrutura", formatoId, nome: newName }),
     });
     const data = await result.json();
-    if (result.ok) {
+    if (result.ok && data) {
       setMeses(prev => prev.map((m, mi) => {
         if (mi !== activeMesIdx) return m;
         return {
           ...m,
           priorities: m.priorities.map(p => ({
             ...p,
-            formatos: p.formatos.map(f =>
-              f.id === formatoId
-                ? { ...f, estruturas: [...f.estruturas, { ...data, variacoes: data.variacoes || [] }] }
-                : f
-            ),
+            formatos: p.formatos.map(f => {
+              if (f.id !== formatoId) return f;
+              const novasVariacoes = data.variacoes || Array.from({ length: 5 }, (_, i) => ({
+                id: `temp-${Date.now()}-${i}`,
+                nome: `V${i + 1}`,
+                checked: false,
+              }));
+              return {
+                ...f,
+                estruturas: [...f.estruturas, { ...data, variacoes: novasVariacoes }],
+              };
+            }),
           })),
         };
       }));
@@ -322,12 +345,13 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
   };
 
   const handleAddVariacao = async (estruturaId: string) => {
-    const existingNames = activeMes?.priorities
+    // Encontra a estrutura específica para contar suas variações
+    const estrutura = activeMes?.priorities
       .flatMap(p => p.formatos)
       .flatMap(f => f.estruturas)
-      .flatMap(e => e.variacoes)
-      .map(v => v.nome) || [];
-    const nextNum = existingNames.filter(n => n.startsWith("V")).length + 1;
+      .find(e => e.id === estruturaId);
+
+    const nextNum = estrutura ? estrutura.variacoes.length + 1 : 1;
     const newName = `V${nextNum}`;
 
     const result = await fetch("/api/prioridades-midia-paga", {
