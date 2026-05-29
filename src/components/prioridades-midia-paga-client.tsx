@@ -228,22 +228,17 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
       }),
     });
     const data = await result.json();
-    if (result.ok) {
-      const emp = empreendimentos.find(e => e.id === empreendimentoId);
+    if (result.ok && data) {
       setMeses(prev => prev.map((m, mi) => {
         if (mi !== activeMesIdx) return m;
         return {
           ...m,
-          priorities: [...m.priorities, {
-            ...data,
-            empreendimento: emp,
-            formatos: [],
-          }],
+          priorities: [...m.priorities, data],
         };
       }));
       setShowDropdown(false);
       setSearchEmpreendimento("");
-      // Abre o formato automaticamente
+      // Abre os formatos automaticamente
       setTimeout(() => {
         if (data.formatos && data.formatos.length > 0) {
           setFormatosAbertos(prev => {

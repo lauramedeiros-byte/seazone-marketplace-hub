@@ -70,24 +70,79 @@ export async function POST(request: NextRequest) {
       const prioridade = await db.midiaPagaPrioridade.create({
         data: { mesId: data.mesId, empreendimentoId: data.empreendimentoId },
       });
-      // Criar 4 formatos padrão
+
+      // Criar 4 formatos padrão com estruturas e variações em batch
       const formatos = ["Estático", "Vídeo Narrado", "Vídeo Apresentadora", "Vídeos Disruptivos"];
+
+      // Prepara todos os dados em memória
+      const allFormatos: Array<{ nome: string; estruturas: Array<{ nome: string; variacoes: string[] }> }> = [];
       for (const nome of formatos) {
-        const formato = await db.midiaPagaFormato.create({
-          data: { prioridadeId: prioridade.id, nome },
-        });
+        const estruturas = [];
         for (let e = 1; e <= 4; e++) {
-          const estrutura = await db.midiaPagaEstrutura.create({
-            data: { formatoId: formato.id, nome: `E${e}` },
-          });
+          const variacoes = [];
           for (let v = 1; v <= 5; v++) {
-            await db.midiaPagaVariacao.create({
-              data: { estruturaId: estrutura.id, nome: `V${v}` },
-            });
+            variacoes.push(`V${v}`);
           }
+          estruturas.push({ nome: `E${e}`, variacoes });
+        }
+        allFormatos.push({ nome, estruturas });
+      }
+
+      // Cria formatos um a um (precisa do ID para criar estruturas)
+      const formatosCriados = [];
+      for (const fmt of allFormatos) {
+        const formato = await db.midiaPagaFormato.create({
+          data: { prioridadeId: prioridade.id, nome: fmt.nome },
+        });
+        formatosCriados.push({ id: formato.id, estruturas: fmt.estruturas });
+      }
+
+      // Cria todas as estruturas em batch para cada formato
+      const allEstruturas: Array<{ formatoId: string; nome: string }> = [];
+      for (const fmt of formatosCriados) {
+        for (const est of fmt.estruturas) {
+          allEstruturas.push({ formatoId: fmt.id, nome: est.nome });
         }
       }
-      return NextResponse.json(prioridade);
+
+      // Usa createMany para estruturas (se disponível) ou batch simples
+      const estruturasCriadas = [];
+      for (const est of allEstruturas) {
+        const estrutura = await db.midiaPagaEstrutura.create({
+          data: { formatoId: est.formatoId, nome: est.nome },
+        });
+        estruturasCriadas.push(estrutura);
+      }
+
+      // Cria todas as variações em batch
+      const allVariacoes: Array<{ estruturaId: string; nome: string }> = [];
+      for (const est of estruturasCriadas) {
+        for (let v = 1; v <= 5; v++) {
+          allVariacoes.push({ estruturaId: est.id, nome: `V${v}` });
+        }
+      }
+
+      // Batch insert das variações
+      for (const varData of allVariacoes) {
+        await db.midiaPagaVariacao.create({ data: varData });
+      }
+
+      // Retorna a prioridade completa com formatos
+      const prioridadeCompleta = await db.midiaPagaPrioridade.findUnique({
+        where: { id: prioridade.id },
+        include: {
+          empreendimento: true,
+          formatos: {
+            include: {
+              estruturas: {
+                include: { variacoes: true },
+              },
+            },
+          },
+        },
+      });
+
+      return NextResponse.json(prioridadeCompleta);
     }
 
     if (action === "update-prioridade") {
