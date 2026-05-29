@@ -72,6 +72,14 @@ export async function POST(request: NextRequest) {
     if (action === "update-prioridade") {
       const updated = await db.midiaPagaPrioridade.update({
         where: { id: data.id },
+        data: {},
+      });
+      return NextResponse.json(updated);
+    }
+
+    if (action === "update-mes") {
+      const updated = await db.midiaPagaMes.update({
+        where: { id: data.id },
         data: {
           estrategia: data.estrategia ?? null,
           campanhasAtivas: data.campanhasAtivas ?? null,

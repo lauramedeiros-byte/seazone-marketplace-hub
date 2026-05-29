@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ import {
   ChevronRight,
   Calendar,
   Building2,
-  Save,
   X,
 } from "lucide-react";
 
@@ -47,9 +46,6 @@ interface MidiaPagaFormato {
 
 interface MidiaPagaPrioridade {
   id: string;
-  estrategia: string | null;
-  campanhasAtivas: string | null;
-  briefingsZerados: string | null;
   empreendimento: {
     id: string;
     nome: string;
@@ -60,6 +56,9 @@ interface MidiaPagaPrioridade {
 interface MidiaPagaMes {
   id: string;
   mes: string;
+  estrategia: string | null;
+  campanhasAtivas: string | null;
+  briefingsZerados: string | null;
   priorities: MidiaPagaPrioridade[];
 }
 
@@ -74,7 +73,6 @@ interface Props {
 }
 
 export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimentos: initialEmpreendimentos }: Props) {
-  const { user } = useUser();
   const [meses, setMeses] = useState(initialMeses);
   const [empreendimentos, setEmpreendimentos] = useState(initialEmpreendimentos);
   const [activeMesIdx, setActiveMesIdx] = useState(0);
@@ -82,9 +80,8 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
   const [newMesValue, setNewMesValue] = useState("");
   const [showAddEmpreendimento, setShowAddEmpreendimento] = useState(false);
   const [newEmpreendimentoName, setNewEmpreendimentoName] = useState("");
-  const [prioridadesAbertas, setPrioridadesAbertas] = useState<Record<string, boolean>>({});
   const [formatosAbertos, setFormatosAbertos] = useState<Record<string, boolean>>({});
-  const [editingTexts, setEditingTexts] = useState<Record<string, { estrategia?: string; campanhasAtivas?: string; briefingsZerados?: string }>>({});
+  const [editingMes, setEditingMes] = useState<{ estrategia?: string; campanhasAtivas?: string; briefingsZerados?: string }>({});
 
   const activeMes = meses[activeMesIdx];
 
@@ -93,10 +90,6 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
     const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
                     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     return `${months[parseInt(month) - 1]} ${year}`;
-  };
-
-  const togglePrioridade = (id: string) => {
-    setPrioridadesAbertas(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const toggleFormato = async (id: string, checked: boolean) => {
@@ -239,38 +232,25 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
     }));
   };
 
-  const updatePrioridadeText = useCallback(async (prioridadeId: string, field: "estrategia" | "campanhasAtivas" | "briefingsZerados", value: string) => {
-    setEditingTexts(prev => ({
-      ...prev,
-      [prioridadeId]: { ...prev[prioridadeId], [field]: value },
-    }));
-  }, []);
+  const handleSaveMesText = async (field: "estrategia" | "campanhasAtivas" | "briefingsZerados") => {
+    if (!activeMes) return;
+    const value = editingMes[field];
+    if (value === undefined) return;
 
-  const savePrioridadeText = async (prioridadeId: string) => {
-    const text = editingTexts[prioridadeId];
-    if (!text) return;
     await fetch("/api/prioridades-midia-paga", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        action: "update-prioridade",
-        id: prioridadeId,
-        ...text,
+        action: "update-mes",
+        id: activeMes.id,
+        [field]: value,
       }),
     });
+
     setMeses(prev => prev.map((m, mi) => {
       if (mi !== activeMesIdx) return m;
-      return {
-        ...m,
-        priorities: m.priorities.map(p =>
-          p.id === prioridadeId ? { ...p, ...text } : p
-        ),
-      };
+      return { ...m, [field]: value };
     }));
-    setEditingTexts(prev => {
-      const { [prioridadeId]: _, ...rest } = prev;
-      return rest;
-    });
   };
 
   const handleAddEstrutura = async (formatoId: string) => {
@@ -451,12 +431,63 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
         </Card>
       ) : (
         <>
+          {/* Perguntas do mês */}
+          <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Planejamento do Mês
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Qual a estratégia adotada (gatilho de teste nos criativos):
+                </label>
+                <Textarea
+                  value={editingMes.estrategia ?? activeMes.estrategia ?? ""}
+                  onChange={(e) => setEditingMes(prev => ({ ...prev, estrategia: e.target.value }))}
+                  onBlur={() => handleSaveMesText("estrategia")}
+                  placeholder="Descreva a estratégia do mês..."
+                  rows={2}
+                  className="text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Algum desses já está com campanha ativa? Se sim, quais:
+                </label>
+                <Textarea
+                  value={editingMes.campanhasAtivas ?? activeMes.campanhasAtivas ?? ""}
+                  onChange={(e) => setEditingMes(prev => ({ ...prev, campanhasAtivas: e.target.value }))}
+                  onBlur={() => handleSaveMesText("campanhasAtivas")}
+                  placeholder="Liste as campanhas ativas..."
+                  rows={2}
+                  className="text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Quais você precisa fazer briefing do zero (ainda não tem campanha ativa):
+                </label>
+                <Textarea
+                  value={editingMes.briefingsZerados ?? activeMes.briefingsZerados ?? ""}
+                  onChange={(e) => setEditingMes(prev => ({ ...prev, briefingsZerados: e.target.value }))}
+                  onBlur={() => handleSaveMesText("briefingsZerados")}
+                  placeholder="Liste os empreendimentos que precisam de briefing..."
+                  rows={2}
+                  className="text-sm bg-white"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Adicionar empreendimento */}
           <Card className="mb-6">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
-                Adicionar Empreendimento
+                Empreendimentos Prioritários
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -499,16 +530,15 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
             </CardContent>
           </Card>
 
-          {/* Lista de prioridades */}
+          {/* Lista de empreendimentos com formatos */}
           {activeMes.priorities.length === 0 ? (
             <Card className="p-8 text-center">
               <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Nenhum empreendimento adicionado neste mês ainda.</p>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {activeMes.priorities.map((prioridade) => {
-                const isOpen = prioridadesAbertas[prioridade.id];
                 const hasFormatos = prioridade.formatos.length > 0;
                 const checkedCount = prioridade.formatos.filter(f => f.checked).length;
                 const totalCount = prioridade.formatos.length;
@@ -517,27 +547,17 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
                   <Card key={prioridade.id}>
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
-                        <button
-                          onClick={() => togglePrioridade(prioridade.id)}
-                          className="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                        >
-                          {isOpen ? (
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
-                          )}
-                          <CardTitle className="text-lg">{prioridade.empreendimento.nome}</CardTitle>
-                        </button>
+                        <CardTitle className="text-base">{prioridade.empreendimento.nome}</CardTitle>
                         <div className="flex items-center gap-2">
                           {hasFormatos && (
                             <Badge variant={checkedCount === totalCount ? "success" : "secondary"}>
-                              {checkedCount}/{totalCount} formatos
+                              {checkedCount}/{totalCount}
                             </Badge>
                           )}
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-red-500"
+                            className="text-red-500 h-8 w-8 p-0"
                             onClick={() => handleRemovePrioridade(prioridade.id)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -546,163 +566,112 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
                       </div>
                     </CardHeader>
 
-                    {isOpen && (
-                      <CardContent className="space-y-4">
-                        {/* Perguntas */}
-                        <div className="space-y-3">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 mb-1 block">
-                              Quais empreendimentos são prioridade:
-                            </label>
-                            <p className="text-sm text-gray-600 bg-gray-50 rounded-md p-2">
-                              {prioridade.empreendimento.nome}
-                            </p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 mb-1 block">
-                              Qual a estratégia adotada (gatilho de teste nos criativos):
-                            </label>
-                            <Textarea
-                              value={editingTexts[prioridade.id]?.estrategia ?? prioridade.estrategia ?? ""}
-                              onChange={(e) => updatePrioridadeText(prioridade.id, "estrategia", e.target.value)}
-                              onBlur={() => savePrioridadeText(prioridade.id)}
-                              placeholder="Descreva a estratégia..."
-                              rows={2}
-                              className="text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 mb-1 block">
-                              Algum desses já está com campanha ativa? Se sim, quais:
-                            </label>
-                            <Textarea
-                              value={editingTexts[prioridade.id]?.campanhasAtivas ?? prioridade.campanhasAtivas ?? ""}
-                              onChange={(e) => updatePrioridadeText(prioridade.id, "campanhasAtivas", e.target.value)}
-                              onBlur={() => savePrioridadeText(prioridade.id)}
-                              placeholder="Liste as campanhas ativas..."
-                              rows={2}
-                              className="text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 mb-1 block">
-                              Quais você precisa fazer briefing do zero (ainda não tem campanha ativa):
-                            </label>
-                            <Textarea
-                              value={editingTexts[prioridade.id]?.briefingsZerados ?? prioridade.briefingsZerados ?? ""}
-                              onChange={(e) => updatePrioridadeText(prioridade.id, "briefingsZerados", e.target.value)}
-                              onBlur={() => savePrioridadeText(prioridade.id)}
-                              placeholder="Liste os empreendimentos que precisam de briefing..."
-                              rows={2}
-                              className="text-sm"
-                            />
-                          </div>
-                        </div>
+                    <CardContent>
+                      {/* Formatos */}
+                      {hasFormatos ? (
+                        <div className="space-y-2">
+                          {prioridade.formatos.map((formato) => {
+                            const isOpen = formatosAbertos[formato.id];
+                            const checkedEstruturas = formato.estruturas.filter(e => e.checked).length;
+                            return (
+                              <div key={formato.id} className="border rounded-lg overflow-hidden">
+                                <div
+                                  className="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                                  onClick={() => setFormatosAbertos(prev => ({ ...prev, [formato.id]: !prev[formato.id] }))}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={formato.checked}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleFormato(formato.id, !formato.checked);
+                                      }}
+                                      className="w-4 h-4 rounded border-gray-300"
+                                    />
+                                    <span className="font-medium text-sm">{formato.nome}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {checkedEstruturas}/{formato.estruturas.length}
+                                    </Badge>
+                                    {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                  </div>
+                                </div>
 
-                        {/* Formatos e estrutura */}
-                        {hasFormatos && (
-                          <div className="border-t pt-4">
-                            <h3 className="text-sm font-semibold text-gray-700 mb-3">Formatos e Estruturas</h3>
-                            <div className="space-y-3">
-                              {prioridade.formatos.map((formato) => {
-                                const isOpen = formatosAbertos[formato.id];
-                                return (
-                                  <div key={formato.id} className="border rounded-lg overflow-hidden">
-                                    <div
-                                      className="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
-                                      onClick={() => setFormatosAbertos(prev => ({ ...prev, [formato.id]: !prev[formato.id] }))}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <input
-                                          type="checkbox"
-                                          checked={formato.checked}
-                                          onChange={(e) => {
-                                            e.stopPropagation();
-                                            toggleFormato(formato.id, !formato.checked);
-                                          }}
-                                          className="w-4 h-4 rounded border-gray-300"
-                                        />
-                                        <span className="font-medium">{formato.nome}</span>
-                                        <Badge variant="secondary">
-                                          {formato.estruturas.length} estruturas
-                                        </Badge>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                                      </div>
-                                    </div>
-
-                                    {isOpen && (
-                                      <div className="p-3 border-t bg-white">
-                                        <div className="flex flex-wrap gap-2 mb-3">
-                                          {formato.estruturas.map((estrutura) => (
-                                            <div key={estrutura.id} className="border rounded-md p-2 bg-gray-50 min-w-[120px]">
-                                              <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                  <input
-                                                    type="checkbox"
-                                                    checked={estrutura.checked}
-                                                    onChange={() => toggleEstrutura(estrutura.id, !estrutura.checked)}
-                                                    className="w-3 h-3"
-                                                  />
-                                                  <span className="font-medium text-sm">{estrutura.nome}</span>
-                                                </div>
+                                {isOpen && (
+                                  <div className="p-3 border-t bg-white">
+                                    <div className="flex flex-wrap gap-2">
+                                      {formato.estruturas.map((estrutura) => (
+                                        <div key={estrutura.id} className="border rounded-md p-2 bg-gray-50 min-w-[100px]">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                              <input
+                                                type="checkbox"
+                                                checked={estrutura.checked}
+                                                onChange={() => toggleEstrutura(estrutura.id, !estrutura.checked)}
+                                                className="w-3 h-3"
+                                              />
+                                              <span className="font-medium text-sm">{estrutura.nome}</span>
+                                            </div>
+                                            <button
+                                              onClick={() => handleRemoveEstrutura(estrutura.id)}
+                                              className="text-gray-400 hover:text-red-500"
+                                            >
+                                              <X className="w-3 h-3" />
+                                            </button>
+                                          </div>
+                                          <div className="flex flex-wrap gap-1">
+                                            {estrutura.variacoes.map((variacao) => (
+                                              <div
+                                                key={variacao.id}
+                                                className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer ${
+                                                  variacao.checked ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                                                }`}
+                                                onClick={() => toggleVariacao(variacao.id, !variacao.checked)}
+                                              >
+                                                {variacao.checked && <Check className="w-2 h-2" />}
+                                                <span>{variacao.nome}</span>
                                                 <button
-                                                  onClick={() => handleRemoveEstrutura(estrutura.id)}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRemoveVariacao(variacao.id);
+                                                  }}
                                                   className="text-gray-400 hover:text-red-500"
                                                 >
-                                                  <X className="w-3 h-3" />
+                                                  <X className="w-2 h-2" />
                                                 </button>
                                               </div>
-                                              <div className="flex flex-wrap gap-1">
-                                                {estrutura.variacoes.map((variacao) => (
-                                                  <div
-                                                    key={variacao.id}
-                                                    className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer ${
-                                                      variacao.checked ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                                                    }`}
-                                                    onClick={() => toggleVariacao(variacao.id, !variacao.checked)}
-                                                  >
-                                                    {variacao.checked && <Check className="w-2 h-2" />}
-                                                    <span>{variacao.nome}</span>
-                                                    <button
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleRemoveVariacao(variacao.id);
-                                                      }}
-                                                      className="text-gray-400 hover:text-red-500"
-                                                    >
-                                                      <X className="w-2 h-2" />
-                                                    </button>
-                                                  </div>
-                                                ))}
-                                                <button
-                                                  onClick={() => handleAddVariacao(estrutura.id)}
-                                                  className="px-2 py-0.5 rounded text-xs text-blue-600 hover:bg-blue-50 border border-dashed border-blue-300"
-                                                >
-                                                  <Plus className="w-3 h-3 inline" />
-                                                </button>
-                                              </div>
-                                            </div>
-                                          ))}
-                                          <button
-                                            onClick={() => handleAddEstrutura(formato.id)}
-                                            className="px-3 py-2 rounded border border-dashed border-gray-300 text-sm text-gray-500 hover:text-blue-600 hover:border-blue-300"
-                                          >
-                                            <Plus className="w-4 h-4 inline mr-1" />
-                                            Adicionar estrutura
-                                          </button>
+                                            ))}
+                                            <button
+                                              onClick={() => handleAddVariacao(estrutura.id)}
+                                              className="px-2 py-0.5 rounded text-xs text-blue-600 hover:bg-blue-50 border border-dashed border-blue-300"
+                                            >
+                                              <Plus className="w-3 h-3 inline" />
+                                            </button>
+                                          </div>
                                         </div>
-                                      </div>
-                                    )}
+                                      ))}
+                                      <button
+                                        onClick={() => handleAddEstrutura(formato.id)}
+                                        className="px-3 py-2 rounded border border-dashed border-gray-300 text-sm text-gray-500 hover:text-blue-600 hover:border-blue-300"
+                                      >
+                                        <Plus className="w-4 h-4 inline mr-1" />
+                                        E
+                                      </button>
+                                    </div>
                                   </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    )}
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-400 text-center py-4">
+                          Sem formatos ainda
+                        </p>
+                      )}
+                    </CardContent>
                   </Card>
                 );
               })}

@@ -477,11 +477,11 @@ export async function removePrioridade(id: string) {
   revalidatePath("/prioridades-midia-paga");
 }
 
-export async function updatePrioridade(
+export async function updateMes(
   id: string,
   data: { estrategia?: string; campanhasAtivas?: string; briefingsZerados?: string }
 ) {
-  await db.midiaPagaPrioridade.update({ where: { id }, data });
+  await db.midiaPagaMes.update({ where: { id }, data });
   revalidatePath("/prioridades-midia-paga");
 }
 

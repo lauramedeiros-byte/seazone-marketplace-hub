@@ -177,10 +177,13 @@ model LostBoard {
 // ── Mídia Paga ────────────────────────────────────────────────────────────────
 
 model MidiaPagaMes {
-  id        String   @id @default(cuid())
-  mes       String   @unique // YYYY-MM, ex: "2026-05"
-  criadoEm  DateTime @default(now())
-  priorities MidiaPagaPrioridade[]
+  id               String   @id @default(cuid())
+  mes              String   @unique // YYYY-MM, ex: "2026-05"
+  estrategia       String?  // Gatilho de teste nos criativos
+  campanhasAtivas  String?  // Campanhas já ativas
+  briefingsZerados String? // Empreendimentos que precisam de briefing
+  criadoEm         DateTime @default(now())
+  priorities       MidiaPagaPrioridade[]
 }
 
 model Empreendimento {
@@ -192,14 +195,11 @@ model Empreendimento {
 }
 
 model MidiaPagaPrioridade {
-  id              String   @id @default(cuid())
-  mesId           String
-  mes             MidiaPagaMes @relation(fields: [mesId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  mesId            String
+  mes              MidiaPagaMes @relation(fields: [mesId], references: [id], onDelete: Cascade)
   empreendimentoId String
-  empreendimento  Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
-  estrategia      String?
-  campanhasAtivas  String?
-  briefingsZerados  String?
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
   criadoEm         DateTime @default(now())
   formatos         MidiaPagaFormato[]
 }
