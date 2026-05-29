@@ -286,6 +286,30 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
     }));
   };
 
+  const handleSaveAllMesTexts = async () => {
+    if (!activeMes) return;
+
+    const result = await fetch("/api/prioridades-midia-paga", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update-mes",
+        id: activeMes.id,
+        estrategia: editingMes.estrategia ?? "",
+        campanhasAtivas: editingMes.campanhasAtivas ?? "",
+        briefingsZerados: editingMes.briefingsZerados ?? "",
+      }),
+    });
+
+    if (result.ok) {
+      const data = await result.json();
+      setMeses(prev => prev.map((m, mi) => {
+        if (mi !== activeMesIdx) return m;
+        return { ...m, ...data };
+      }));
+    }
+  };
+
   const handleAddEstrutura = async (formatoId: string) => {
     // Encontra o próximo número de estrutura para este formato
     const formato = activeMes?.priorities
@@ -481,10 +505,18 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
           {/* Perguntas do mês */}
           <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Planejamento do Mês
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Planejamento do Mês
+                </CardTitle>
+                {activeMes && (
+                  <Button size="sm" onClick={handleSaveAllMesTexts}>
+                    <Check className="w-4 h-4" />
+                    Salvar
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -492,9 +524,8 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
                   Qual a estratégia adotada (gatilho de teste nos criativos):
                 </label>
                 <Textarea
-                  value={editingMes.estrategia ?? activeMes.estrategia ?? ""}
+                  value={editingMes.estrategia ?? ""}
                   onChange={(e) => setEditingMes(prev => ({ ...prev, estrategia: e.target.value }))}
-                  onBlur={() => handleSaveMesText("estrategia")}
                   placeholder="Descreva a estratégia do mês..."
                   rows={2}
                   className="text-sm bg-white"
@@ -505,9 +536,8 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
                   Algum desses já está com campanha ativa? Se sim, quais:
                 </label>
                 <Textarea
-                  value={editingMes.campanhasAtivas ?? activeMes.campanhasAtivas ?? ""}
+                  value={editingMes.campanhasAtivas ?? ""}
                   onChange={(e) => setEditingMes(prev => ({ ...prev, campanhasAtivas: e.target.value }))}
-                  onBlur={() => handleSaveMesText("campanhasAtivas")}
                   placeholder="Liste as campanhas ativas..."
                   rows={2}
                   className="text-sm bg-white"
@@ -518,9 +548,8 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
                   Quais você precisa fazer briefing do zero (ainda não tem campanha ativa):
                 </label>
                 <Textarea
-                  value={editingMes.briefingsZerados ?? activeMes.briefingsZerados ?? ""}
+                  value={editingMes.briefingsZerados ?? ""}
                   onChange={(e) => setEditingMes(prev => ({ ...prev, briefingsZerados: e.target.value }))}
-                  onBlur={() => handleSaveMesText("briefingsZerados")}
                   placeholder="Liste os empreendimentos que precisam de briefing..."
                   rows={2}
                   className="text-sm bg-white"
