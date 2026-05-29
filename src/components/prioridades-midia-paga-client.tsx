@@ -80,6 +80,8 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
   const [newMesValue, setNewMesValue] = useState("");
   const [showAddEmpreendimento, setShowAddEmpreendimento] = useState(false);
   const [newEmpreendimentoName, setNewEmpreendimentoName] = useState("");
+  const [editingEmpreendimentoId, setEditingEmpreendimentoId] = useState<string | null>(null);
+  const [editingEmpreendimentoName, setEditingEmpreendimentoName] = useState("");
   const [formatosAbertos, setFormatosAbertos] = useState<Record<string, boolean>>({});
   const [editingMes, setEditingMes] = useState<{ estrategia?: string; campanhasAtivas?: string; briefingsZerados?: string }>({});
 
@@ -193,6 +195,31 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
       setNewEmpreendimentoName("");
       setShowAddEmpreendimento(false);
     }
+  };
+
+  const handleStartEditEmpreendimento = (emp: { id: string; nome: string }) => {
+    setEditingEmpreendimentoId(emp.id);
+    setEditingEmpreendimentoName(emp.nome);
+  };
+
+  const handleSaveEditEmpreendimento = async () => {
+    if (!editingEmpreendimentoId || !editingEmpreendimentoName.trim()) return;
+    const result = await fetch("/api/prioridades-midia-paga", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update-empreendimento", id: editingEmpreendimentoId, nome: editingEmpreendimentoName.trim() }),
+    });
+    if (result.ok) {
+      setEmpreendimentos(prev => prev.map(e => e.id === editingEmpreendimentoId ? { ...e, nome: editingEmpreendimentoName.trim() } : e));
+      setEditingEmpreendimentoId(null);
+      setEditingEmpreendimentoName("");
+    }
+  };
+
+  const handleDeleteEmpreendimento = async (id: string) => {
+    if (!confirm("Excluir este empreendimento? Ele será removido de todos os meses.")) return;
+    await fetch(`/api/prioridades-midia-paga?id=${id}&type=empreendimento`, { method: "DELETE" });
+    setEmpreendimentos(prev => prev.filter(e => e.id !== id));
   };
 
   const handleAddPrioridade = async (empreendimentoId: string) => {
@@ -482,39 +509,83 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
             </CardContent>
           </Card>
 
-          {/* Adicionar empreendimento */}
+          {/* Empreendimentos Prioritários */}
           <Card className="mb-6">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
-                Empreendimentos Prioritários
+                Lista de Empreendimentos
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {availableEmpreendimentos.length === 0 && !showAddEmpreendimento ? (
-                <p className="text-sm text-gray-500 mb-3">Todos os empreendimentos já estão no mês.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {availableEmpreendimentos.map(emp => (
-                    <Button
-                      key={emp.id}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAddPrioridade(emp.id)}
-                    >
-                      <Plus className="w-3 h-3" />
-                      {emp.nome}
-                    </Button>
-                  ))}
-                </div>
-              )}
+              {/* Lista de todos os empreendimentos com edit/delete */}
+              <div className="space-y-2 mb-4">
+                {empreendimentos.map(emp => {
+                  const isInMes = prioridadesIds.includes(emp.id);
+                  const isEditing = editingEmpreendimentoId === emp.id;
+                  return (
+                    <div key={emp.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      {isEditing ? (
+                        <>
+                          <Input
+                            value={editingEmpreendimentoName}
+                            onChange={(e) => setEditingEmpreendimentoName(e.target.value)}
+                            className="flex-1 h-8 text-sm"
+                            autoFocus
+                          />
+                          <Button size="sm" onClick={handleSaveEditEmpreendimento} className="h-8">
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingEmpreendimentoId(null)} className="h-8 w-8 p-0">
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="flex-1 text-sm font-medium">{emp.nome}</span>
+                          {!isInMes && (
+                            <>
+                              <button
+                                onClick={() => handleStartEditEmpreendimento(emp)}
+                                className="text-gray-400 hover:text-blue-600 p-1"
+                                title="Editar"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteEmpreendimento(emp.id)}
+                                className="text-gray-400 hover:text-red-600 p-1"
+                                title="Excluir"
+                              >
+                                🗑️
+                              </button>
+                              <Button size="sm" variant="outline" onClick={() => handleAddPrioridade(emp.id)} className="h-7 text-xs">
+                                <Plus className="w-3 h-3" />
+                                Adicionar ao mês
+                              </Button>
+                            </>
+                          )}
+                          {isInMes && (
+                            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                              ✓ No mês
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Adicionar novo */}
               {showAddEmpreendimento ? (
                 <div className="flex items-center gap-2">
                   <Input
-                    placeholder="Nome do empreendimento"
+                    placeholder="Nome do novo empreendimento"
                     value={newEmpreendimentoName}
                     onChange={(e) => setNewEmpreendimentoName(e.target.value)}
                     className="flex-1"
+                    autoFocus
                   />
                   <Button size="sm" onClick={handleAddEmpreendimento}>Adicionar</Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowAddEmpreendimento(false)}>
@@ -522,9 +593,9 @@ export function PrioridadesMidiaPagaClient({ meses: initialMeses, empreendimento
                   </Button>
                 </div>
               ) : (
-                <Button size="sm" variant="ghost" onClick={() => setShowAddEmpreendimento(true)}>
+                <Button size="sm" variant="outline" onClick={() => setShowAddEmpreendimento(true)}>
                   <Plus className="w-4 h-4" />
-                  Novo empreendimento
+                  Adicionar novo empreendimento
                 </Button>
               )}
             </CardContent>

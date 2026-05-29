@@ -45,6 +45,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(emp);
     }
 
+    if (action === "update-empreendimento") {
+      const emp = await db.empreendimento.update({
+        where: { id: data.id },
+        data: { nome: data.nome },
+      });
+      return NextResponse.json(emp);
+    }
+
     if (action === "add-prioridade") {
       const prioridade = await db.midiaPagaPrioridade.create({
         data: { mesId: data.mesId, empreendimentoId: data.empreendimentoId },
