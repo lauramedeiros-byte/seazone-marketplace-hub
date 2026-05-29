@@ -483,7 +483,7 @@ export function OppsClient({ semanas: initial }: Props) {
       </div>
 
       {/* Links úteis */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
@@ -506,6 +506,20 @@ export function OppsClient({ semanas: initial }: Props) {
             </div>
             <Button variant="outline" size="sm" asChild>
               <a href="https://claude.ai/artifacts/latest/63177553-77d0-4911-89d2-01a5114de546" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4" />
+                Abrir
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Montar Textos 2 Top Opps</p>
+              <p className="text-xs text-gray-500">Usa a skill /textos-2-top-opps-marketplace no Claude Cowork para criar 2 opções de WhatsApp e 2 de e-mail</p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://claude.ai/c/c01f1fb9-e6e8-8009-ad57-e7a8ef67e9eb" target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4" />
                 Abrir
               </a>
