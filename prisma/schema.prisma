@@ -173,3 +173,61 @@ model LostBoard {
   criadoEm   DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 }
+
+// ── Mídia Paga ────────────────────────────────────────────────────────────────
+
+model MidiaPagaMes {
+  id        String   @id @default(cuid())
+  mes       String   @unique // YYYY-MM, ex: "2026-05"
+  criadoEm  DateTime @default(now())
+  priorities MidiaPagaPrioridade[]
+}
+
+model Empreendimento {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+  priorities MidiaPagaPrioridade[]
+}
+
+model MidiaPagaPrioridade {
+  id              String   @id @default(cuid())
+  mesId           String
+  mes             MidiaPagaMes @relation(fields: [mesId], references: [id], onDelete: Cascade)
+  empreendimentoId String
+  empreendimento  Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  estrategia      String?
+  campanhasAtivas  String?
+  briefingsZerados  String?
+  criadoEm         DateTime @default(now())
+  formatos         MidiaPagaFormato[]
+}
+
+model MidiaPagaFormato {
+  id             String   @id @default(cuid())
+  prioridadeId   String
+  prioridade     MidiaPagaPrioridade @relation(fields: [prioridadeId], references: [id], onDelete: Cascade)
+  nome           String   // ex: "Estático", "Vídeo Narrado"
+  checked        Boolean  @default(false)
+  criadoEm       DateTime @default(now())
+  estruturas     MidiaPagaEstrutura[]
+}
+
+model MidiaPagaEstrutura {
+  id        String   @id @default(cuid())
+  formatoId String
+  formato   MidiaPagaFormato @relation(fields: [formatoId], references: [id], onDelete: Cascade)
+  nome      String   // ex: "E1", "E2"
+  checked   Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+  variacoes MidiaPagaVariacao[]
+}
+
+model MidiaPagaVariacao {
+  id          String   @id @default(cuid())
+  estruturaId String
+  estrutura   MidiaPagaEstrutura @relation(fields: [estruturaId], references: [id], onDelete: Cascade)
+  nome        String   // ex: "V1", "V2"
+  checked     Boolean  @default(false)
+}

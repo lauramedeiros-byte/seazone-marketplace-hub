@@ -393,3 +393,141 @@ export async function deleteArtefato(id: string) {
   await db.artefatoConfig.delete({ where: { id } });
   revalidatePath("/artefatos-de-consulta");
 }
+
+// ── Mídia Paga ────────────────────────────────────────────────────────────────
+
+export async function getAllMidiaPagaMeses() {
+  return db.midiaPagaMes.findMany({
+    orderBy: { mes: "desc" },
+    include: {
+      priorities: {
+        include: {
+          empreendimento: true,
+          formatos: {
+            include: {
+              estruturas: {
+                include: {
+                  variacoes: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function createMidiaPagaMes(mes: string) {
+  return db.midiaPagaMes.create({ data: { mes } });
+}
+
+export async function deleteMidiaPagaMes(id: string) {
+  await db.midiaPagaMes.delete({ where: { id } });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function getAllEmpreendimentos() {
+  return db.empreendimento.findMany({
+    where: { ativo: true },
+    orderBy: { nome: "asc" },
+  });
+}
+
+export async function createEmpreendimento(nome: string) {
+  const emp = await db.empreendimento.create({ data: { nome } });
+  revalidatePath("/prioridades-midia-paga");
+  return emp;
+}
+
+export async function deleteEmpreendimento(id: string) {
+  await db.empreendimento.delete({ where: { id } });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function addPrioridadeToMes(mesId: string, empreendimentoId: string) {
+  const prioridade = await db.midiaPagaPrioridade.create({
+    data: { mesId, empreendimentoId },
+  });
+  // Criar 4 formatos padrão com estruturas e variações
+  const formatos = ["Estático", "Vídeo Narrado", "Vídeo Apresentadora", "Vídeos Disruptivos"];
+  for (const nome of formatos) {
+    const formato = await db.midiaPagaFormato.create({
+      data: { prioridadeId: prioridade.id, nome },
+    });
+    // Criar 4 estruturas (E1-E4)
+    for (let e = 1; e <= 4; e++) {
+      const estrutura = await db.midiaPagaEstrutura.create({
+        data: { formatoId: formato.id, nome: `E${e}` },
+      });
+      // Criar 5 variações (V1-V5)
+      for (let v = 1; v <= 5; v++) {
+        await db.midiaPagaVariacao.create({
+          data: { estruturaId: estrutura.id, nome: `V${v}` },
+        });
+      }
+    }
+  }
+  revalidatePath("/prioridades-midia-paga");
+  return prioridade;
+}
+
+export async function removePrioridade(id: string) {
+  await db.midiaPagaPrioridade.delete({ where: { id } });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function updatePrioridade(
+  id: string,
+  data: { estrategia?: string; campanhasAtivas?: string; briefingsZerados?: string }
+) {
+  await db.midiaPagaPrioridade.update({ where: { id }, data });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function toggleFormatoChecked(id: string, checked: boolean) {
+  await db.midiaPagaFormato.update({ where: { id }, data: { checked } });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function toggleEstruturaChecked(id: string, checked: boolean) {
+  await db.midiaPagaEstrutura.update({ where: { id }, data: { checked } });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function toggleVariacaoChecked(id: string, checked: boolean) {
+  await db.midiaPagaVariacao.update({ where: { id }, data: { checked } });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function addEstrutura(formatoId: string, nome: string) {
+  const estrutura = await db.midiaPagaEstrutura.create({
+    data: { formatoId, nome },
+  });
+  // Criar 5 variações padrão
+  for (let v = 1; v <= 5; v++) {
+    await db.midiaPagaVariacao.create({
+      data: { estruturaId: estrutura.id, nome: `V${v}` },
+    });
+  }
+  revalidatePath("/prioridades-midia-paga");
+  return estrutura;
+}
+
+export async function removeEstrutura(id: string) {
+  await db.midiaPagaEstrutura.delete({ where: { id } });
+  revalidatePath("/prioridades-midia-paga");
+}
+
+export async function addVariacao(estruturaId: string, nome: string) {
+  const variacao = await db.midiaPagaVariacao.create({
+    data: { estruturaId, nome },
+  });
+  revalidatePath("/prioridades-midia-paga");
+  return variacao;
+}
+
+export async function removeVariacao(id: string) {
+  await db.midiaPagaVariacao.delete({ where: { id } });
+  revalidatePath("/prioridades-midia-paga");
+}

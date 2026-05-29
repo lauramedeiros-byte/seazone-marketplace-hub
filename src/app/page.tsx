@@ -10,6 +10,7 @@ import {
   Search,
   RefreshCw,
   Megaphone,
+  TrendingUp as TrendingUpIcon,
 } from "lucide-react";
 import { SubCardSearch } from "@/components/sub-card-search";
 
@@ -64,6 +65,13 @@ const subCards = [
     descricao: "Análise de campanhas de mídia paga",
     icone: Megaphone,
     cor: "text-pink-600",
+  },
+  {
+    href: "/prioridades-midia-paga",
+    titulo: "Prioridades de Mídia Paga",
+    descricao: "Planejamento mensal de prioridades e formatos de criativos",
+    icone: TrendingUpIcon,
+    cor: "text-cyan-600",
   },
 ];
 
