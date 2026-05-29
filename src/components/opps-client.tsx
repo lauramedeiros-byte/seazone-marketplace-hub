@@ -513,17 +513,9 @@ export function OppsClient({ semanas: initial }: Props) {
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Montar Textos 2 Top Opps</p>
-              <p className="text-xs text-gray-500">Usa a skill /textos-2-top-opps-marketplace no Claude Cowork para criar 2 opções de WhatsApp e 2 de e-mail</p>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <a href="https://claude.ai/c/c01f1fb9-e6e8-8009-ad57-e7a8ef67e9eb" target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4" />
-                Abrir
-              </a>
-            </Button>
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-gray-700">Montar Textos 2 Top Opps</p>
+            <p className="text-xs text-gray-500 mt-1">Acessar o Claude Cowork → Usar a skill /textos-2-top-opps-marketplace → Ele vai pedir os dados do empreendimento para montar 2 opções de texto para WhatsApp e 2 opções de e-mail</p>
           </CardContent>
         </Card>
       </div>
