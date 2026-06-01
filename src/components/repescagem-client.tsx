@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, TextCursorInput, CheckCircle2, Image as ImageIcon, Save, Search, RotateCcw, Circle, Check } from "lucide-react";
+import { Plus, Trash2, TextCursorInput, CheckCircle2, Image as ImageIcon, Save, Search, RotateCcw, Circle, Check, RefreshCw } from "lucide-react";
 import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento, createRepescagemNumero, updateRepescagemNumero, deleteRepescagemNumero, resetarAuditoria } from "@/lib/actions";
 
 interface Numero {
@@ -203,6 +203,32 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     );
   };
 
+  const [auditando, setAuditando] = useState(false);
+  const [auditResult, setAuditResult] = useState<{
+    atualizados: number;
+    ignorados: number;
+    erros: number;
+    detalhes: { nome: string; status: string; motivo?: string }[];
+  } | null>(null);
+
+  const handleAuditar = async () => {
+    if (!confirm("Auditar números da planilha? Isso vai atualizar os textos de TODOS os empreendimentos.")) return;
+    setAuditando(true);
+    setAuditResult(null);
+    try {
+      const res = await fetch("/api/auditar-repescagem", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.erro);
+      setAuditResult(data);
+      if (data.atualizados > 0) window.location.reload();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert("Erro na auditoria: " + msg);
+    } finally {
+      setAuditando(false);
+    }
+  };
+
   const getTexto = (emp: Empreendimento) =>
     editTexto[emp.id] !== undefined ? editTexto[emp.id] : emp.textoConteudo ?? "";
 
@@ -257,17 +283,49 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
         </p>
       </div>
 
-      {/* Barra de busca */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input
-          type="text"
-          placeholder="Buscar empreendimento..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="pl-10 h-10"
-        />
+      {/* Barra de busca + botão auditar */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Buscar empreendimento..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="pl-10 h-10"
+          />
+        </div>
+        <Button
+          variant="outline"
+          onClick={handleAuditar}
+          disabled={auditando}
+          className="shrink-0 h-10 border-blue-200 text-blue-600 hover:bg-blue-50"
+        >
+          {auditando ? (
+            <RefreshCw className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
+          Auditar números
+        </Button>
       </div>
+
+      {/* Resultado da auditoria */}
+      {auditResult && (
+        <Card className="mb-4 border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-green-700">
+              {auditResult.atualizados} atualizados, {auditResult.ignorados} ignorados
+              {auditResult.erros > 0 && `, ${auditResult.erros} erros`}
+            </p>
+            {auditResult.detalhes.filter(d => d.status !== "ok").map(d => (
+              <p key={d.nome} className="text-xs text-yellow-700 mt-1">
+                {d.nome}: {d.motivo}
+              </p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Resumo da auditoria */}
       <Card className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
