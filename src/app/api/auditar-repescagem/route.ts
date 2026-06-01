@@ -18,6 +18,22 @@ function formatBRL(valor: number): string {
   });
 }
 
+function parseValor(texto: string): { cota: number | null; entrada: number | null } {
+  // Extrai valores monetários do texto (R$ 999.999,99 ou R$ 999999,99)
+  const matches = texto.match(/R\$\s*([\d\.]+),(\d{2})/g);
+  if (!matches || matches.length === 0) return { cota: null, entrada: null };
+
+  const vals = matches.map((m) => {
+    const n = parseFloat(m.replace(/R\$\s*/g, "").replace(/\./g, "").replace(",", "."));
+    return isNaN(n) ? null : n;
+  }).filter((v): v is number => v !== null);
+
+  // Primeira menção de "unidades" = valor da cota
+  // Última menção (se >1) = valor da entrada
+  const entradaIdx = vals.length > 1 ? vals.length - 1 : 0;
+  return { cota: vals[0] ?? null, entrada: vals.length > 1 ? vals[entradaIdx] ?? null : null };
+}
+
 function slugify(nome: string): string {
   return nome
     .toLowerCase()
@@ -28,28 +44,31 @@ function slugify(nome: string): string {
     .trim();
 }
 
-/**
- * Substitui os valores de preço no texto atual mantendo toda a estrutura.
- * Busca linhas que contenham "R$" e substitui o último valor monetário
- * quando a linha menciona "valor", "entrada", "unidades", etc.
- */
-function atualizarTexto(textoAtual: string, params: {
-  nomeEmpreendimento: string;
-  valorCota: number;
-  valorEntrada: number | null;
-  emFuncionamento: boolean;
-}): string {
-  const { nomeEmpreendimento, valorCota, valorEntrada, emFuncionamento } = params;
+function atualizarTexto(
+  textoAtual: string,
+  params: {
+    valorCota: number;
+    valorEntrada: number | null;
+    emFuncionamento: boolean;
+  }
+): { texto: string; alterado: boolean } {
+  const { valorCota, valorEntrada, emFuncionamento } = params;
 
-  let texto = textoAtual;
+  const oldVals = parseValor(textoAtual);
 
-  // ── 1. Identificar se deve mencionar entrada ─────────────────────────────
+  // Se os valores já batem exatamente, não precisa mudar nada
+  const precisaAtualizar =
+    oldVals.cota !== valorCota ||
+    oldVals.entrada !== valorEntrada ||
+    emFuncionamento !== textoAtual.toLowerCase().includes("em operação");
+
+  if (!precisaAtualizar) {
+    return { texto: textoAtual, alterado: false };
+  }
+
   const temEntrada =
-    valorEntrada !== null &&
-    valorEntrada !== valorCota &&
-    valorEntrada > 0;
+    valorEntrada !== null && valorEntrada !== valorCota && valorEntrada > 0;
 
-  // ── 2. Construir a linha de valores ────────────────────────────────────
   const valorCotaStr = `R$ ${formatBRL(valorCota)}`;
   const entradaStr =
     temEntrada
@@ -58,46 +77,39 @@ function atualizarTexto(textoAtual: string, params: {
 
   const novaLinhaValores = `atualmente temos as últimas unidades a partir de ${valorCotaStr}${entradaStr}.`;
 
-  // ── 3. Substituir a linha de valores no texto ───────────────────────────
-  // Procura qualquer linha que contenha "atualmente temos" ou "últimas unidades"
-  const linhas = texto.split("\n");
+  const linhas = textoAtual.split("\n");
   let substituiuValores = false;
   let substituiuOperacao = false;
+  const emOperacaoTexto = "O empreendimento já está em operação, e";
 
   for (let i = 0; i < linhas.length; i++) {
     const l = linhas[i];
     const lLower = l.toLowerCase();
 
-    // Substituir linha de valores
-    if (!substituiuValores && (lLower.includes("atualmente temos") || lLower.includes("últimas unidades"))) {
+    if (
+      !substituiuValores &&
+      (lLower.includes("atualmente temos") || lLower.includes("últimas unidades"))
+    ) {
       linhas[i] = novaLinhaValores;
       substituiuValores = true;
       continue;
     }
 
-    // Tratar "Em operação" (coluna S = Em funcionamento)
-    const emOperacaoTexto = "O empreendimento já está em operação, e";
-
     if (lLower.includes("em operação") || lLower.includes("funcionamento")) {
       if (!emFuncionamento) {
-        // Remove a menção de operação
         linhas[i] = l.replace(/O empreendimento já está em operação,?\s*e\s*/i, "");
       }
       substituiuOperacao = true;
       continue;
     }
 
-    if (emFuncionamento && !substituiuOperacao) {
-      // A linha anterior contém "atualmente temos" — inserir menção de operação antes
-      if (lLower.includes("atualmente temos") && !lLower.includes("em operação")) {
-        linhas[i] = `${emOperacaoTexto} ${l.toLowerCase().replace(/^e /, "")}`;
-        substituiuOperacao = true;
-        substituiuValores = true; // já substituiu na mesma linha
-      }
+    if (emFuncionamento && !substituiuOperacao && lLower.includes("atualmente temos") && !lLower.includes("em operação")) {
+      linhas[i] = `${emOperacaoTexto} ${l.toLowerCase().replace(/^e /, "")}`;
+      substituiuValores = true;
+      substituiuOperacao = true;
     }
   }
 
-  // Se não encontrou "atualmente temos" para substituir, inserir antes da linha de rendas
   if (!substituiuValores) {
     const idxRendas = linhas.findIndex((l) =>
       l.toLowerCase().includes("oportunidade perfeita") ||
@@ -106,67 +118,52 @@ function atualizarTexto(textoAtual: string, params: {
     if (idxRendas > 0) {
       linhas.splice(idxRendas - 1, 0, novaLinhaValores);
     } else {
-      texto += `\n\n${novaLinhaValores}`;
+      return { texto: textoAtual + `\n\n${novaLinhaValores}`, alterado: true };
     }
   }
 
-  return linhas.join("\n");
+  return { texto: linhas.join("\n"), alterado: true };
 }
 
 export async function POST() {
   try {
-    // 1. Buscar dados do Sheets
     const res = await fetch(SHEETS_URL, {
       next: { revalidate: 0 },
       signal: AbortSignal.timeout(30_000),
     });
 
     if (!res.ok) {
-      return NextResponse.json(
-        { erro: `Erro ao buscar Sheets: ${res.status}` },
-        { status: 502 }
-      );
+      return NextResponse.json({ erro: `Erro ao buscar Sheets: ${res.status}` }, { status: 502 });
     }
 
     const dados: Record<
       string,
-      {
-        valorCota?: number;
-        valorEntrada?: number;
-        emFuncionamento?: boolean;
-        url?: string;
-        erro?: string;
-      }
+      { valorCota?: number; valorEntrada?: number; emFuncionamento?: boolean; url?: string; erro?: string }
     > = await res.json();
 
-    // 2. Buscar empreendimentos do banco
-    const empreendimentos = await db.repescagemEmpreendimento.findMany({
-      include: { numeros: true },
-    });
+    const empreendimentos = await db.repescagemEmpreendimento.findMany({ include: { numeros: true } });
 
     const resultados: {
       nome: string;
-      status: "ok" | "ignorada" | "erro";
+      status: "alterado" | "mantido" | "erro";
+      valorAntigo?: string;
+      valorNovo?: string;
       motivo?: string;
     }[] = [];
 
     for (const emp of empreendimentos) {
-      const nomeBanco = emp.nomeEmpreendimento;
-      const slugBanco = slugify(nomeBanco);
-
-      let dado = dados[nomeBanco];
+      const slugBanco = slugify(emp.nomeEmpreendimento);
+      let dado = dados[emp.nomeEmpreendimento];
 
       if (!dado) {
-        const chaveSheets = Object.keys(dados).find(
-          (k) => slugify(k) === slugBanco
-        );
+        const chaveSheets = Object.keys(dados).find((k) => slugify(k) === slugBanco);
         if (chaveSheets) dado = dados[chaveSheets];
       }
 
       if (!dado || dado.erro) {
         resultados.push({
-          nome: nomeBanco,
-          status: "ignorada",
+          nome: emp.nomeEmpreendimento,
+          status: "erro",
           motivo: dado?.erro ?? "Não encontrada no Sheets",
         });
         continue;
@@ -177,22 +174,21 @@ export async function POST() {
 
       if (valorCota === null) {
         resultados.push({
-          nome: nomeBanco,
+          nome: emp.nomeEmpreendimento,
           status: "erro",
           motivo: "Valor da cota ausente no Sheets",
         });
         continue;
       }
 
-      const textoAntigo = emp.textoConteudo ?? "";
-      const textoNovo = atualizarTexto(textoAntigo, {
-        nomeEmpreendimento: nomeBanco,
+      const { texto: textoNovo, alterado } = atualizarTexto(emp.textoConteudo ?? "", {
         valorCota,
         valorEntrada,
         emFuncionamento: dado.emFuncionamento ?? false,
       });
 
-      // 3. Atualizar no banco
+      const valorCotaAntigo = parseValor(emp.textoConteudo ?? "").cota;
+
       await db.repescagemEmpreendimento.update({
         where: { id: emp.id },
         data: {
@@ -201,11 +197,9 @@ export async function POST() {
         },
       });
 
-      // Atualizar campos "Valor total" e "Entrada" nos números, se existirem
+      // Atualizar campo "Valor total" nos números, se existir
       const numeroTotal = emp.numeros.find(
-        (n) =>
-          n.campoNome.toLowerCase().includes("valor") &&
-          n.campoNome.toLowerCase().includes("total")
+        (n) => n.campoNome.toLowerCase().includes("valor") && n.campoNome.toLowerCase().includes("total")
       );
       if (numeroTotal) {
         await db.repescagemNumero.update({
@@ -215,9 +209,7 @@ export async function POST() {
       }
 
       if (valorEntrada !== null && valorEntrada !== valorCota) {
-        const numeroEntrada = emp.numeros.find((n) =>
-          n.campoNome.toLowerCase().includes("entrada")
-        );
+        const numeroEntrada = emp.numeros.find((n) => n.campoNome.toLowerCase().includes("entrada"));
         if (numeroEntrada) {
           await db.repescagemNumero.update({
             where: { id: numeroEntrada.id },
@@ -226,27 +218,25 @@ export async function POST() {
         }
       }
 
-      resultados.push({ nome: nomeBanco, status: "ok" });
+      resultados.push({
+        nome: emp.nomeEmpreendimento,
+        status: alterado ? "alterado" : "mantido",
+        valorAntigo: valorCotaAntigo !== null ? `R$ ${formatBRL(valorCotaAntigo)}` : undefined,
+        valorNovo: `R$ ${formatBRL(valorCota)}`,
+      });
     }
 
     revalidatePath("/respescagem");
 
-    const atualizados = resultados.filter((r) => r.status === "ok").length;
-    const ignorados = resultados.filter((r) => r.status === "ignorada").length;
-    const erros = resultados.filter((r) => r.status === "erro").length;
-
     return NextResponse.json({
       total: empreendimentos.length,
-      atualizados,
-      ignorados,
-      erros,
+      alterados: resultados.filter((r) => r.status === "alterado").length,
+      mantidos: resultados.filter((r) => r.status === "mantido").length,
+      erros: resultados.filter((r) => r.status === "erro").length,
       detalhes: resultados,
     });
   } catch (err) {
     console.error("[auditar-repescagem]", err);
-    return NextResponse.json(
-      { erro: "Erro interno ao auditar." },
-      { status: 500 }
-    );
+    return NextResponse.json({ erro: "Erro interno ao auditar." }, { status: 500 });
   }
 }

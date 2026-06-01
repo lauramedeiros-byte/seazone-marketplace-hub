@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useUser } from "@clerk/nextjs";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,16 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, TextCursorInput, CheckCircle2, Image as ImageIcon, Save, Search, RotateCcw, Circle, Check, RefreshCw } from "lucide-react";
-import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento, createRepescagemNumero, updateRepescagemNumero, deleteRepescagemNumero, resetarAuditoria } from "@/lib/actions";
+import { Plus, Trash2, TextCursorInput, Image as ImageIcon, Save, Search, RefreshCw, Pencil, ArrowUpDown, Check } from "lucide-react";
+import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento } from "@/lib/actions";
 
 interface Numero {
   id: string;
   campoNome: string;
   valorAtual: string | null;
-  sinalizador: string | null;
-  verificado: boolean;
-  dataVerificado: Date | null;
 }
 
 interface Empreendimento {
@@ -38,7 +34,6 @@ interface Props {
 }
 
 export function RepescagemClient({ empreendimentos: initial }: Props) {
-  const { user } = useUser();
   const [empreendimentos, setEmpreendimentos] = useState(initial);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editTexto, setEditTexto] = useState<Record<string, string | undefined>>({});
@@ -46,8 +41,6 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
   const [saving, setSaving] = useState<string | null>(null);
   const [addingEmp, setAddingEmp] = useState(false);
   const [newEmpNome, setNewEmpNome] = useState("");
-  const [addingNum, setAddingNum] = useState<string | null>(null);
-  const [newNumCampo, setNewNumCampo] = useState("");
   const [busca, setBusca] = useState("");
 
   const empreendimentosFiltrados = useMemo(() => {
@@ -57,14 +50,6 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       e.nomeEmpreendimento.toLowerCase().includes(q)
     );
   }, [empreendimentos, busca]);
-
-  const totalNumeros = useMemo(() => {
-    return empreendimentos.reduce((acc, e) => acc + e.numeros.length, 0);
-  }, [empreendimentos]);
-
-  const numerosVerificados = useMemo(() => {
-    return empreendimentos.reduce((acc, e) => acc + e.numeros.filter(n => n.verificado).length, 0);
-  }, [empreendimentos]);
 
   const handleCreateEmpreendimento = async () => {
     if (!newEmpNome.trim()) return;
@@ -113,102 +98,12 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     }
   };
 
-  const handleCreateNumero = async (empreendimentoId: string) => {
-    if (!newNumCampo.trim()) return;
-    setAddingNum(empreendimentoId);
-    try {
-      await createRepescagemNumero(empreendimentoId, newNumCampo.trim(), user?.id);
-      setNewNumCampo("");
-      setAddingNum(null);
-      window.location.reload();
-    } catch {
-      setAddingNum(null);
-    }
-  };
-
-  const handleUpdateNumeroValor = async (id: string, valor: string, campoNome: string, textoAtual: string) => {
-    await updateRepescagemNumero(id, { valorAtual: valor });
-
-    setEmpreendimentos((prev) =>
-      prev.map((e) => ({
-        ...e,
-        numeros: e.numeros.map((n) =>
-          n.id === id ? { ...n, valorAtual: valor } : n
-        ),
-      }))
-    );
-
-    if (textoAtual && textoAtual.trim()) {
-      const textoAtualizado = atualizarNumeroNoTexto(textoAtual, campoNome, valor);
-      if (textoAtualizado !== textoAtual) {
-        const empId = empreendimentos.find((e) => e.numeros.some((n) => n.id === id))?.id;
-        if (empId) {
-          const imgAtual = empreendimentos.find((e) => e.id === empId)?.linkImagem ?? "";
-          setEditTexto((prev) => ({ ...prev, [empId]: textoAtualizado }));
-          await updateRepescagemTextoEImagem(empId, textoAtualizado, imgAtual);
-          setEmpreendimentos((prev) =>
-            prev.map((e) =>
-              e.id === empId ? { ...e, textoConteudo: textoAtualizado, dataUltimaAtualizacao: new Date() } : e
-            )
-          );
-        }
-      }
-    }
-  };
-
-  const handleToggleVerificado = async (id: string, verificado: boolean) => {
-    // Atualiza UI imediatamente (otimista)
-    setEmpreendimentos((prev) =>
-      prev.map((e) => ({
-        ...e,
-        numeros: e.numeros.map((n) =>
-          n.id === id ? { ...n, verificado, dataVerificado: verificado ? new Date() : null } : n
-        ),
-      }))
-    );
-
-    // Salva no banco
-    const result = await fetch('/api/toggle-verificado', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, verificado }),
-    });
-    if (!result.ok) {
-      console.error("Erro ao salvar:", await result.text());
-    }
-  };
-
-  const handleResetarAuditoria = async (empreendimentoId: string) => {
-    if (!confirm("Resetar auditoria? Todos os números voltarão para 'não verificado'.")) return;
-    await resetarAuditoria(empreendimentoId);
-    setEmpreendimentos((prev) =>
-      prev.map((e) =>
-        e.id === empreendimentoId
-          ? {
-              ...e,
-              numeros: e.numeros.map((n) => ({ ...n, verificado: false, dataVerificado: null })),
-            }
-          : e
-      )
-    );
-  };
-
-  const handleDeleteNumero = async (numeroId: string) => {
-    await deleteRepescagemNumero(numeroId);
-    setEmpreendimentos((prev) =>
-      prev.map((e) => ({
-        ...e,
-        numeros: e.numeros.filter((n) => n.id !== numeroId),
-      }))
-    );
-  };
-
   const [auditando, setAuditando] = useState(false);
   const [auditResult, setAuditResult] = useState<{
-    atualizados: number;
-    ignorados: number;
+    alterados: number;
+    mantidos: number;
     erros: number;
-    detalhes: { nome: string; status: string; motivo?: string }[];
+    detalhes: { nome: string; status: string; valorAntigo?: string; valorNovo?: string; motivo?: string }[];
   } | null>(null);
 
   const handleAuditar = async () => {
@@ -220,7 +115,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.erro);
       setAuditResult(data);
-      if (data.atualizados > 0) window.location.reload();
+      if (data.alterados > 0 || data.erros > 0) window.location.reload();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       alert("Erro na auditoria: " + msg);
@@ -237,39 +132,6 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
 
   const hasChanges = (emp: Empreendimento) =>
     editTexto[emp.id] !== undefined || editImagem[emp.id] !== undefined;
-
-  function atualizarNumeroNoTexto(texto: string, campoNome: string, novoValor: string): string {
-    const lines = texto.split('\n');
-    const campoLower = campoNome.toLowerCase();
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (line.toLowerCase().includes(campoLower)) {
-        const regex = /((?:R\$\s*)?[\d\.,]+(?:\s*[-–]\s*[\d\.,]+)?)\s*(?:\/|$|\)|;|€|€)/gi;
-        const matches = [...line.matchAll(regex)];
-
-        if (matches.length > 0) {
-          const lastMatch = matches[matches.length - 1];
-          if (lastMatch[1]) {
-            lines[i] = line.replace(lastMatch[1], novoValor);
-            return lines.join('\n');
-          }
-        }
-
-        const regexValor = /((?:R\$\s*)?[\d\.,]+(?:[-–][\d\.,]+)?)/;
-        const valorMatch = line.match(regexValor);
-        if (valorMatch && valorMatch[1]) {
-          const nextLine = lines[i + 1];
-          if (nextLine && /^\s*[\d\.,]+/.test(nextLine)) {
-            lines[i + 1] = nextLine.replace(/^(\s*)([\d\.,]+)/, `$1${novoValor}`);
-            return lines.join('\n');
-          }
-        }
-      }
-    }
-
-    return texto;
-  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -311,51 +173,45 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       </div>
 
       {/* Resultado da auditoria */}
-      {auditResult && (
+      {auditResult && !auditando && (
         <Card className="mb-4 border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-green-700">
-              {auditResult.atualizados} atualizados, {auditResult.ignorados} ignorados
-              {auditResult.erros > 0 && `, ${auditResult.erros} erros`}
-            </p>
-            {auditResult.detalhes.filter(d => d.status !== "ok").map(d => (
-              <p key={d.nome} className="text-xs text-yellow-700 mt-1">
-                {d.nome}: {d.motivo}
-              </p>
-            ))}
+          <CardContent className="p-4 space-y-1">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <p className="text-sm font-semibold text-green-800">Auditoria completa!</p>
+            </div>
+            <div className="flex gap-4 text-xs text-green-700 ml-6">
+              {auditResult.alterados > 0 && (
+                <span className="flex items-center gap-1">
+                  <Pencil className="w-3 h-3 text-blue-600" />
+                  {auditResult.alterados} ajustado{auditResult.alterados > 1 ? "s" : ""}
+                </span>
+              )}
+              {auditResult.mantidos > 0 && (
+                <span className="flex items-center gap-1">
+                  <ArrowUpDown className="w-3 h-3 text-gray-500" />
+                  {auditResult.mantidos} sem mudança
+                </span>
+              )}
+              {auditResult.erros > 0 && (
+                <span className="flex items-center gap-1 text-red-600">
+                  <span className="w-3 h-3 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">!</span>
+                  {auditResult.erros} com erro{auditResult.erros > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            {auditResult.detalhes.filter(d => d.status === "erro").length > 0 && (
+              <div className="mt-2 ml-6 space-y-1">
+                {auditResult.detalhes.filter(d => d.status === "erro").map(d => (
+                  <p key={d.nome} className="text-xs text-red-600">
+                    {d.nome}: {d.motivo}
+                  </p>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
-
-      {/* Resumo da auditoria */}
-      <Card className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Progresso da Auditoria</p>
-              <p className="text-xs text-gray-500">
-                {numerosVerificados} de {totalNumeros} números verificados
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Circle className="w-3 h-3 text-gray-300" />
-                <span className="text-xs text-gray-600">Pendente</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-3 h-3 text-blue-500" />
-                <span className="text-xs text-gray-600">Auditado</span>
-              </div>
-            </div>
-          </div>
-          <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-500 h-2 rounded-full transition-all"
-              style={{ width: `${totalNumeros > 0 ? (numerosVerificados / totalNumeros) * 100 : 0}%` }}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Form adicionar empreendimento */}
       <Card className="mb-6">
@@ -388,225 +244,124 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-gray-500">{empreendimentosFiltrados.length} de {empreendimentos.length} empreendimentos</p>
-          {empreendimentosFiltrados.map((emp) => {
-            const empVerificados = emp.numeros.filter(n => n.verificado).length;
-            return (
-              <Card key={emp.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          setExpandedId(expandedId === emp.id ? null : emp.id)
-                        }
-                        className="text-sm text-gray-500 hover:text-gray-700"
-                      >
-                        {expandedId === emp.id ? "▼" : "▶"}
-                      </button>
-                      <CardTitle className="text-base">
-                        {emp.nomeEmpreendimento}
-                      </CardTitle>
-                      {emp.linkImagem && (
-                        <ImageIcon className="w-4 h-4 text-blue-500" />
-                      )}
-                      {emp.numeros.length > 0 && (
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          empVerificados === emp.numeros.length
-                            ? "bg-blue-100 text-blue-700"
-                            : empVerificados > 0
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}>
-                          {empVerificados === emp.numeros.length && empVerificados > 0
-                            ? "Auditado"
-                            : `${empVerificados}/${emp.numeros.length}`}
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteEmpreendimento(emp.id)}
-                      className="text-gray-400 hover:text-red-600"
+          {empreendimentosFiltrados.map((emp) => (
+            <Card key={emp.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setExpandedId(expandedId === emp.id ? null : emp.id)}
+                      className="text-sm text-gray-500 hover:text-gray-700"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {expandedId === emp.id ? "▼" : "▶"}
+                    </button>
+                    <CardTitle className="text-base">{emp.nomeEmpreendimento}</CardTitle>
+                    {emp.linkImagem && (
+                      <ImageIcon className="w-4 h-4 text-blue-500" />
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteEmpreendimento(emp.id)}
+                    className="text-gray-400 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                {emp.dataUltimaAtualizacao && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Atualizado em {new Date(emp.dataUltimaAtualizacao).toLocaleDateString("pt-BR")}
+                  </p>
+                )}
+              </CardHeader>
+
+              {expandedId === emp.id && (
+                <CardContent className="space-y-4">
+                  {/* Imagem */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Link da Imagem</label>
+                    <Input
+                      type="url"
+                      placeholder="Cole aqui o link da imagem para o disparo..."
+                      value={getImagem(emp)}
+                      onChange={(e) => setEditImagem((prev) => ({ ...prev, [emp.id]: e.target.value }))}
+                      className="text-sm"
+                    />
+                    {getImagem(emp) && (
+                      <div className="mt-2">
+                        <img
+                          src={getImagem(emp)}
+                          alt="Preview"
+                          className="max-h-32 rounded-lg border border-gray-200"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Texto do empreendimento */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Texto do Empreendimento</label>
+                    <Textarea
+                      value={getTexto(emp)}
+                      onChange={(e) => setEditTexto((prev) => ({ ...prev, [emp.id]: e.target.value }))}
+                      rows={8}
+                      placeholder="Cole aqui o texto de marketing do empreendimento..."
+                      className="text-sm"
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => handleSave(emp.id)}
+                      disabled={saving === emp.id || !hasChanges(emp)}
+                    >
+                      <Save className="w-4 h-4" />
+                      {saving === emp.id ? "Salvando..." : "Salvar Tudo"}
                     </Button>
                   </div>
-                  {emp.dataUltimaAtualizacao && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Atualizado em{" "}
-                      {new Date(emp.dataUltimaAtualizacao).toLocaleDateString("pt-BR")}
-                    </p>
-                  )}
-                </CardHeader>
 
-                {expandedId === emp.id && (
-                  <CardContent className="space-y-4">
-                    {/* Imagem */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">
-                        Link da Imagem
-                      </label>
-                      <Input
-                        type="url"
-                        placeholder="Cole aqui o link da imagem para o disparo..."
-                        value={getImagem(emp)}
-                        onChange={(e) =>
-                          setEditImagem((prev) => ({
-                            ...prev,
-                            [emp.id]: e.target.value,
-                          }))
-                        }
-                        className="text-sm"
-                      />
-                      {getImagem(emp) && (
-                        <div className="mt-2">
-                          <img
-                            src={getImagem(emp)}
-                            alt="Preview"
-                            className="max-h-32 rounded-lg border border-gray-200"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Texto do empreendimento */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1">
-                        Texto do Empreendimento
-                      </label>
-                      <Textarea
-                        value={getTexto(emp)}
-                        onChange={(e) =>
-                          setEditTexto((prev) => ({
-                            ...prev,
-                            [emp.id]: e.target.value,
-                          }))
-                        }
-                        rows={8}
-                        placeholder="Cole aqui o texto de marketing do empreendimento..."
-                        className="text-sm"
-                      />
-                    </div>
-
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleResetarAuditoria(emp.id)}
-                        className="text-orange-600 border-orange-200 hover:bg-orange-50"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                        Resetar Auditoria
-                      </Button>
-                      <Button
-                        onClick={() => handleSave(emp.id)}
-                        disabled={saving === emp.id || !hasChanges(emp)}
-                      >
-                        <Save className="w-4 h-4" />
-                        {saving === emp.id ? "Salvando..." : "Salvar Tudo"}
-                      </Button>
-                    </div>
-
-                    {/* Números para auditar */}
+                  {/* Valores da Cota */}
+                  {emp.numeros.length > 0 && (
                     <div className="pt-4 border-t border-gray-100">
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Números para Auditar
-                        </label>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Campo (ex: IPTU, m²)..."
-                            value={addingNum === emp.id ? newNumCampo : ""}
-                            onChange={(e) => {
-                              setAddingNum(emp.id);
-                              setNewNumCampo(e.target.value);
-                            }}
-                            onKeyDown={async (e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                await handleCreateNumero(emp.id);
-                              }
-                            }}
-                            className="w-48 h-8 text-xs"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCreateNumero(emp.id)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
+                      <div className="mb-2">
+                        <label className="text-sm font-medium text-gray-700">Valores da Cota</label>
                       </div>
-
-                      {emp.numeros.length === 0 ? (
-                        <p className="text-sm text-gray-400">
-                          Nenhum número cadastrado.
-                        </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {emp.numeros.map((num) => (
-                            <div
-                              key={num.id}
-                              className={`flex items-center gap-3 p-3 rounded-lg border ${
-                                num.verificado
-                                  ? "bg-blue-50 border-blue-200"
-                                  : "bg-gray-50 border-gray-200"
-                              }`}
-                            >
-                              <button
-                                onClick={() => handleToggleVerificado(num.id, !num.verificado)}
-                                className={`shrink-0 p-1 rounded-full transition-colors ${
-                                  num.verificado
-                                    ? "bg-blue-500 text-white"
-                                    : "bg-gray-200 text-gray-400 hover:bg-gray-300"
-                                }`}
-                                title={num.verificado ? "Desfazer auditoria" : "Marcar como auditado"}
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                              <div className="flex-1">
-                                <span className={`text-sm font-medium ${
-                                  num.verificado ? "text-blue-700" : "text-gray-600"
-                                }`}>
-                                  {num.campoNome}
-                                </span>
-                                {num.verificado && num.dataVerificado && (
-                                  <span className="text-xs text-blue-500 ml-2">
-                                    Auditado em {new Date(num.dataVerificado).toLocaleDateString("pt-BR")}
-                                  </span>
-                                )}
+                      <div className="space-y-2">
+                        {emp.numeros.map((num) => {
+                          const isValor = num.campoNome.toLowerCase().includes("valor") && num.campoNome.toLowerCase().includes("total");
+                          const isEntrada = num.campoNome.toLowerCase().includes("entrada");
+                          if (!isValor && !isEntrada) {
+                            return (
+                              <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
+                                <div className="flex-1">
+                                  <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
+                                </div>
+                                <span className="text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
                               </div>
-                              <Input
-                                value={num.valorAtual ?? ""}
-                                onChange={(e) =>
-                                  handleUpdateNumeroValor(num.id, e.target.value, num.campoNome, emp.textoConteudo ?? "")
-                                }
-                                placeholder="Valor..."
-                                className="w-40 h-8 text-sm"
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteNumero(num.id)}
-                                className="text-gray-400 hover:text-red-600 shrink-0"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+                            );
+                          }
+                          return (
+                            <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
+                              <div className="flex-1">
+                                <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
+                              </div>
+                              <ArrowUpDown className="w-3 h-3 text-gray-400 shrink-0" />
+                              <span className="text-sm font-mono text-gray-500 line-through shrink-0">
+                                {num.valorAtual ?? "—"}
+                              </span>
+                              <span className="text-sm font-mono text-gray-400 shrink-0">→</span>
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          ))}
         </div>
       )}
     </div>
