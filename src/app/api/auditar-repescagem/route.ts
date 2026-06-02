@@ -28,34 +28,20 @@ function slugify(nome: string): string {
     .trim();
 }
 
-/**
- * Extrai valores de renda do texto atual (R$ X.XXX,XX ou R$ X.XXX)
- */
-/**
- * Extrai valores de renda do texto atual.
- * Aceita formatos: R$ 4.598,00  |  R$ 4.598  |  R$ 4598,00
- */
 function extrairRendas(texto: string): { anual: string | null; mensal: string | null } {
-  // Procura toda menção de R$ no texto (ignora o R$ do próprio valor, pega o primeiro após "renda líquida")
-  function extrair(tipo: "anual" | "mensal", sufixo: string): string | null {
-    const pattern = tipo === "anual"
-      ? /(?:renda\s+líquida\s+(?:mensal\s+)?anual[^\$R]*?R\$\s*([\d\.,]+)/i
-      : /(?:renda\s+líquida\s+(?:mensal(?:\s+média)?)[^\$R]*?R\$\s*([\d\.,]+)/i;
-
+  function extrair(tipo: "anual" | "mensal"): string | null {
+    const patternAnual = /(?:renda\s+líquida\s+(?:mensal\s+)?anual[^\$R]*?R\$\s*([\d\.,]+))/i;
+    const patternMensal = /(?:renda\s+líquida\s+(?:mensal(?:\s+média)?)[^\$R]*?R\$\s*([\d\.,]+))/i;
+    const pattern = tipo === "anual" ? patternAnual : patternMensal;
     const match = texto.match(pattern);
     if (!match) return null;
     const val = match[1].trim();
-    // Normaliza: aceita com ou sem decimais, com ou sem ponto de milhar
     const normalized = val.replace(/\./g, "").replace(",", ".");
     const n = parseFloat(normalized);
     if (isNaN(n)) return null;
     return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-
-  return {
-    anual: extrair("anual", "anual"),
-    mensal: extrair("mensal", "mensal"),
-  };
+  return { anual: extrair("anual"), mensal: extrair("mensal") };
 }
 
 function gerarTexto(params: {
