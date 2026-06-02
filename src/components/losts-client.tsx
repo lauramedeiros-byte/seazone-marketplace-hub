@@ -1286,6 +1286,7 @@ export function LostsClient() {
       {activeTab === "campanhas" ? (
         <CampanhasPanel campanhas={campanhas} onChange={setCampanhas} />
       ) : (
+        <>
 
       {/* ── Main Header ── */}
       <div style={{ maxWidth: 1280, margin: "0 auto 24px" }}>
@@ -1630,6 +1631,7 @@ export function LostsClient() {
         </div>
       </div>
       )}
+        </>
       </div>
     </div>
   );
