@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 const SHEETS_URL =
-  "https://script.google.com/macros/s/AKfycbxvl_WGlrn5-LMuY96EkpAEYsR1CqbtM-jkSZPA79LSBHRQkT2nPO1BvSlnb76oGWTU6w/exec";
+  "https://script.google.com/macros/s/AKfycbwnr1VkWXPkt3-Iuho7uSY1d0BUyzudrPRvmC7wWTA69pAnjdlByYQMcnXQiOmIRBOGzg/exec";
 
 function toNumber(valor: unknown): number | null {
   if (valor === null || valor === undefined || valor === "") return null;
@@ -31,12 +31,30 @@ function slugify(nome: string): string {
 /**
  * Extrai valores de renda do texto atual (R$ X.XXX,XX ou R$ X.XXX)
  */
+/**
+ * Extrai valores de renda do texto atual.
+ * Aceita formatos: R$ 4.598,00  |  R$ 4.598  |  R$ 4598,00
+ */
 function extrairRendas(texto: string): { anual: string | null; mensal: string | null } {
-  const matchAnual = texto.match(/renda líquida anual[^R]*R\$\s*([\d\.]+,\d{2})/i);
-  const matchMensal = texto.match(/renda líquida mensal[^R]*R\$\s*([\d\.]+,\d{2})/i);
+  // Procura toda menção de R$ no texto (ignora o R$ do próprio valor, pega o primeiro após "renda líquida")
+  function extrair(tipo: "anual" | "mensal", sufixo: string): string | null {
+    const pattern = tipo === "anual"
+      ? /(?:renda\s+líquida\s+(?:mensal\s+)?anual[^\$R]*?R\$\s*([\d\.,]+)/i
+      : /(?:renda\s+líquida\s+(?:mensal(?:\s+média)?)[^\$R]*?R\$\s*([\d\.,]+)/i;
+
+    const match = texto.match(pattern);
+    if (!match) return null;
+    const val = match[1].trim();
+    // Normaliza: aceita com ou sem decimais, com ou sem ponto de milhar
+    const normalized = val.replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(normalized);
+    if (isNaN(n)) return null;
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   return {
-    anual: matchAnual ? matchAnual[1] : null,
-    mensal: matchMensal ? matchMensal[1] : null,
+    anual: extrair("anual", "anual"),
+    mensal: extrair("mensal", "mensal"),
   };
 }
 
@@ -129,7 +147,7 @@ export async function POST() {
 
     const dados: Record<
       string,
-      { valorCota?: number; valorEntrada?: number; emFuncionamento?: boolean; url?: string; erro?: string }
+      { valorCota?: number; valorEntrada?: number; emFuncionamento?: boolean; url?: string; erro?: string; totalDisponivel?: number }
     > = await res.json();
 
     const empreendimentos = await db.repescagemEmpreendimento.findMany({
@@ -186,7 +204,7 @@ export async function POST() {
       const textoAtual = emp.textoConteudo ?? "";
       const rendas = extrairRendas(textoAtual);
 
-      const apenasUmaCota = !dado.erro && valorCota !== null;
+      const apenasUmaCota = (dado.totalDisponivel ?? 0) === 1;
 
       const textoNovo = gerarTexto({
         nomeEmpreendimento: emp.nomeEmpreendimento,
