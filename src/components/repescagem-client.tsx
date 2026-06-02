@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, TextCursorInput, Image as ImageIcon, Save, Search, RefreshCw, Pencil, ArrowUpDown, Check } from "lucide-react";
-import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento } from "@/lib/actions";
+import { Plus, Trash2, TextCursorInput, Image as ImageIcon, Save, Search, RefreshCw, Pencil, Check } from "lucide-react";
+import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento, resetarEdicaoManual } from "@/lib/actions";
 
 interface Numero {
   id: string;
@@ -27,6 +27,7 @@ interface Empreendimento {
   linkImagem: string | null;
   dataUltimaAtualizacao: Date | null;
   numeros: Numero[];
+  editadoManualmente: boolean;
 }
 
 interface Props {
@@ -87,7 +88,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       setEmpreendimentos((prev) =>
         prev.map((e) =>
           e.id === id
-            ? { ...e, textoConteudo: texto, linkImagem: imagem, dataUltimaAtualizacao: new Date() }
+            ? { ...e, textoConteudo: texto, linkImagem: imagem, dataUltimaAtualizacao: new Date(), editadoManualmente: true }
             : e
         )
       );
@@ -98,12 +99,21 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     }
   };
 
+  const handleResetarEdicaoManual = async (id: string) => {
+    if (!confirm("Permitir auditoria automática para este empreendimento?")) return;
+    await resetarEdicaoManual(id);
+    setEmpreendimentos((prev) =>
+      prev.map((e) => e.id === id ? { ...e, editadoManualmente: false } : e)
+    );
+  };
+
   const [auditando, setAuditando] = useState(false);
   const [auditResult, setAuditResult] = useState<{
-    alterados: number;
+    gerados: number;
     mantidos: number;
+    manuais: number;
     erros: number;
-    detalhes: { nome: string; status: string; valorAntigo?: string; valorNovo?: string; motivo?: string }[];
+    detalhes: { nome: string; status: string; valorNovo?: string; motivo?: string }[];
   } | null>(null);
 
   const handleAuditar = async () => {
@@ -115,7 +125,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.erro);
       setAuditResult(data);
-      if (data.alterados > 0 || data.erros > 0) window.location.reload();
+      if (data.gerados > 0 || data.erros > 0) window.location.reload();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       alert("Erro na auditoria: " + msg);
@@ -175,37 +185,44 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       {/* Resultado da auditoria */}
       {auditResult && !auditando && (
         <Card className="mb-4 border-green-200 bg-green-50">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-4 space-y-2">
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-600" />
               <p className="text-sm font-semibold text-green-800">Auditoria completa!</p>
             </div>
-            <div className="flex gap-4 text-xs text-green-700 ml-6">
-              {auditResult.alterados > 0 && (
+            <div className="flex flex-wrap gap-4 text-xs text-green-700 ml-6">
+              {auditResult.gerados > 0 && (
                 <span className="flex items-center gap-1">
-                  <Pencil className="w-3 h-3 text-blue-600" />
-                  {auditResult.alterados} ajustado{auditResult.alterados > 1 ? "s" : ""}
+                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">ajustado</span>
+                  {auditResult.gerados}
                 </span>
               )}
               {auditResult.mantidos > 0 && (
                 <span className="flex items-center gap-1">
-                  <ArrowUpDown className="w-3 h-3 text-gray-500" />
-                  {auditResult.mantidos} sem mudança
+                  <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">mantido</span>
+                  {auditResult.mantidos}
+                </span>
+              )}
+              {auditResult.manuais > 0 && (
+                <span className="flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">editado</span>
+                  {auditResult.manuais}
                 </span>
               )}
               {auditResult.erros > 0 && (
-                <span className="flex items-center gap-1 text-red-600">
-                  <span className="w-3 h-3 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">!</span>
-                  {auditResult.erros} com erro{auditResult.erros > 1 ? "s" : ""}
+                <span className="flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">erro</span>
+                  {auditResult.erros}
                 </span>
               )}
             </div>
-            {auditResult.detalhes.filter(d => d.status === "erro").length > 0 && (
+            {auditResult.detalhes.filter(d => d.status === "erro" || d.status === "manual").length > 0 && (
               <div className="mt-2 ml-6 space-y-1">
                 {auditResult.detalhes.filter(d => d.status === "erro").map(d => (
-                  <p key={d.nome} className="text-xs text-red-600">
-                    {d.nome}: {d.motivo}
-                  </p>
+                  <p key={d.nome} className="text-xs text-red-600">{d.nome}: {d.motivo}</p>
+                ))}
+                {auditResult.detalhes.filter(d => d.status === "manual").map(d => (
+                  <p key={d.nome} className="text-xs text-yellow-600">{d.nome}: edição manual — não atualizado</p>
                 ))}
               </div>
             )}
@@ -244,124 +261,136 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-gray-500">{empreendimentosFiltrados.length} de {empreendimentos.length} empreendimentos</p>
-          {empreendimentosFiltrados.map((emp) => (
-            <Card key={emp.id} className="overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setExpandedId(expandedId === emp.id ? null : emp.id)}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      {expandedId === emp.id ? "▼" : "▶"}
-                    </button>
-                    <CardTitle className="text-base">{emp.nomeEmpreendimento}</CardTitle>
-                    {emp.linkImagem && (
-                      <ImageIcon className="w-4 h-4 text-blue-500" />
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteEmpreendimento(emp.id)}
-                    className="text-gray-400 hover:text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-                {emp.dataUltimaAtualizacao && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Atualizado em {new Date(emp.dataUltimaAtualizacao).toLocaleDateString("pt-BR")}
-                  </p>
-                )}
-              </CardHeader>
+          {empreendimentosFiltrados.map((emp) => {
+            const numValor = emp.numeros.find(n => n.campoNome.toLowerCase().includes("valor") && n.campoNome.toLowerCase().includes("total"));
+            const numEntrada = emp.numeros.find(n => n.campoNome.toLowerCase().includes("entrada"));
+            const temValor = numValor?.valorAtual;
+            const temEntrada = numEntrada?.valorAtual;
 
-              {expandedId === emp.id && (
-                <CardContent className="space-y-4">
-                  {/* Imagem */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">Link da Imagem</label>
-                    <Input
-                      type="url"
-                      placeholder="Cole aqui o link da imagem para o disparo..."
-                      value={getImagem(emp)}
-                      onChange={(e) => setEditImagem((prev) => ({ ...prev, [emp.id]: e.target.value }))}
-                      className="text-sm"
-                    />
-                    {getImagem(emp) && (
-                      <div className="mt-2">
-                        <img
-                          src={getImagem(emp)}
-                          alt="Preview"
-                          className="max-h-32 rounded-lg border border-gray-200"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Texto do empreendimento */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">Texto do Empreendimento</label>
-                    <Textarea
-                      value={getTexto(emp)}
-                      onChange={(e) => setEditTexto((prev) => ({ ...prev, [emp.id]: e.target.value }))}
-                      rows={8}
-                      placeholder="Cole aqui o texto de marketing do empreendimento..."
-                      className="text-sm"
-                    />
-                  </div>
-
-                  <div className="flex justify-end">
+            return (
+              <Card key={emp.id} className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setExpandedId(expandedId === emp.id ? null : emp.id)}
+                        className="text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        {expandedId === emp.id ? "▼" : "▶"}
+                      </button>
+                      <CardTitle className="text-base">{emp.nomeEmpreendimento}</CardTitle>
+                      {emp.linkImagem && (
+                        <ImageIcon className="w-4 h-4 text-blue-500" />
+                      )}
+                      {emp.editadoManualmente && (
+                        <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">editado</span>
+                      )}
+                    </div>
                     <Button
-                      onClick={() => handleSave(emp.id)}
-                      disabled={saving === emp.id || !hasChanges(emp)}
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteEmpreendimento(emp.id)}
+                      className="text-gray-400 hover:text-red-600"
                     >
-                      <Save className="w-4 h-4" />
-                      {saving === emp.id ? "Salvando..." : "Salvar Tudo"}
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
+                  {emp.dataUltimaAtualizacao && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Atualizado em {new Date(emp.dataUltimaAtualizacao).toLocaleDateString("pt-BR")}
+                    </p>
+                  )}
+                </CardHeader>
 
-                  {/* Valores da Cota */}
-                  {emp.numeros.length > 0 && (
-                    <div className="pt-4 border-t border-gray-100">
-                      <div className="mb-2">
-                        <label className="text-sm font-medium text-gray-700">Valores da Cota</label>
-                      </div>
-                      <div className="space-y-2">
-                        {emp.numeros.map((num) => {
-                          const isValor = num.campoNome.toLowerCase().includes("valor") && num.campoNome.toLowerCase().includes("total");
-                          const isEntrada = num.campoNome.toLowerCase().includes("entrada");
-                          if (!isValor && !isEntrada) {
+                {expandedId === emp.id && (
+                  <CardContent className="space-y-4">
+                    {/* Imagem */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Link da Imagem</label>
+                      <Input
+                        type="url"
+                        placeholder="Cole aqui o link da imagem para o disparo..."
+                        value={getImagem(emp)}
+                        onChange={(e) => setEditImagem((prev) => ({ ...prev, [emp.id]: e.target.value }))}
+                        className="text-sm"
+                      />
+                      {getImagem(emp) && (
+                        <div className="mt-2">
+                          <img
+                            src={getImagem(emp)}
+                            alt="Preview"
+                            className="max-h-32 rounded-lg border border-gray-200"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Texto do empreendimento */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Texto do Empreendimento</label>
+                      <Textarea
+                        value={getTexto(emp)}
+                        onChange={(e) => setEditTexto((prev) => ({ ...prev, [emp.id]: e.target.value }))}
+                        rows={10}
+                        placeholder="Cole aqui o texto de marketing do empreendimento..."
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      {emp.editadoManualmente && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleResetarEdicaoManual(emp.id)}
+                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                        >
+                          Liberar auditoria
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => handleSave(emp.id)}
+                        disabled={saving === emp.id || !hasChanges(emp)}
+                      >
+                        <Save className="w-4 h-4" />
+                        {saving === emp.id ? "Salvando..." : "Salvar Tudo"}
+                      </Button>
+                    </div>
+
+                    {/* Valores da Cota */}
+                    {emp.numeros.length > 0 && (
+                      <div className="pt-4 border-t border-gray-100">
+                        <div className="mb-2">
+                          <label className="text-sm font-medium text-gray-700">Valores da Cota</label>
+                        </div>
+                        <div className="space-y-2">
+                          {emp.numeros.map((num) => {
+                            const isValor = num.campoNome.toLowerCase().includes("valor") && num.campoNome.toLowerCase().includes("total");
+                            const isEntrada = num.campoNome.toLowerCase().includes("entrada");
+                            if (!isValor && !isEntrada) {
+                              return (
+                                <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
+                                  <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
+                                  <span className="ml-auto text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
+                                </div>
+                              );
+                            }
                             return (
                               <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
-                                <div className="flex-1">
-                                  <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
-                                </div>
-                                <span className="text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
+                                <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
+                                <span className="ml-auto text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
                               </div>
                             );
-                          }
-                          return (
-                            <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
-                              <div className="flex-1">
-                                <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
-                              </div>
-                              <ArrowUpDown className="w-3 h-3 text-gray-400 shrink-0" />
-                              <span className="text-sm font-mono text-gray-500 line-through shrink-0">
-                                {num.valorAtual ?? "—"}
-                              </span>
-                              <span className="text-sm font-mono text-gray-400 shrink-0">→</span>
-                            </div>
-                          );
-                        })}
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              )}
-            </Card>
-          ))}
+                    )}
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

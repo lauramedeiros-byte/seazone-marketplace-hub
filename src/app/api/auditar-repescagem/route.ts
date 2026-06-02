@@ -18,22 +18,6 @@ function formatBRL(valor: number): string {
   });
 }
 
-function parseValor(texto: string): { cota: number | null; entrada: number | null } {
-  // Extrai valores monetários do texto (R$ 999.999,99 ou R$ 999999,99)
-  const matches = texto.match(/R\$\s*([\d\.]+),(\d{2})/g);
-  if (!matches || matches.length === 0) return { cota: null, entrada: null };
-
-  const vals = matches.map((m) => {
-    const n = parseFloat(m.replace(/R\$\s*/g, "").replace(/\./g, "").replace(",", "."));
-    return isNaN(n) ? null : n;
-  }).filter((v): v is number => v !== null);
-
-  // Primeira menção de "unidades" = valor da cota
-  // Última menção (se >1) = valor da entrada
-  const entradaIdx = vals.length > 1 ? vals.length - 1 : 0;
-  return { cota: vals[0] ?? null, entrada: vals.length > 1 ? vals[entradaIdx] ?? null : null };
-}
-
 function slugify(nome: string): string {
   return nome
     .toLowerCase()
@@ -44,85 +28,92 @@ function slugify(nome: string): string {
     .trim();
 }
 
-function atualizarTexto(
-  textoAtual: string,
-  params: {
-    valorCota: number;
-    valorEntrada: number | null;
-    emFuncionamento: boolean;
-  }
-): { texto: string; alterado: boolean } {
-  const { valorCota, valorEntrada, emFuncionamento } = params;
+/**
+ * Extrai valores de renda do texto atual (R$ X.XXX,XX ou R$ X.XXX)
+ */
+function extrairRendas(texto: string): { anual: string | null; mensal: string | null } {
+  const matchAnual = texto.match(/renda líquida anual[^R]*R\$\s*([\d\.]+,\d{2})/i);
+  const matchMensal = texto.match(/renda líquida mensal[^R]*R\$\s*([\d\.]+,\d{2})/i);
+  return {
+    anual: matchAnual ? matchAnual[1] : null,
+    mensal: matchMensal ? matchMensal[1] : null,
+  };
+}
 
-  const oldVals = parseValor(textoAtual);
+function gerarTexto(params: {
+  nomeEmpreendimento: string;
+  valorCota: number;
+  valorEntrada: number | null;
+  emFuncionamento: boolean;
+  url: string;
+  rendasAnual: string | null;
+  rendasMensal: string | null;
+  apenasUmaCota: boolean;
+}): string {
+  const { nomeEmpreendimento, valorCota, valorEntrada, emFuncionamento, url, rendasAnual, rendasMensal, apenasUmaCota } = params;
 
-  // Se os valores já batem exatamente, não precisa mudar nada
-  const precisaAtualizar =
-    oldVals.cota !== valorCota ||
-    oldVals.entrada !== valorEntrada ||
-    emFuncionamento !== textoAtual.toLowerCase().includes("em operação");
+  const nomeDisplay = nomeEmpreendimento.replace(/ Spot$/i, "");
+  const temEntrada = valorEntrada !== null && valorEntrada > 0 && valorEntrada !== valorCota;
 
-  if (!precisaAtualizar) {
-    return { texto: textoAtual, alterado: false };
-  }
+  if (emFuncionamento) {
+    // ── Pattern B ou C ───────────────────────────────────────────────
+    const linhaCota = apenasUmaCota
+      ? `temos a última unidade a partir de R$ ${formatBRL(valorCota)}.`
+      : `temos as últimas unidades a partir de R$ ${formatBRL(valorCota)}${temEntrada ? `, com entradas a partir de R$ ${formatBRL(valorEntrada)}` : ""}.`;
 
-  const temEntrada =
-    valorEntrada !== null && valorEntrada !== valorCota && valorEntrada > 0;
+    const rendasLinha = rendasAnual
+      ? `renda líquida anual estimada de R$ ${rendasAnual} e renda líquida mensal de R$ ${rendasMensal}`
+      : rendasMensal
+      ? `renda líquida mensal média de R$ ${rendasMensal}`
+      : "renda líquida mensal média de R$ X,XX";
 
-  const valorCotaStr = `R$ ${formatBRL(valorCota)}`;
-  const entradaStr =
-    temEntrada
-      ? `, com entrada a partir de R$ ${formatBRL(valorEntrada)}`
-      : "";
+    const Airbnb = apenasUmaCota
+      ? "no curto prazo com Airbnb"
+      : "no Airbnb no curto prazo";
 
-  const novaLinhaValores = `atualmente temos as últimas unidades a partir de ${valorCotaStr}${entradaStr}.`;
-
-  const linhas = textoAtual.split("\n");
-  let substituiuValores = false;
-  let substituiuOperacao = false;
-  const emOperacaoTexto = "O empreendimento já está em operação, e";
-
-  for (let i = 0; i < linhas.length; i++) {
-    const l = linhas[i];
-    const lLower = l.toLowerCase();
-
-    if (
-      !substituiuValores &&
-      (lLower.includes("atualmente temos") || lLower.includes("últimas unidades"))
-    ) {
-      linhas[i] = novaLinhaValores;
-      substituiuValores = true;
-      continue;
-    }
-
-    if (lLower.includes("em operação") || lLower.includes("funcionamento")) {
-      if (!emFuncionamento) {
-        linhas[i] = l.replace(/O empreendimento já está em operação,?\s*e\s*/i, "");
-      }
-      substituiuOperacao = true;
-      continue;
-    }
-
-    if (emFuncionamento && !substituiuOperacao && lLower.includes("atualmente temos") && !lLower.includes("em operação")) {
-      linhas[i] = `${emOperacaoTexto} ${l.toLowerCase().replace(/^e /, "")}`;
-      substituiuValores = true;
-      substituiuOperacao = true;
-    }
+    const linhas = [
+      `Oi, [NOME]! Como você está?`,
+      ``,
+      `Recebemos em nosso sistema que você demonstrou interesse no ${nomeDisplay}. Todos os detalhes estão disponíveis aqui: ${url}`,
+      ``,
+      `O empreendimento já está pronto para você faturar ${Airbnb}, e atualmente, ${linhaCota}`,
+      ``,
+      `Essa é a oportunidade perfeita para garantir ${rendasLinha}, com a gestão da Seazone!`,
+      ``,
+      `Pagamento exclusivamente via pix ou parcelamento. Não aceitamos FGTS nem carta de crédito.`,
+      ``,
+      `Gostaria de agendar uma reunião para conhecer melhor o nosso modelo de negócio?`,
+    ];
+    return linhas.join("\n");
   }
 
-  if (!substituiuValores) {
-    const idxRendas = linhas.findIndex((l) =>
-      l.toLowerCase().includes("oportunidade perfeita") ||
-      l.toLowerCase().includes("renda líquida")
-    );
-    if (idxRendas > 0) {
-      linhas.splice(idxRendas - 1, 0, novaLinhaValores);
-    } else {
-      return { texto: textoAtual + `\n\n${novaLinhaValores}`, alterado: true };
-    }
-  }
+  // ── Pattern A — com entrada ─────────────────────────────────────
+  const linhaCota = temEntrada
+    ? `Temos uma oportunidade no valor de R$ ${formatBRL(valorCota)}, com entrada facilitada de R$ ${formatBRL(valorEntrada)}.`
+    : `Temos uma oportunidade no valor de R$ ${formatBRL(valorCota)}.`;
 
-  return { texto: linhas.join("\n"), alterado: true };
+  const rendasLinha = rendasAnual
+    ? `renda líquida anual estimada de R$ ${rendasAnual} e renda líquida mensal de R$ ${rendasMensal}`
+    : rendasMensal
+    ? `renda líquida mensal média de R$ ${rendasMensal}`
+    : "renda líquida mensal média de R$ X,XX";
+
+  const linhas = [
+    `Oi, [NOME]! Como você está?`,
+    ``,
+    `Recebemos em nosso sistema que você demonstrou interesse no ${nomeDisplay}. Todos os detalhes estão disponíveis aqui:`,
+    ``,
+    url,
+    ``,
+    linhaCota,
+    ``,
+    `Essa é a oportunidade perfeita para garantir ${rendasLinha}, com a gestão da Seazone!`,
+    ``,
+    `Pagamento exclusivamente via pix ou parcelamento. Não aceitamos FGTS nem carta de crédito.`,
+    ``,
+    `Gostaria de agendar uma reunião para conhecer melhor o nosso modelo de negócio?`,
+  ];
+  return linhas.join("\n");
 }
 
 export async function POST() {
@@ -141,11 +132,13 @@ export async function POST() {
       { valorCota?: number; valorEntrada?: number; emFuncionamento?: boolean; url?: string; erro?: string }
     > = await res.json();
 
-    const empreendimentos = await db.repescagemEmpreendimento.findMany({ include: { numeros: true } });
+    const empreendimentos = await db.repescagemEmpreendimento.findMany({
+      include: { numeros: true },
+    });
 
     const resultados: {
       nome: string;
-      status: "alterado" | "mantido" | "erro";
+      status: "gerado" | "mantido" | "manual" | "erro";
       valorAntigo?: string;
       valorNovo?: string;
       motivo?: string;
@@ -169,6 +162,15 @@ export async function POST() {
         continue;
       }
 
+      if (emp.editadoManualmente) {
+        resultados.push({
+          nome: emp.nomeEmpreendimento,
+          status: "manual",
+          motivo: "Editado manualmente — não atualizado",
+        });
+        continue;
+      }
+
       const valorCota = toNumber(dado.valorCota);
       const valorEntrada = toNumber(dado.valorEntrada);
 
@@ -181,23 +183,32 @@ export async function POST() {
         continue;
       }
 
-      const { texto: textoNovo, alterado } = atualizarTexto(emp.textoConteudo ?? "", {
+      const textoAtual = emp.textoConteudo ?? "";
+      const rendas = extrairRendas(textoAtual);
+
+      const apenasUmaCota = !dado.erro && valorCota !== null;
+
+      const textoNovo = gerarTexto({
+        nomeEmpreendimento: emp.nomeEmpreendimento,
         valorCota,
         valorEntrada,
         emFuncionamento: dado.emFuncionamento ?? false,
+        url: dado.url ?? "",
+        rendasAnual: rendas.anual,
+        rendasMensal: rendas.mensal,
+        apenasUmaCota,
       });
-
-      const valorCotaAntigo = parseValor(emp.textoConteudo ?? "").cota;
 
       await db.repescagemEmpreendimento.update({
         where: { id: emp.id },
         data: {
           textoConteudo: textoNovo,
           dataUltimaAtualizacao: new Date(),
+          editadoManualmente: false,
         },
       });
 
-      // Atualizar campo "Valor total" nos números, se existir
+      // Atualizar campos Valor total e Entrada nos números
       const numeroTotal = emp.numeros.find(
         (n) => n.campoNome.toLowerCase().includes("valor") && n.campoNome.toLowerCase().includes("total")
       );
@@ -220,8 +231,7 @@ export async function POST() {
 
       resultados.push({
         nome: emp.nomeEmpreendimento,
-        status: alterado ? "alterado" : "mantido",
-        valorAntigo: valorCotaAntigo !== null ? `R$ ${formatBRL(valorCotaAntigo)}` : undefined,
+        status: "gerado",
         valorNovo: `R$ ${formatBRL(valorCota)}`,
       });
     }
@@ -230,8 +240,9 @@ export async function POST() {
 
     return NextResponse.json({
       total: empreendimentos.length,
-      alterados: resultados.filter((r) => r.status === "alterado").length,
+      gerados: resultados.filter((r) => r.status === "gerado").length,
       mantidos: resultados.filter((r) => r.status === "mantido").length,
+      manuais: resultados.filter((r) => r.status === "manual").length,
       erros: resultados.filter((r) => r.status === "erro").length,
       detalhes: resultados,
     });
