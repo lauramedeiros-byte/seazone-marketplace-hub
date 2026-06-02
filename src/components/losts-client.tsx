@@ -1630,6 +1630,7 @@ export function LostsClient() {
         </div>
       </div>
       )}
+      </div>
     </div>
   );
 }
