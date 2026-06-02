@@ -30,8 +30,8 @@ function slugify(nome: string): string {
 
 function extrairRendas(texto: string): { anual: string | null; mensal: string | null } {
   function extrair(tipo: "anual" | "mensal"): string | null {
-    const patternAnual = /(?:renda\s+líquida\s+(?:mensal\s+)?anual[^\$R]*?R\$\s*([\d\.,]+))/i;
-    const patternMensal = /(?:renda\s+líquida\s+(?:mensal(?:\s+média)?)[^\$R]*?R\$\s*([\d\.,]+))/i;
+    const patternAnual = /(?:renda\s+líquida\s+(?:mensal\s+)?anual[^$]*?R\$\s*([\d\.]+(?:,\d{2})?))/i;
+    const patternMensal = /(?:renda\s+líquida\s+(?:mensal(?:\s+média)?)[^$]*?R\$\s*([\d\.]+(?:,\d{2})?))/i;
     const pattern = tipo === "anual" ? patternAnual : patternMensal;
     const match = texto.match(pattern);
     if (!match) return null;
@@ -39,7 +39,7 @@ function extrairRendas(texto: string): { anual: string | null; mensal: string | 
     const normalized = val.replace(/\./g, "").replace(",", ".");
     const n = parseFloat(normalized);
     if (isNaN(n)) return null;
-    return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
   }
   return { anual: extrair("anual"), mensal: extrair("mensal") };
 }
