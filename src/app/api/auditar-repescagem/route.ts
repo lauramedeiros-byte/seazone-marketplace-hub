@@ -56,7 +56,6 @@ function gerarTexto(params: {
 }): string {
   const { nomeEmpreendimento, valorCota, valorEntrada, emFuncionamento, url, rendasAnual, rendasMensal, apenasUmaCota } = params;
 
-  const nomeDisplay = nomeEmpreendimento.replace(/ Spot$/i, "");
   const temEntrada = valorEntrada !== null && valorEntrada > 0 && valorEntrada !== valorCota;
 
   if (emFuncionamento) {
@@ -78,13 +77,13 @@ function gerarTexto(params: {
     const linhas = [
       `Oi, [NOME]! Como você está?`,
       ``,
-      `Recebemos em nosso sistema que você demonstrou interesse no ${nomeDisplay}. Todos os detalhes estão disponíveis aqui: ${url}`,
+      `Recebemos em nosso sistema que você demonstrou interesse no ${nomeEmpreendimento}. Todos os detalhes estão disponíveis aqui: ${url}`,
       ``,
       `O empreendimento já está pronto para você faturar ${Airbnb}, e atualmente, ${linhaCota}`,
       ``,
       `Essa é a oportunidade perfeita para garantir ${rendasLinha}, com a gestão da Seazone!`,
       ``,
-      `Pagamento exclusivamente via pix ou parcelamento. Não aceitamos FGTS nem carta de crédito.`,
+      `Pagamento exclusivamente via pix ou parcelamento. Não aceitamos fgts nem carta de crédito.`,
       ``,
       `Gostaria de agendar uma reunião para conhecer melhor o nosso modelo de negócio?`,
     ];
@@ -105,7 +104,7 @@ function gerarTexto(params: {
   const linhas = [
     `Oi, [NOME]! Como você está?`,
     ``,
-    `Recebemos em nosso sistema que você demonstrou interesse no ${nomeDisplay}. Todos os detalhes estão disponíveis aqui:`,
+    `Recebemos em nosso sistema que você demonstrou interesse no ${nomeEmpreendimento}. Todos os detalhes estão disponíveis aqui:`,
     ``,
     url,
     ``,
@@ -113,7 +112,7 @@ function gerarTexto(params: {
     ``,
     `Essa é a oportunidade perfeita para garantir ${rendasLinha}, com a gestão da Seazone!`,
     ``,
-    `Pagamento exclusivamente via pix ou parcelamento. Não aceitamos FGTS nem carta de crédito.`,
+    `Pagamento exclusivamente via pix ou parcelamento. Não aceitamos fgts nem carta de crédito.`,
     ``,
     `Gostaria de agendar uma reunião para conhecer melhor o nosso modelo de negócio?`,
   ];
