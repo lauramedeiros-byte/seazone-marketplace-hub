@@ -1065,6 +1065,10 @@ export function LostsClient() {
   const [campanhas, setCampanhas] = useState<Campanha[]>([]);
   const [loading, setLoading] = useState(true);
   const [dragging, setDragging] = useState<string | null>(null);
+  const [campanhas, setCampanhas] = useState([]);
+  const [activeTab, setActiveTab] = useState("board");
+  const [campanhas, setCampanhas] = useState([]);
+  const [activeTab, setActiveTab] = useState("board");
   const [dragFrom, setDragFrom] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"board" | "campanhas">("board");
   const gctr = useRef(17);
