@@ -44,7 +44,15 @@ export async function updateRepescagemTextoEImagem(
 ) {
   await db.repescagemEmpreendimento.update({
     where: { id },
-    data: { textoConteudo, linkImagem, dataUltimaAtualizacao: new Date() },
+    data: { textoConteudo, linkImagem, dataUltimaAtualizacao: new Date(), editadoManualmente: true },
+  });
+  revalidatePath("/respescagem");
+}
+
+export async function resetarEdicaoManual(id: string) {
+  await db.repescagemEmpreendimento.update({
+    where: { id },
+    data: { editadoManualmente: false },
   });
   revalidatePath("/respescagem");
 }

@@ -26,13 +26,14 @@ model RepescagemEmpreendimento {
   id                    String   @id @default(cuid())
   nomeEmpreendimento    String
   textoConteudo         String?
-  linkImagem             String?
+  linkImagem            String?
   dataUltimaAtualizacao DateTime?
   atualizadoPor         String?
   criadoPorId           String?
   criadoPor             User?    @relation(fields: [criadoPorId], references: [id])
   criadoEm              DateTime @default(now())
-  atualizadoEm         DateTime @updatedAt
+  atualizadoEm          DateTime @updatedAt
+  editadoManualmente    Boolean  @default(false)
   numeros               RepescagemNumero[]
 }
 
