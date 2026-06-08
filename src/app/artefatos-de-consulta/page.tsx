@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers } from "lucide-react";
 
 const links = [
   {
@@ -46,11 +46,19 @@ const links = [
     cor: "bg-pink-50 text-pink-600 border-pink-100",
   },
   {
-    url: "https://growth-seazone.lovable.app/campaign-analytics",
-    titulo: "Growth — Criativos em Campanha",
-    descricao:
-      "Criativos ativos em campanha de mídia paga de Marketplace.",
+    grupo: "Growth",
+    url: "https://artefatos-growth-seazone.vercel.app/criativos",
+    titulo: "Criativos por Campanha",
+    descricao: "Quantidade de criativos ativos por campanha",
     icone: Megaphone,
+    cor: "bg-blue-50 text-blue-600 border-blue-100",
+  },
+  {
+    grupo: "Growth",
+    url: "https://artefatos-growth-seazone.vercel.app/creative-hub",
+    titulo: "Creative Hub",
+    descricao: "Estoque de criativos",
+    icone: Layers,
     cor: "bg-blue-50 text-blue-600 border-blue-100",
   },
   {
@@ -108,6 +116,21 @@ export default function ArtefatosPage() {
     );
   }, [busca]);
 
+  const grupos = useMemo(() => {
+    const map = new Map<string, typeof links>();
+    const semGrupo: typeof links = [];
+    for (const link of filtrados) {
+      if (link.grupo) {
+        const existing = map.get(link.grupo) || [];
+        existing.push(link);
+        map.set(link.grupo, existing);
+      } else {
+        semGrupo.push(link);
+      }
+    }
+    return { grupos: Array.from(map.entries()), semGrupo };
+  }, [filtrados]);
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <BackButton />
@@ -139,41 +162,90 @@ export default function ArtefatosPage() {
           <p>Nenhum artefato encontrado.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filtrados.map((link) => {
-            const Icon = link.icone;
-            return (
-              <a
-                key={link.url}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block group"
-              >
-                <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all h-full border-l-4 border-l-transparent hover:border-l-4">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2.5 rounded-lg shrink-0 ${link.cor}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                          {link.titulo}
-                          <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
-                        </CardTitle>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-xs leading-relaxed ml-12">
-                      {link.descricao}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </a>
-            );
-          })}
-        </div>
+        <>
+          {/* Blocos agrupados */}
+          {grupos.grupos.map(([nomeGrupo, linksGrupo]) => (
+            <div key={nomeGrupo} className="mb-6">
+              <h2 className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+                {nomeGrupo}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {linksGrupo.map((link) => {
+                  const Icon = link.icone;
+                  return (
+                    <a
+                      key={link.url}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block group"
+                    >
+                      <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all h-full border-l-4 border-l-blue-400">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2.5 rounded-lg shrink-0 ${link.cor}`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                {link.titulo}
+                                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                              </CardTitle>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="text-xs leading-relaxed ml-12">
+                            {link.descricao}
+                          </CardDescription>
+                        </CardContent>
+                      </Card>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* Cards sem grupo */}
+          {grupos.semGrupo.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {grupos.semGrupo.map((link) => {
+                const Icon = link.icone;
+                return (
+                  <a
+                    key={link.url}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all h-full border-l-4 border-l-transparent hover:border-l-4">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2.5 rounded-lg shrink-0 ${link.cor}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                              {link.titulo}
+                              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                            </CardTitle>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="text-xs leading-relaxed ml-12">
+                          {link.descricao}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       {filtrados.length > 0 && filtrados.length < links.length && (
