@@ -114,17 +114,29 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     manuais: number;
     erros: number;
     detalhes: { nome: string; status: string; valorNovo?: string; motivo?: string }[];
-  } | null>(null);
+    data: string;
+  } | null>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("repescagem_audit_result");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch { /* ignore */ }
+      }
+    }
+    return null;
+  });
 
   const handleAuditar = async () => {
     if (!confirm("Auditar números da planilha? Isso vai atualizar os textos de TODOS os empreendimentos.")) return;
     setAuditando(true);
-    setAuditResult(null);
     try {
       const res = await fetch("/api/auditar-repescagem", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.erro);
-      setAuditResult(data);
+      const resultWithDate = { ...data, data: new Date().toLocaleString("pt-BR") };
+      setAuditResult(resultWithDate);
+      localStorage.setItem("repescagem_audit_result", JSON.stringify(resultWithDate));
       if (data.gerados > 0 || data.erros > 0) window.location.reload();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -186,9 +198,12 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       {auditResult && !auditando && (
         <Card className="mb-4 border-green-200 bg-green-50">
           <CardContent className="p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-600" />
-              <p className="text-sm font-semibold text-green-800">Auditoria completa!</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-600" />
+                <p className="text-sm font-semibold text-green-800">Auditoria completa!</p>
+              </div>
+              <p className="text-xs text-green-600">{auditResult.data}</p>
             </div>
             <div className="flex flex-wrap gap-4 text-xs text-green-700 ml-6">
               {auditResult.gerados > 0 && (
