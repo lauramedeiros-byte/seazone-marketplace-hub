@@ -20,6 +20,7 @@ model User {
   briefings                 Briefing[]
   metas                      Meta[]
   artefatos                  ArtefatoConfig[]
+  campanhas                  Campanha[]
 }
 
 model RepescagemEmpreendimento {
@@ -171,6 +172,18 @@ model ArtefatoConfig {
 model LostBoard {
   id         String   @id @default(cuid())
   boardData  Json     // groups, cards, sections, abordagens
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model Campanha {
+  id         String   @id @default(cuid())
+  nome       String
+  contexto   String?
+  links      Json     // [{titulo: string, url: string}]
+  ordem      Int      @default(0)
+  criadoPorId String?
+  criadoPor  User?    @relation(fields: [criadoPorId], references: [id])
   criadoEm   DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 }
