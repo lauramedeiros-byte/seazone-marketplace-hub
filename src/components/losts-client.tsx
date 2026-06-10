@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BackButton } from "@/components/back-button";
+import { CampanhasClient } from "./campanhas-client";
 
 // ─── Card definitions ──────────────────────────────────────────────────────────
 const CARDS: Record<string, { l: string; s: "sz" | "mk" }> = {
@@ -940,6 +941,7 @@ export function LostsClient() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [abordagens, setAbordagens] = useState<Record<string, Abordagem[]>>({});
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"board" | "campanhas">("board");
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragFrom, setDragFrom] = useState<string | null>(null);
   const gctr = useRef(17);
@@ -1118,6 +1120,50 @@ export function LostsClient() {
 
       {/* ── Data Sources Header ── */}
       <DataSources />
+
+      {/* ── Tabs ── */}
+      <div style={{ maxWidth: 1280, margin: "0 auto 16px", display: "flex", gap: 4 }}>
+        <button
+          onClick={() => setActiveTab("board")}
+          style={{
+            padding: "8px 20px",
+            borderRadius: "8px 8px 0 0",
+            border: "none",
+            borderBottom: activeTab === "board" ? "2px solid #1d4ed8" : "2px solid transparent",
+            background: activeTab === "board" ? "#fff" : "#e2e8f0",
+            color: activeTab === "board" ? "#1d4ed8" : "#64748b",
+            fontWeight: activeTab === "board" ? 600 : 400,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          Board de Lost
+        </button>
+        <button
+          onClick={() => setActiveTab("campanhas")}
+          style={{
+            padding: "8px 20px",
+            borderRadius: "8px 8px 0 0",
+            border: "none",
+            borderBottom: activeTab === "campanhas" ? "2px solid #1d4ed8" : "2px solid transparent",
+            background: activeTab === "campanhas" ? "#fff" : "#e2e8f0",
+            color: activeTab === "campanhas" ? "#1d4ed8" : "#64748b",
+            fontWeight: activeTab === "campanhas" ? 600 : 400,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          Campanhas
+        </button>
+      </div>
+
+      {/* ── Tab Content ── */}
+      {activeTab === "campanhas" ? (
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <CampanhasClient />
+        </div>
+      ) : (
+        <>
 
       {/* ── Main Header ── */}
       <div style={{ maxWidth: 1280, margin: "0 auto 24px" }}>
@@ -1461,6 +1507,8 @@ export function LostsClient() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
