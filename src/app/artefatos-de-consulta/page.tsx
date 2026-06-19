@@ -173,11 +173,13 @@ export default function ArtefatosPage() {
         <>
           {/* Blocos agrupados */}
           {grupos.grupos.map(([nomeGrupo, linksGrupo]) => (
-            <div key={nomeGrupo} className="mb-6">
-              <h2 className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+            <div key={nomeGrupo} className="mb-6 bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+              <h2 className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <TrendingUp className="w-3.5 h-3.5" />
                 {nomeGrupo}
+                <span className="ml-auto text-blue-400 font-normal normal-case tracking-normal text-xs">{linksGrupo.length} artefatos</span>
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {linksGrupo.map((link) => {
                   const Icon = link.icone;
                   return (
@@ -188,7 +190,7 @@ export default function ArtefatosPage() {
                       rel="noopener noreferrer"
                       className="block group"
                     >
-                      <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all h-full border-l-4 border-l-blue-400">
+                      <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all h-full border-l-4 border-l-blue-400 bg-white">
                         <CardHeader className="pb-2">
                           <div className="flex items-start gap-3">
                             <div className={`p-2.5 rounded-lg shrink-0 ${link.cor}`}>
