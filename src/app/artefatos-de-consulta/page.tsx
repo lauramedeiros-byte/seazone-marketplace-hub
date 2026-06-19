@@ -62,6 +62,14 @@ const links = [
     cor: "bg-blue-50 text-blue-600 border-blue-100",
   },
   {
+    grupo: "Growth",
+    url: "https://artefatos-growth-seazone.vercel.app/creative-library",
+    titulo: "Creative Library",
+    descricao: "Busca criativo pelo ID do Pipedrive para visualizar o conteúdo do vídeo ou imagem.",
+    icone: Search,
+    cor: "bg-blue-50 text-blue-600 border-blue-100",
+  },
+  {
     url: "https://saleszone-prod.seazone.dev/mia/erros",
     titulo: "SalesZone — Erros MIA",
     descricao:
