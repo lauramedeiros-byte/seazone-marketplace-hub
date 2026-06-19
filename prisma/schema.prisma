@@ -245,3 +245,12 @@ model MidiaPagaVariacao {
   nome        String   // ex: "V1", "V2"
   checked     Boolean  @default(false)
 }
+
+model AnaliseClaude {
+  id          String   @id @default(cuid())
+  descricao   String
+  links       Json     // [{url: string, label: string}]
+  dataAnalise DateTime
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
