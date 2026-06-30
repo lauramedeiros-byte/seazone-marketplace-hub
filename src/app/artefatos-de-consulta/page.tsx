@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send } from "lucide-react";
 
 const links = [
   {
@@ -76,6 +76,14 @@ const links = [
       "Quantidade de erros nos envios da MIA (WhatsApp) por frente de campanha.",
     icone: AlertTriangle,
     cor: "bg-red-50 text-red-600 border-red-100",
+  },
+  {
+    url: "https://disparos-base-interna.vercel.app/",
+    titulo: "Disparos — Base Interna",
+    descricao:
+      "Performance dos disparos de base interna de marketplace: quais geram mais SQL e oportunidades, para guiar a estratégia de disparos.",
+    icone: Send,
+    cor: "bg-teal-50 text-teal-600 border-teal-100",
   },
   {
     url: "https://seazone-fd92b9.pipedrive.com/progress/insights/report/145311418e24c1b247cdfb337678405e",
