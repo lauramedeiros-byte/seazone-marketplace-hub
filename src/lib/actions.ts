@@ -267,50 +267,6 @@ export async function addLostHistorico(
   revalidatePath("/losts");
 }
 
-// ── Briefings ─────────────────────────────────────────────────────────────
-
-export async function createBriefing(
-  data: {
-    titulo: string;
-    empresa?: string | null;
-    canal?: string | null;
-    codigoProtecao?: string | null;
-    userId: string;
-  }
-) {
-  const createData = {
-    titulo: data.titulo,
-    empresa: data.empresa ?? null,
-    canal: data.canal ?? null,
-    codigoProtecao: data.codigoProtecao ?? null,
-    criadoPorId: data.userId,
-  };
-  await db.briefing.create({ data: createData });
-  revalidatePath("/briefings");
-}
-
-export async function updateBriefing(
-  id: string,
-  data: {
-    titulo?: string;
-    empresa?: string | null;
-    canal?: string | null;
-    formularioJson?: unknown;
-    status?: string;
-    codigoProtecao?: string | null;
-    dataPublicacao?: Date | null;
-  }
-) {
-  await db.briefing.update({ where: { id }, data: data as never });
-  revalidatePath("/briefings");
-  revalidatePath(`/briefings/${id}`);
-}
-
-export async function deleteBriefing(id: string) {
-  await db.briefing.delete({ where: { id } });
-  revalidatePath("/briefings");
-}
-
 // ── Metas ────────────────────────────────────────────────────────────────────
 
 export async function createMeta(
