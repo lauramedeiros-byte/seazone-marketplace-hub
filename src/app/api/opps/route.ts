@@ -115,6 +115,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
       }
 
+      case "save-passo": {
+        // Salva o conteúdo editável da aba "Passo a passo" (registro único)
+        const { conteudo } = data;
+        await db.oppsPassoAPasso.upsert({
+          where: { id: "singleton" },
+          update: { conteudoJson: conteudo },
+          create: { id: "singleton", conteudoJson: conteudo },
+        });
+        return NextResponse.json({ success: true });
+      }
+
       default:
         return NextResponse.json({ error: "Ação desconhecida" }, { status: 400 });
     }

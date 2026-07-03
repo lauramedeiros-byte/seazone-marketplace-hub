@@ -246,6 +246,13 @@ model MidiaPagaVariacao {
   checked     Boolean  @default(false)
 }
 
+model OppsPassoAPasso {
+  id           String   @id @default("singleton")
+  conteudoJson Json
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
 model AnaliseClaude {
   id          String   @id @default(cuid())
   descricao   String

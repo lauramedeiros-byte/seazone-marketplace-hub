@@ -61,6 +61,7 @@ interface OppSemana {
 
 interface Props {
   semanas: OppSemana[];
+  passoInicial?: unknown;
 }
 
 function Step({ n, children, tone = "dark" }: { n: number; children: ReactNode; tone?: "dark" | "video" }) {
@@ -160,9 +161,74 @@ function parseOppsText(text: string): ParsedOpp[] | null {
   return blocks.map(parseOppBlock).filter((b): b is ParsedOpp => b !== null);
 }
 
-export function OppsClient({ semanas: initial }: Props) {
+// ── Conteúdo editável da aba "Passo a passo" ───────────────────────────────
+interface PassoSecao {
+  titulo: string;
+  intro: string;
+  passos: string[];
+}
+interface PassoConteudo {
+  principal: PassoSecao & { observacao: string };
+  video: PassoSecao;
+}
+
+const DEFAULT_PASSO: PassoConteudo = {
+  principal: {
+    titulo: "Passo a passo das opps",
+    intro: "Do pedido ao time de Marketplace até o disparo pela Gaby.",
+    passos: [
+      "Cobre o time de Marketplace entre quarta e sexta, toda semana, para mandarem as 5 oportunidades.",
+      "Suba as oportunidades aqui no artefato + no artefato da Mônica. Um aviso automático é gerado para ela no grupo #comunidade-investidores no Slack, para escolher as 3 da semana.",
+      "Enquanto isso, você já pode escolher 2 cotas da semana passada que não foram publicadas pelo marketing — ou esperar a Mônica escolher as da semana vigente e ficar com o restante. No fim da sexta você deve ter 2 cotas escolhidas para a semana seguinte.",
+      "Com as 2 cotas escolhidas, acesse a skill /textos-2-top-opps-marketplace. Ela pede os dados do empreendimento e monta 2 opções de WhatsApp e 2 de e-mail. Dê um check e ajuste as frases se alguma ficar ruim.",
+      "Com os textos em mãos, peça para a Gaby disparar WhatsApp e e-mail no grupo #entrega_disparos, sinalizando o dia de disparo de cada uma. Não esqueça de enviar as fotos para a Gaby!",
+    ],
+    observacao:
+      "Ao escolher cota da semana passada, confira no Spotômetro → Revendas (https://spotometro.seazone.com.br/) se ela ainda está disponível. Se não estiver, escolha outra (da semana passada ou da semana atual).",
+  },
+  video: {
+    titulo: "Vídeos Narrados da OPP da semana",
+    intro: "Processo paralelo. O 1º vídeo (1ª opp) é postado na terça, e a 2ª opp na quinta.",
+    passos: [
+      "Depois de escolher as opps da semana, monte o briefing para o Designer fazer um vídeo narrado simples da opp.",
+      "Para montar o roteiro, acesse o Claude Chat com a skill /[a definir] (nome a definir — em criação).",
+      "Forneça os dados do empreendimento e ele vai gerar o roteiro.",
+      "Baixe em .docx e confira as cenas/roteiro. (Costuma precisar ajustar as cenas e simplificar o lettering.)",
+      "Abra um card no Pipefy pedindo a opp para o designer, respeitando a data de entrega.",
+      "Entre na pasta de briefings (pela Home do Hub Marketplace) e suba o briefing no artefato oficial de Marketplace.",
+      "Depois de pronto, envie no #social-media-mkt (https://seazone-fund.slack.com/archives/C06BUCUDX1B) para a Thay postar (só no story — ela já sabe qual link colocar). Exemplo de pedido: https://seazone-fund.slack.com/archives/C06BUCUDX1B/p1782826216806829",
+    ],
+  },
+};
+
+function mergePasso(saved: unknown): PassoConteudo {
+  const s = (saved ?? {}) as Partial<PassoConteudo>;
+  return {
+    principal: { ...DEFAULT_PASSO.principal, ...(s.principal ?? {}) },
+    video: { ...DEFAULT_PASSO.video, ...(s.video ?? {}) },
+  };
+}
+
+// Deixa URLs (https://…) clicáveis dentro de um texto livre
+function renderComLinks(text: string): ReactNode {
+  return text.split(/(https?:\/\/[^\s)]+)/g).map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className={linkCls}>
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
+export function OppsClient({ semanas: initial, passoInicial }: Props) {
   const { user } = useUser();
   const [semanas, setSemanas] = useState(initial);
+  const [passo, setPasso] = useState<PassoConteudo>(() => mergePasso(passoInicial));
+  const [editPasso, setEditPasso] = useState(false);
+  const [draftPasso, setDraftPasso] = useState<PassoConteudo>(passo);
+  const [savingPasso, setSavingPasso] = useState(false);
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [editWhatsapp, setEditWhatsapp] = useState<Record<string, string>>({});
@@ -514,6 +580,50 @@ export function OppsClient({ semanas: initial }: Props) {
       condicoes: editOppData.condicoes || null,
     });
     setEditingOpp(null);
+  };
+
+  // ── Passo a passo (editável, salvo no banco) ─────────────────────────────
+  const startEditPasso = () => {
+    setDraftPasso(JSON.parse(JSON.stringify(passo)) as PassoConteudo);
+    setEditPasso(true);
+  };
+  const setSecao = (sec: "principal" | "video", patch: Partial<PassoConteudo["principal"]>) => {
+    setDraftPasso((d) => ({ ...d, [sec]: { ...d[sec], ...patch } }));
+  };
+  const updatePassoItem = (sec: "principal" | "video", idx: number, val: string) => {
+    setDraftPasso((d) => ({
+      ...d,
+      [sec]: { ...d[sec], passos: d[sec].passos.map((p, i) => (i === idx ? val : p)) },
+    }));
+  };
+  const addPassoItem = (sec: "principal" | "video") => {
+    setDraftPasso((d) => ({ ...d, [sec]: { ...d[sec], passos: [...d[sec].passos, ""] } }));
+  };
+  const removePassoItem = (sec: "principal" | "video", idx: number) => {
+    setDraftPasso((d) => ({ ...d, [sec]: { ...d[sec], passos: d[sec].passos.filter((_, i) => i !== idx) } }));
+  };
+  const savePasso = async () => {
+    setSavingPasso(true);
+    try {
+      const clean: PassoConteudo = {
+        principal: { ...draftPasso.principal, passos: draftPasso.principal.passos.map((p) => p.trim()).filter(Boolean) },
+        video: { ...draftPasso.video, passos: draftPasso.video.passos.map((p) => p.trim()).filter(Boolean) },
+      };
+      const res = await fetch("/api/opps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save-passo", conteudo: clean }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        alert(d.error || "Erro ao salvar");
+        return;
+      }
+      setPasso(clean);
+      setEditPasso(false);
+    } finally {
+      setSavingPasso(false);
+    }
   };
 
   // Histórico: semanas com opps escolhidas
@@ -962,89 +1072,151 @@ export function OppsClient({ semanas: initial }: Props) {
 
         {/* ── ABA: Passo a passo ──────────────────────────────────────────── */}
         <TabsContent value="passo">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ListChecks className="w-4 h-4 text-teal-600" />
-                Passo a passo das opps
-              </CardTitle>
-              <p className="text-xs text-gray-500 mt-1">Do pedido ao time de Marketplace até o disparo pela Gaby.</p>
-            </CardHeader>
-            <CardContent>
-              <ol className="space-y-3">
-                <Step n={1}>
-                  Cobre o time de Marketplace <strong>entre quarta e sexta</strong>, toda semana, para mandarem as <strong>5 oportunidades</strong>.
-                </Step>
-                <Step n={2}>
-                  Suba as oportunidades <strong>aqui no artefato</strong> + no <strong>artefato da Mônica</strong>. Um aviso automático é gerado para ela no grupo <strong>#comunidade-investidores</strong> no Slack, para escolher as 3 da semana.
-                </Step>
-                <Step n={3}>
-                  Enquanto isso, você já pode escolher <strong>2 cotas da semana passada</strong> que não foram publicadas pelo marketing — ou esperar a Mônica escolher as da semana vigente e ficar com o restante. No fim da sexta você deve ter <strong>2 cotas escolhidas</strong> para a semana seguinte.
-                </Step>
-                <Step n={4}>
-                  Com as 2 cotas escolhidas, acesse a skill <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-800 font-mono text-xs">/textos-2-top-opps-marketplace</code>. Ela pede os dados do empreendimento e monta <strong>2 opções de WhatsApp</strong> e <strong>2 de e-mail</strong>. Dê um check e ajuste as frases se alguma ficar ruim.
-                </Step>
-                <Step n={5}>
-                  Com os textos em mãos, peça para a <strong>Gaby</strong> disparar WhatsApp e e-mail no grupo <strong>#entrega_disparos</strong>, sinalizando o dia de disparo de cada uma. <strong>Não esqueça de enviar as fotos para a Gaby!</strong>
-                </Step>
-              </ol>
-
-              <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3.5">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-sm text-amber-900">
-                  <strong>Ao escolher cota da semana passada</strong>, confira no{" "}
-                  <a href="https://spotometro.seazone.com.br/" target="_blank" rel="noopener noreferrer" className={linkCls}>
-                    Spotômetro → Revendas
-                  </a>{" "}
-                  se ela ainda está disponível. Se não estiver, escolha outra (da semana passada ou da semana atual).
-                </p>
+          {/* Barra de edição */}
+          <div className="flex justify-end mb-3">
+            {editPasso ? (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setEditPasso(false)} disabled={savingPasso}>
+                  Cancelar
+                </Button>
+                <Button size="sm" onClick={savePasso} disabled={savingPasso}>
+                  <Check className="w-4 h-4" />
+                  {savingPasso ? "Salvando..." : "Salvar tudo"}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <Button variant="outline" size="sm" onClick={startEditPasso}>
+                <Edit2 className="w-4 h-4" />
+                Editar passo a passo
+              </Button>
+            )}
+          </div>
 
-          {/* Sub-card: Vídeos Narrados */}
-          <Card className="mt-4 border-fuchsia-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Video className="w-4 h-4 text-fuchsia-600" />
-                Vídeos Narrados da OPP da semana
-              </CardTitle>
-              <p className="text-xs text-gray-500 mt-1">
-                Processo paralelo. O 1º vídeo (1ª opp) é postado na <strong>terça</strong>, e a 2ª opp na <strong>quinta</strong>.
+          {editPasso ? (
+            /* ── MODO EDIÇÃO ── */
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-teal-600" /> Processo principal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Título</label>
+                    <Input value={draftPasso.principal.titulo} onChange={(e) => setSecao("principal", { titulo: e.target.value })} className="text-sm mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Descrição</label>
+                    <Input value={draftPasso.principal.intro} onChange={(e) => setSecao("principal", { intro: e.target.value })} className="text-sm mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Passos</label>
+                    <div className="space-y-2 mt-1">
+                      {draftPasso.principal.passos.map((p, i) => (
+                        <div key={i} className="flex gap-2 items-start">
+                          <span className="mt-2 text-xs text-gray-400 w-5 shrink-0">{i + 1}.</span>
+                          <Textarea value={p} onChange={(e) => updatePassoItem("principal", i, e.target.value)} rows={2} className="text-sm" />
+                          <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 h-8 w-8 shrink-0" onClick={() => removePassoItem("principal", i)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button size="sm" variant="outline" className="mt-2" onClick={() => addPassoItem("principal")}>
+                      <Plus className="w-4 h-4" /> Adicionar passo
+                    </Button>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Observação (aviso destacado)</label>
+                    <Textarea value={draftPasso.principal.observacao} onChange={(e) => setSecao("principal", { observacao: e.target.value })} rows={3} className="text-sm mt-1" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-fuchsia-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Video className="w-4 h-4 text-fuchsia-600" /> Vídeos Narrados
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Título</label>
+                    <Input value={draftPasso.video.titulo} onChange={(e) => setSecao("video", { titulo: e.target.value })} className="text-sm mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Descrição</label>
+                    <Input value={draftPasso.video.intro} onChange={(e) => setSecao("video", { intro: e.target.value })} className="text-sm mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Passos</label>
+                    <div className="space-y-2 mt-1">
+                      {draftPasso.video.passos.map((p, i) => (
+                        <div key={i} className="flex gap-2 items-start">
+                          <span className="mt-2 text-xs text-gray-400 w-5 shrink-0">{i + 1}.</span>
+                          <Textarea value={p} onChange={(e) => updatePassoItem("video", i, e.target.value)} rows={2} className="text-sm" />
+                          <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 h-8 w-8 shrink-0" onClick={() => removePassoItem("video", i)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button size="sm" variant="outline" className="mt-2" onClick={() => addPassoItem("video")}>
+                      <Plus className="w-4 h-4" /> Adicionar passo
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <p className="text-xs text-gray-400">
+                Dica: cole URLs completas (https://…) no texto — elas viram links automaticamente na visualização.
               </p>
-            </CardHeader>
-            <CardContent>
-              <ol className="space-y-3">
-                <Step n={1} tone="video">
-                  Depois de escolher as opps da semana, monte o <strong>briefing para o Designer</strong> fazer um vídeo narrado simples da opp.
-                </Step>
-                <Step n={2} tone="video">
-                  Para montar o roteiro, acesse o <strong>Claude Chat</strong> com a skill <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-800 font-mono text-xs">/[a definir]</code> <span className="text-gray-400">(nome a definir — em criação)</span>.
-                </Step>
-                <Step n={3} tone="video">Forneça os dados do empreendimento e ele vai gerar o roteiro.</Step>
-                <Step n={4} tone="video">
-                  Baixe em <strong>.docx</strong> e confira as cenas/roteiro. <span className="text-gray-500">(Costuma precisar ajustar as cenas e simplificar o lettering.)</span>
-                </Step>
-                <Step n={5} tone="video">
-                  Abra um card no <strong>Pipefy</strong> pedindo a opp para o designer, <strong>respeitando a data de entrega</strong>.
-                </Step>
-                <Step n={6} tone="video">
-                  Entre na <strong>pasta de briefings</strong> (pela Home do Hub Marketplace) e suba o briefing no <strong>artefato oficial de Marketplace</strong>.
-                </Step>
-                <Step n={7} tone="video">
-                  Depois de pronto, envie no{" "}
-                  <a href="https://seazone-fund.slack.com/archives/C06BUCUDX1B" target="_blank" rel="noopener noreferrer" className={linkCls}>
-                    #social-media-mkt
-                  </a>{" "}
-                  para a <strong>Thay</strong> postar (só no story — ela já sabe qual link colocar).{" "}
-                  <a href="https://seazone-fund.slack.com/archives/C06BUCUDX1B/p1782826216806829" target="_blank" rel="noopener noreferrer" className={linkCls}>
-                    Ver exemplo de pedido
-                  </a>
-                  .
-                </Step>
-              </ol>
-            </CardContent>
-          </Card>
+            </div>
+          ) : (
+            /* ── MODO LEITURA ── */
+            <>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-teal-600" />
+                    {passo.principal.titulo}
+                  </CardTitle>
+                  {passo.principal.intro && <p className="text-xs text-gray-500 mt-1">{passo.principal.intro}</p>}
+                </CardHeader>
+                <CardContent>
+                  <ol className="space-y-3">
+                    {passo.principal.passos.map((p, i) => (
+                      <Step key={i} n={i + 1}>{renderComLinks(p)}</Step>
+                    ))}
+                  </ol>
+                  {passo.principal.observacao && (
+                    <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3.5">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-sm text-amber-900">{renderComLinks(passo.principal.observacao)}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="mt-4 border-fuchsia-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Video className="w-4 h-4 text-fuchsia-600" />
+                    {passo.video.titulo}
+                  </CardTitle>
+                  {passo.video.intro && <p className="text-xs text-gray-500 mt-1">{passo.video.intro}</p>}
+                </CardHeader>
+                <CardContent>
+                  <ol className="space-y-3">
+                    {passo.video.passos.map((p, i) => (
+                      <Step key={i} n={i + 1} tone="video">{renderComLinks(p)}</Step>
+                    ))}
+                  </ol>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>

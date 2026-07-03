@@ -13,6 +13,9 @@ export default async function OppsPage() {
 
   const allWeeks = getAllWeeks(2025, 52);
 
+  const passoRow = await db.oppsPassoAPasso.findUnique({ where: { id: "singleton" } });
+  const passoInicial = (passoRow?.conteudoJson as unknown) ?? null;
+
   const semanas = await Promise.all(
     allWeeks
       .slice(-26)
@@ -42,6 +45,7 @@ export default async function OppsPage() {
     return (
       <OppsClient
         semanas={[withItems!]}
+        passoInicial={passoInicial}
       />
     );
   }
@@ -60,5 +64,5 @@ export default async function OppsPage() {
     validSemanas.unshift(withItems!);
   }
 
-  return <OppsClient semanas={validSemanas} />;
+  return <OppsClient semanas={validSemanas} passoInicial={passoInicial} />;
 }
