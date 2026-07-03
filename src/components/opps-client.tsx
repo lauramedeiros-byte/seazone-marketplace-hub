@@ -31,6 +31,7 @@ import {
   AlertTriangle,
   Video,
   ListChecks,
+  MapPin,
 } from "lucide-react";
 
 interface OppItem {
@@ -78,6 +79,86 @@ function Step({ n, children, tone = "dark" }: { n: number; children: ReactNode; 
 }
 
 const linkCls = "text-teal-700 font-medium underline underline-offset-2";
+
+// ── Parser do formato rico (blocos separados por --- com emojis) ───────────
+function stripEmoji(s: string): string {
+  return s.replace(/:[a-z0-9_+\-]+:/gi, " ").replace(/\s+/g, " ").trim();
+}
+
+function splitOppBlocks(text: string): string[] {
+  // separa o texto antes de cada cabeçalho "Oportunidade —", tolerando ou não os "---"
+  return text
+    .split(/(?=(?::fire:\s*)?Oportunidade\s*[—–-]\s)/i)
+    .map((p) => p.replace(/\n\s*-{3,}\s*\n?/g, "\n").trim())
+    .filter((p) => /Oportunidade\s*[—–-]/i.test(p));
+}
+
+interface ParsedOpp {
+  nome: string;
+  preco: string | null;
+  localizacao: string | null;
+  condicoes: string;
+  observacoes: string;
+}
+
+function parseOppBlock(raw: string): ParsedOpp | null {
+  const original = raw.trim();
+  const lines = original.split("\n").map((l) => l.trim()).filter(Boolean);
+  let nome = "";
+  let preco: string | null = null;
+  let localizacao: string | null = null;
+  const cond: string[] = [];
+  const push = (v: string) => {
+    const t = v.trim();
+    if (!t || t.length <= 1) return;
+    if (/^Unidade\s+\S+$/i.test(t)) return; // a unidade já vai no nome
+    if (!cond.includes(t)) cond.push(t);
+  };
+
+  for (const line of lines) {
+    const clean = stripEmoji(line);
+    if (!clean) continue;
+
+    const hdr = clean.match(/Oportunidade\s*[—–-]\s*(.+)/i);
+    if (hdr) {
+      nome = hdr[1].trim();
+      continue;
+    }
+
+    const isMoney = /moneybag/i.test(line) || (!preco && /^R\$/.test(clean));
+    if (isMoney) {
+      const m = clean.match(/R\$\s*[\d.]+(?:,\d{2})?/);
+      if (m) preco = m[0].replace(/\s+/g, " ").trim();
+      const parts = clean.split("|").map((s) => s.trim());
+      for (let i = 1; i < parts.length; i++) push(parts[i]); // condições após o preço (Distrato, Entrada em 6x…)
+      continue;
+    }
+
+    // linha de localização (cidade/UF)
+    if (/round_pushpin/i.test(line) && /\/[A-Za-z]{2}\b/.test(clean) && !localizacao) {
+      localizacao = clean;
+      continue;
+    }
+
+    // demais linhas de benefício: quebra por "|" em itens separados
+    for (const part of clean.split("|")) push(part);
+  }
+
+  if (!nome) return null;
+  return {
+    nome: nome.substring(0, 160),
+    preco,
+    localizacao,
+    condicoes: cond.join(" · "),
+    observacoes: original,
+  };
+}
+
+function parseOppsText(text: string): ParsedOpp[] | null {
+  const blocks = splitOppBlocks(text);
+  if (blocks.length === 0) return null; // não é o formato rico → usar parser antigo (linha a linha)
+  return blocks.map(parseOppBlock).filter((b): b is ParsedOpp => b !== null);
+}
 
 export function OppsClient({ semanas: initial }: Props) {
   const { user } = useUser();
@@ -187,25 +268,36 @@ export function OppsClient({ semanas: initial }: Props) {
     setBulkError(null);
     setBulkSuccess(null);
     try {
-      const lines = bulkOppText.split("\n").filter((l) => l.trim());
-      let added = 0;
       const errors: string[] = [];
-      const parsed: { nome: string; preco: string | null; condicoes: string }[] = [];
+      let parsed: ParsedOpp[] = [];
 
-      for (const line of lines) {
-        const { nome, preco, condicoes } = parseBulkOpp(line);
-        if (!nome || nome.length < 2) {
-          errors.push(`Não consegui entender: "${line.substring(0, 50)}..."`);
-          continue;
+      const structured = parseOppsText(bulkOppText);
+      if (structured && structured.length > 0) {
+        // formato rico (blocos com emojis)
+        parsed = structured;
+      } else {
+        // formato antigo: uma opp por linha
+        const lines = bulkOppText.split("\n").filter((l) => l.trim());
+        for (const line of lines) {
+          const { nome, preco, condicoes } = parseBulkOpp(line);
+          if (!nome || nome.length < 2) {
+            errors.push(`Não consegui entender: "${line.substring(0, 50)}..."`);
+            continue;
+          }
+          parsed.push({ nome, preco, localizacao: null, condicoes, observacoes: "" });
         }
-        parsed.push({ nome, preco, condicoes });
       }
 
-      if (errors.length > 0 && parsed.length === 0) {
-        setBulkError(`Não consegui entender nenhuma linha:\n${errors.join("\n")}`);
+      if (parsed.length === 0) {
+        setBulkError(
+          errors.length
+            ? `Não consegui entender:\n${errors.join("\n")}`
+            : "Não consegui identificar nenhuma opp no texto colado."
+        );
         return;
       }
 
+      let added = 0;
       for (const p of parsed) {
         const result = await fetch("/api/opps", {
           method: "POST",
@@ -214,9 +306,10 @@ export function OppsClient({ semanas: initial }: Props) {
             action: "create",
             semanaId: activeSemana.id,
             nomeEmpreendimento: p.nome.trim(),
-            localizacao: null,
+            localizacao: p.localizacao,
             preco: p.preco,
             condicoes: p.condicoes || null,
+            observacoes: p.observacoes || null,
           }),
         });
         if (result.ok) {
@@ -229,7 +322,7 @@ export function OppsClient({ semanas: initial }: Props) {
 
       setBulkOppText("");
       if (added > 0) {
-        setBulkSuccess(`${added} opps adicionadas com sucesso!`);
+        setBulkSuccess(`${added} opp(s) adicionada(s) com sucesso!`);
         setTimeout(() => window.location.reload(), 1200);
       }
       if (errors.length > 0) {
@@ -434,14 +527,35 @@ export function OppsClient({ semanas: initial }: Props) {
   }, [semanas]);
 
   // ── Sub-linha de metadados de uma opp ────────────────────────────────────
-  const OppMeta = ({ item }: { item: OppItem }) => (
-    <div className="flex flex-wrap gap-1.5 mt-1">
-      {item.preco && (
-        <span className="text-[11px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">{item.preco}</span>
-      )}
-      {item.condicoes && <span className="text-[11px] text-gray-500">{item.condicoes}</span>}
-    </div>
-  );
+  const OppMeta = ({ item, clamp = true }: { item: OppItem; clamp?: boolean }) => {
+    const chips = (item.condicoes || "").split(" · ").map((c) => c.trim()).filter(Boolean);
+    const shown = clamp ? chips.slice(0, 5) : chips;
+    const extra = chips.length - shown.length;
+    return (
+      <div className="mt-1 space-y-1.5">
+        <div className="flex flex-wrap gap-1.5 items-center">
+          {item.preco && (
+            <span className="text-[11px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-800 font-semibold">{item.preco}</span>
+          )}
+          {item.localizacao && (
+            <span className="text-[11px] text-gray-500 inline-flex items-center gap-1">
+              <MapPin className="w-3 h-3" /> {item.localizacao}
+            </span>
+          )}
+        </div>
+        {shown.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {shown.map((c, i) => (
+              <span key={i} className="text-[10.5px] bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 text-gray-600">
+                {c}
+              </span>
+            ))}
+            {clamp && extra > 0 && <span className="text-[10.5px] text-gray-400 self-center">+{extra}</span>}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -594,14 +708,14 @@ export function OppsClient({ semanas: initial }: Props) {
             </div>
           )}
           <Textarea
-            placeholder={`Cole aqui as 5 opps, uma por linha:\nSantinho Spot - 309B: R$ 289.000,00 ; ágio zero; entrada até 3x\nCanasvieiras Spot - 211: R$ 263.871,91; 7% abaixo do mercado`}
+            placeholder={`Cole aqui as opps do Marketplace (pode colar as 5 de uma vez, separadas por ---).\nEu leio automaticamente o nome do empreendimento, o valor e os benefícios de cada uma.`}
             value={bulkOppText}
             onChange={(e) => {
               setBulkOppText(e.target.value);
               setBulkError(null);
               setBulkSuccess(null);
             }}
-            rows={4}
+            rows={6}
             className="text-sm font-mono"
           />
           <div className="flex justify-end mt-2">
@@ -786,6 +900,19 @@ export function OppsClient({ semanas: initial }: Props) {
                         <X className="w-4 h-4" /> Remover
                       </Button>
                     </div>
+
+                    {/* O que essa opp oferece */}
+                    {(item.preco || item.condicoes || item.localizacao) && (
+                      <div className="mb-3">
+                        <OppMeta item={item} clamp={false} />
+                      </div>
+                    )}
+                    {item.observacoes && (
+                      <details className="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                        <summary className="text-xs font-medium text-gray-600 cursor-pointer select-none">Ver texto completo da opp</summary>
+                        <p className="mt-2 text-[11px] text-gray-600 whitespace-pre-wrap leading-relaxed">{item.observacoes}</p>
+                      </details>
+                    )}
 
                     {/* WhatsApp */}
                     <div className="bg-green-50 rounded-lg p-3 border border-green-200 mb-3">
