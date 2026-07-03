@@ -32,6 +32,8 @@ import {
   Video,
   ListChecks,
   MapPin,
+  Repeat,
+  Radio,
 } from "lucide-react";
 
 interface OppItem {
@@ -241,6 +243,7 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editingOpp, setEditingOpp] = useState<string | null>(null);
   const [editOppData, setEditOppData] = useState({ nome: "", preco: "", condicoes: "" });
+  const [openTextos, setOpenTextos] = useState<string | null>(null);
 
   const activeSemana = semanas[activeWeekIdx];
   const prevSemana = semanas[activeWeekIdx + 1];
@@ -270,6 +273,16 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
       .filter((i) => i.tipoDestaque === "semana-anterior")
       .map((i) => i.nomeEmpreendimento)
   );
+  // "No ar esta semana" = as escolhidas na semana anterior (que estão sendo publicadas agora)
+  const noAr = (prevSemana?.items ?? []).filter((i) => i.destaque);
+  // Rótulo da semana de publicação (a semana seguinte à que está sendo montada)
+  const nextWeekLabel = activeSemana
+    ? (() => {
+        const d = new Date(activeSemana.weekStart);
+        d.setDate(d.getDate() + 7);
+        return formatWeek(d);
+      })()
+    : "";
 
   function parseBulkOpp(line: string): { nome: string; preco: string | null; condicoes: string } {
     const texto = line.trim();
@@ -690,52 +703,41 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
 
         <TabsContent value="fluxo">
 
-      {/* Aviso: avisar a Thay */}
-      <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3.5">
-        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-sm text-amber-900">
-          <strong>Sempre que escolher as 2 opps da semana seguinte, avise a Thay de quais vão ser!</strong> Ela vai atrás da pasta para pegar as imagens estáticas da opp.
-        </p>
-      </div>
-
-      {/* Links úteis */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-          <CardContent className="p-3.5 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-700">Opps Mônica (Comunidade)</p>
-              <p className="text-xs text-gray-500">Preencha as opps para a comunidade</p>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <a href="https://opps-seazone.vercel.app/#marketplace" target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4" />
-                Abrir
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
-          <CardContent className="p-3.5 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-700">Transformar Opps</p>
-              <p className="text-xs text-gray-500">Converte opps para o formato da Mônica</p>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <a href="https://claude.ai/artifacts/latest/63177553-77d0-4911-89d2-01a5114de546" target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4" />
-                Abrir
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
-          <CardContent className="p-3.5">
-            <p className="text-sm font-medium text-gray-700">Montar Textos 2 Top Opps</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Claude Cowork → skill <code className="font-mono">/textos-2-top-opps-marketplace</code> → ele pede os dados do empreendimento e monta 2 opções de WhatsApp e 2 de e-mail.
-            </p>
-          </CardContent>
-        </Card>
+      {/* Links úteis (compactos) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+        <a
+          href="https://opps-seazone.vercel.app/#marketplace"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50/50 px-3 py-2 hover:bg-purple-50 transition-colors"
+        >
+          <Users className="w-4 h-4 text-purple-600 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-gray-700 truncate">Opps Mônica</p>
+            <p className="text-[10.5px] text-gray-500 truncate">Preencher p/ comunidade</p>
+          </div>
+          <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-500 shrink-0" />
+        </a>
+        <a
+          href="https://claude.ai/artifacts/latest/63177553-77d0-4911-89d2-01a5114de546"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2 hover:bg-blue-50 transition-colors"
+        >
+          <Repeat className="w-4 h-4 text-blue-600 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-gray-700 truncate">Transformar Opps</p>
+            <p className="text-[10.5px] text-gray-500 truncate">P/ formato da Mônica</p>
+          </div>
+          <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0" />
+        </a>
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2">
+          <MessageSquare className="w-4 h-4 text-amber-600 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-gray-700 truncate">Montar textos 2 top opps</p>
+            <p className="text-[10.5px] text-gray-500 truncate">Skill /textos-2-top-opps-marketplace</p>
+          </div>
+        </div>
       </div>
 
       {/* Seletor de semana + histórico */}
@@ -789,6 +791,94 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
         </Card>
       )}
 
+      {/* Orientação: para qual semana estou escolhendo */}
+      <div className="mb-4 flex items-start gap-3 rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50 to-emerald-50 p-4">
+        <div className="w-9 h-9 rounded-lg bg-teal-600 text-white grid place-items-center shrink-0">
+          <Clock className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-teal-800">Você está escolhendo as opps da semana que vem</p>
+          <p className="text-xs text-gray-600 mt-0.5">
+            Toda <strong>sexta</strong> você escolhe <strong>2 opps</strong> para publicar na{" "}
+            <strong>semana que vem{nextWeekLabel ? ` (${nextWeekLabel})` : ""}</strong>. Escolha entre as que chegaram hoje e as da semana passada.
+          </p>
+        </div>
+      </div>
+
+      {/* No ar esta semana (as escolhidas na sexta passada) */}
+      {noAr.length > 0 && (
+        <div className="mb-4 rounded-xl border border-gray-200 border-l-4 border-l-red-500 bg-white p-4">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <Radio className="w-4 h-4 text-red-500" />
+            <span className="text-sm font-bold text-gray-800">No ar esta semana</span>
+            <span className="text-[11px] text-gray-400">
+              {activeSemana ? `· ${formatWeek(new Date(activeSemana.weekStart))} ` : ""}· escolhidas na sexta passada
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {noAr.map((item) => (
+              <div key={item.id} className="rounded-lg border border-gray-100 bg-gray-50 p-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{item.nomeEmpreendimento}</p>
+                    {item.localizacao && <p className="text-[11px] text-gray-500 truncate">{item.localizacao}</p>}
+                  </div>
+                  {(item.textoWhatsapp || item.textoEmail) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 text-teal-700 border-teal-300"
+                      onClick={() => setOpenTextos(openTextos === item.id ? null : item.id)}
+                    >
+                      {openTextos === item.id ? "Ocultar" : "Ver textos"}
+                    </Button>
+                  )}
+                </div>
+                {openTextos === item.id && (
+                  <div className="mt-2 space-y-2">
+                    {item.textoWhatsapp && (
+                      <div className="rounded-md border border-green-200 bg-green-50 p-2">
+                        <p className="text-[11px] font-medium text-green-700 mb-1 flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" /> WhatsApp
+                        </p>
+                        <p className="text-[11px] text-gray-700 whitespace-pre-wrap break-words">{renderComLinks(item.textoWhatsapp)}</p>
+                      </div>
+                    )}
+                    {item.textoEmail && (
+                      <div className="rounded-md border border-blue-200 bg-blue-50 p-2">
+                        <p className="text-[11px] font-medium text-blue-700 mb-1 flex items-center gap-1">
+                          <Mail className="w-3 h-3" /> E-mail
+                        </p>
+                        <p className="text-[11px] text-gray-700 whitespace-pre-wrap break-words">{renderComLinks(item.textoEmail)}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Aviso: avisar a Thay */}
+      <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-900">
+          <strong>Ao escolher as 2, avise a Thay</strong> de quais vão ser — ela pega as imagens estáticas na pasta.
+        </p>
+      </div>
+
+      {/* Divisor: montar a semana que vem */}
+      <div className="flex items-center gap-3 mt-6 mb-1">
+        <h2 className="text-base font-bold text-gray-800 whitespace-nowrap">Montar a semana que vem</h2>
+        <div className="h-px bg-gray-200 flex-1" />
+      </div>
+      <p className="text-[11px] text-gray-500 mb-3">
+        <strong className="text-gray-600">1.</strong> as 5 chegam nesta sexta <span className="text-gray-300">→</span>{" "}
+        <strong className="text-gray-600">2.</strong> Mônica pega 3 <span className="text-gray-300">→</span>{" "}
+        <strong className="text-gray-600">3.</strong> você escolhe 2 entre as que sobraram e as da semana passada
+      </p>
+
       {/* ── BLOCO 1: Opps desta sexta ─────────────────────────────────────── */}
       <Card className="mb-4">
         <CardHeader className="pb-3">
@@ -796,7 +886,7 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
             <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                Opps desta sexta
+                Chegaram nesta sexta
                 <Badge variant="secondary">{oppsDaSemana.length} do Marketplace</Badge>
               </CardTitle>
               <p className="text-xs text-gray-500 mt-1">
@@ -936,10 +1026,10 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
               <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
-                  Opps da semana passada
+                  Da semana passada
                   <Badge variant="secondary">{formatWeek(new Date(prevSemana!.weekStart))}</Badge>
                 </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">Você também pode escolher entre estas para publicar nesta semana.</p>
+                <p className="text-xs text-gray-500 mt-1">Opps que não foram publicadas — você também pode escolher entre estas.</p>
               </div>
             </div>
           </CardHeader>
@@ -979,11 +1069,11 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
             <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                Escolhidas para publicar na semana que vem
+                Suas escolhidas
                 <Badge variant={escolhidas.length === 2 ? "success" : "secondary"}>{escolhidas.length}/2</Badge>
               </CardTitle>
               <p className="text-xs text-gray-500 mt-1">
-                As 2 que você escolhe na sexta para publicar na semana seguinte: em social a semana toda + WhatsApp e e-mail. Cole um link com o conteúdo ou digite direto — tudo é salvo.
+                Vão ao ar na <strong>semana que vem{nextWeekLabel ? ` (${nextWeekLabel})` : ""}</strong>: em social a semana toda + WhatsApp e e-mail. Cole um link ou digite o texto — tudo é salvo.
               </p>
             </div>
           </div>
@@ -991,7 +1081,7 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
         <CardContent>
           {escolhidas.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-6">
-              Nenhuma escolhida ainda. Use "Escolher" nas opps acima (desta semana ou da semana passada).
+              Nenhuma escolhida ainda. Use "Escolher" nas opps acima (as que chegaram nesta sexta ou as da semana passada).
             </p>
           ) : (
             <div className="space-y-4">
@@ -1003,7 +1093,7 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
                       <div>
                         <p className="text-base font-semibold text-gray-900">{item.nomeEmpreendimento}</p>
                         <span className={`inline-block mt-1 text-[11px] font-medium rounded-full px-2 py-0.5 border ${daSemanaPassada ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-teal-50 text-teal-700 border-teal-200"}`}>
-                          {daSemanaPassada ? "da semana passada" : "desta semana"}
+                          {daSemanaPassada ? "da semana passada" : "chegou nesta sexta"}
                         </span>
                       </div>
                       <Button variant="ghost" size="sm" className="text-gray-500" onClick={() => handleRemoveChosen(item)} disabled={busyId === item.id}>
