@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,6 +28,9 @@ import {
   ExternalLink,
   Clock,
   Users,
+  AlertTriangle,
+  Video,
+  ListChecks,
 } from "lucide-react";
 
 interface OppItem {
@@ -57,6 +61,23 @@ interface OppSemana {
 interface Props {
   semanas: OppSemana[];
 }
+
+function Step({ n, children, tone = "dark" }: { n: number; children: ReactNode; tone?: "dark" | "video" }) {
+  return (
+    <li className="flex gap-3">
+      <span
+        className={`w-7 h-7 rounded-full text-white text-sm font-bold flex items-center justify-center shrink-0 ${
+          tone === "video" ? "bg-fuchsia-600" : "bg-gray-900"
+        }`}
+      >
+        {n}
+      </span>
+      <div className="text-sm text-gray-700 leading-relaxed pt-0.5">{children}</div>
+    </li>
+  );
+}
+
+const linkCls = "text-teal-700 font-medium underline underline-offset-2";
 
 export function OppsClient({ semanas: initial }: Props) {
   const { user } = useUser();
@@ -437,6 +458,22 @@ export function OppsClient({ semanas: initial }: Props) {
         </div>
       </div>
 
+      <Tabs defaultValue="fluxo">
+        <TabsList className="mb-4">
+          <TabsTrigger value="fluxo">Opps da semana</TabsTrigger>
+          <TabsTrigger value="passo">Passo a passo das opps</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="fluxo">
+
+      {/* Aviso: avisar a Thay */}
+      <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3.5">
+        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-sm text-amber-900">
+          <strong>Sempre que escolher as 2 opps da semana seguinte, avise a Thay de quais vão ser!</strong> Ela vai atrás da pasta para pegar as imagens estáticas da opp.
+        </p>
+      </div>
+
       {/* Links úteis */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
         <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
@@ -794,6 +831,95 @@ export function OppsClient({ semanas: initial }: Props) {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        {/* ── ABA: Passo a passo ──────────────────────────────────────────── */}
+        <TabsContent value="passo">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ListChecks className="w-4 h-4 text-teal-600" />
+                Passo a passo das opps
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">Do pedido ao time de Marketplace até o disparo pela Gaby.</p>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3">
+                <Step n={1}>
+                  Cobre o time de Marketplace <strong>entre quarta e sexta</strong>, toda semana, para mandarem as <strong>5 oportunidades</strong>.
+                </Step>
+                <Step n={2}>
+                  Suba as oportunidades <strong>aqui no artefato</strong> + no <strong>artefato da Mônica</strong>. Um aviso automático é gerado para ela no grupo <strong>#comunidade-investidores</strong> no Slack, para escolher as 3 da semana.
+                </Step>
+                <Step n={3}>
+                  Enquanto isso, você já pode escolher <strong>2 cotas da semana passada</strong> que não foram publicadas pelo marketing — ou esperar a Mônica escolher as da semana vigente e ficar com o restante. No fim da sexta você deve ter <strong>2 cotas escolhidas</strong> para a semana seguinte.
+                </Step>
+                <Step n={4}>
+                  Com as 2 cotas escolhidas, acesse a skill <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-800 font-mono text-xs">/textos-2-top-opps-marketplace</code>. Ela pede os dados do empreendimento e monta <strong>2 opções de WhatsApp</strong> e <strong>2 de e-mail</strong>. Dê um check e ajuste as frases se alguma ficar ruim.
+                </Step>
+                <Step n={5}>
+                  Com os textos em mãos, peça para a <strong>Gaby</strong> disparar WhatsApp e e-mail no grupo <strong>#entrega_disparos</strong>, sinalizando o dia de disparo de cada uma. <strong>Não esqueça de enviar as fotos para a Gaby!</strong>
+                </Step>
+              </ol>
+
+              <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3.5">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-900">
+                  <strong>Ao escolher cota da semana passada</strong>, confira no{" "}
+                  <a href="https://spotometro.seazone.com.br/" target="_blank" rel="noopener noreferrer" className={linkCls}>
+                    Spotômetro → Revendas
+                  </a>{" "}
+                  se ela ainda está disponível. Se não estiver, escolha outra (da semana passada ou da semana atual).
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sub-card: Vídeos Narrados */}
+          <Card className="mt-4 border-fuchsia-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Video className="w-4 h-4 text-fuchsia-600" />
+                Vídeos Narrados da OPP da semana
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                Processo paralelo. O 1º vídeo (1ª opp) é postado na <strong>terça</strong>, e a 2ª opp na <strong>quinta</strong>.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3">
+                <Step n={1} tone="video">
+                  Depois de escolher as opps da semana, monte o <strong>briefing para o Designer</strong> fazer um vídeo narrado simples da opp.
+                </Step>
+                <Step n={2} tone="video">
+                  Para montar o roteiro, acesse o <strong>Claude Chat</strong> com a skill <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-800 font-mono text-xs">/[a definir]</code> <span className="text-gray-400">(nome a definir — em criação)</span>.
+                </Step>
+                <Step n={3} tone="video">Forneça os dados do empreendimento e ele vai gerar o roteiro.</Step>
+                <Step n={4} tone="video">
+                  Baixe em <strong>.docx</strong> e confira as cenas/roteiro. <span className="text-gray-500">(Costuma precisar ajustar as cenas e simplificar o lettering.)</span>
+                </Step>
+                <Step n={5} tone="video">
+                  Abra um card no <strong>Pipefy</strong> pedindo a opp para o designer, <strong>respeitando a data de entrega</strong>.
+                </Step>
+                <Step n={6} tone="video">
+                  Entre na <strong>pasta de briefings</strong> (pela Home do Hub Marketplace) e suba o briefing no <strong>artefato oficial de Marketplace</strong>.
+                </Step>
+                <Step n={7} tone="video">
+                  Depois de pronto, envie no{" "}
+                  <a href="https://seazone-fund.slack.com/archives/C06BUCUDX1B" target="_blank" rel="noopener noreferrer" className={linkCls}>
+                    #social-media-mkt
+                  </a>{" "}
+                  para a <strong>Thay</strong> postar (só no story — ela já sabe qual link colocar).{" "}
+                  <a href="https://seazone-fund.slack.com/archives/C06BUCUDX1B/p1782826216806829" target="_blank" rel="noopener noreferrer" className={linkCls}>
+                    Ver exemplo de pedido
+                  </a>
+                  .
+                </Step>
+              </ol>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
