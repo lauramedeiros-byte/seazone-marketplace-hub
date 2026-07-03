@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     switch (action) {
       case "create": {
-        const { semanaId, nomeEmpreendimento, localizacao, preco, condicoes } = data;
+        const { semanaId, nomeEmpreendimento, localizacao, preco, condicoes, observacoes } = data;
         const item = await db.oppItem.create({
           data: {
             semanaId,
@@ -16,6 +16,7 @@ export async function POST(request: Request) {
             localizacao: localizacao || null,
             preco: preco || null,
             condicoes: condicoes || null,
+            observacoes: observacoes || null,
           },
         });
         return NextResponse.json({ success: true, item });
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
             localizacao: src.localizacao,
             preco: src.preco,
             condicoes: src.condicoes,
+            observacoes: src.observacoes,
             destaque: true,
             tipoDestaque: "semana-anterior",
           },
@@ -110,6 +112,17 @@ export async function POST(request: Request) {
       case "delete": {
         const { id } = data;
         await db.oppItem.delete({ where: { id } });
+        return NextResponse.json({ success: true });
+      }
+
+      case "save-passo": {
+        // Salva o conteúdo editável da aba "Passo a passo" (registro único)
+        const { conteudo } = data;
+        await db.oppsPassoAPasso.upsert({
+          where: { id: "singleton" },
+          update: { conteudoJson: conteudo },
+          create: { id: "singleton", conteudoJson: conteudo },
+        });
         return NextResponse.json({ success: true });
       }
 
