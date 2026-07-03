@@ -979,11 +979,11 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
             <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                Escolhidas para publicar esta semana
+                Escolhidas para publicar na semana que vem
                 <Badge variant={escolhidas.length === 2 ? "success" : "secondary"}>{escolhidas.length}/2</Badge>
               </CardTitle>
               <p className="text-xs text-gray-500 mt-1">
-                Publicadas em social a semana toda + WhatsApp e e-mail. Cole um link com o conteúdo ou digite direto — tudo é salvo.
+                As 2 que você escolhe na sexta para publicar na semana seguinte: em social a semana toda + WhatsApp e e-mail. Cole um link com o conteúdo ou digite direto — tudo é salvo.
               </p>
             </div>
           </div>
