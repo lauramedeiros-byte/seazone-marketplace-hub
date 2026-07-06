@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send, MessageSquare, Activity, Zap } from "lucide-react";
 
 const links = [
   {
@@ -68,6 +68,33 @@ const links = [
     descricao: "Busca criativo pelo ID do Pipedrive para visualizar o conteúdo do vídeo ou imagem.",
     icone: Search,
     cor: "bg-blue-50 text-blue-600 border-blue-100",
+  },
+  {
+    grupo: "Disparos",
+    url: "https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=3062589203783816&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1483659999661571",
+    titulo: "Meta — Templates de WhatsApp",
+    descricao:
+      "Cadastro de templates de mensagem na Meta para disparar WhatsApp.",
+    icone: MessageSquare,
+    cor: "bg-teal-50 text-teal-600 border-teal-100",
+  },
+  {
+    grupo: "Disparos",
+    url: "https://app.morada.ai/dashboard",
+    titulo: "Morada.ai — Saúde do Número",
+    descricao:
+      "Verificação da saúde do número de telefone antes de fazer o disparo.",
+    icone: Activity,
+    cor: "bg-teal-50 text-teal-600 border-teal-100",
+  },
+  {
+    grupo: "Disparos",
+    url: "https://sai.seazone.dev/marketing/management/campaigns",
+    titulo: "SAI — Campanhas de Disparo",
+    descricao:
+      "Criação de campanha na SAI (IA de disparo da Seazone).",
+    icone: Zap,
+    cor: "bg-teal-50 text-teal-600 border-teal-100",
   },
   {
     url: "https://saleszone-prod.seazone.dev/mia/erros",
