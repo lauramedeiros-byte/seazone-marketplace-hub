@@ -253,6 +253,38 @@ model OppsPassoAPasso {
   atualizadoEm DateTime @updatedAt
 }
 
+model PlanejamentoFrente {
+  id           String              @id @default(cuid())
+  nome         String
+  cor          String              @default("teal")
+  ordem        Int                 @default(0)
+  criadoEm     DateTime            @default(now())
+  atualizadoEm DateTime            @updatedAt
+  acoes        PlanejamentoAcao[]
+}
+
+model PlanejamentoAcao {
+  id             String             @id @default(cuid())
+  frenteId       String
+  frente         PlanejamentoFrente @relation(fields: [frenteId], references: [id], onDelete: Cascade)
+  mes            String             // "YYYY-MM"
+  dia            Int                // 1-31
+  titulo         String
+  base           String?
+  empreendimentos String?
+  whatsapp       String?
+  email          String?
+  anotacoes      String?
+  links          Json               @default("[]") // [{ label, url }]
+  feito          Boolean            @default(false)
+  ordem          Int                @default(0)
+  criadoEm       DateTime           @default(now())
+  atualizadoEm   DateTime           @updatedAt
+
+  @@index([mes])
+  @@index([frenteId, mes])
+}
+
 model AnaliseClaude {
   id          String   @id @default(cuid())
   descricao   String
