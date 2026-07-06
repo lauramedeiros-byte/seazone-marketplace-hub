@@ -20,6 +20,8 @@ import {
   LayoutGrid,
   ListChecks,
   Building2,
+  Search,
+  AlertTriangle,
 } from "lucide-react";
 
 interface LinkItem {
@@ -36,6 +38,7 @@ interface Acao {
   empreendimentos: string | null;
   whatsapp: string | null;
   email: string | null;
+  rdCampanha: string | null;
   anotacoes: string | null;
   links: LinkItem[];
   feito: boolean;
@@ -98,6 +101,20 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [view, setView] = useState<"calendario" | "lista">("calendario");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+  const [tip, setTip] = useState<{ text: string; sub?: string; top: number; left: number } | null>(null);
+
+  const hoje = new Date();
+  const hojeNum = hoje.getFullYear() * 10000 + (hoje.getMonth() + 1) * 100 + hoje.getDate();
+  const acaoDateNum = (mes: string, dia: number) => {
+    const [y, m] = mes.split("-").map(Number);
+    return y * 10000 + m * 100 + dia;
+  };
+  const chipState = (a: Acao): "feito" | "alerta" | "pendente" => {
+    if (a.feito) return "feito";
+    if (acaoDateNum(a.mes, a.dia) < hojeNum) return "alerta";
+    return "pendente";
+  };
 
   const frenteAtiva = frentes.find((f) => f.id === frenteAtivaId) ?? frentes[0] ?? null;
   const c = cor(frenteAtiva?.cor ?? "teal");
@@ -115,6 +132,21 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
     }
     return map;
   }, [acoesDoMes]);
+
+  // Busca por mês (em todas as frentes, dentro de todos os campos da ação)
+  const buscaResultados = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return null;
+    return acoes
+      .filter((a) => a.mes === mesAtivo)
+      .filter((a) => {
+        const linksStr = (a.links ?? []).map((l) => `${l.label ?? ""} ${l.url}`).join(" ");
+        return [a.titulo, a.base, a.empreendimentos, a.whatsapp, a.email, a.rdCampanha, a.anotacoes, linksStr]
+          .filter(Boolean)
+          .some((v) => (v as string).toLowerCase().includes(q));
+      })
+      .sort((a, b) => a.dia - b.dia);
+  }, [busca, acoes, mesAtivo]);
 
   // ── Persistência ─────────────────────────────────────────────────────────
   const api = (body: Record<string, unknown>) =>
@@ -139,6 +171,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
         empreendimentos: a.empreendimentos,
         whatsapp: a.whatsapp,
         email: a.email,
+        rdCampanha: a.rdCampanha,
         anotacoes: a.anotacoes,
         links: a.links,
       });
@@ -231,46 +264,55 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const diasComAcao = useMemo(() => Array.from(porDia.keys()).sort((a, b) => a - b), [porDia]);
 
   // ── Card de ação (editor) ────────────────────────────────────────────────
-  const renderAcaoCard = (a: Acao) => (
-    <div key={a.id} className={`rounded-xl border p-4 ${a.feito ? "border-gray-200 bg-gray-50/60" : "border-gray-200 bg-white"}`}>
-      <div className="flex items-start gap-3">
+  const renderAcaoCard = (a: Acao, idx: number) => {
+    const atrasada = chipState(a) === "alerta";
+    return (
+    <div key={a.id} className={`rounded-xl border-2 overflow-hidden ${a.feito ? "border-gray-200 bg-gray-50/60" : atrasada ? "border-red-300 bg-white" : "border-gray-300 bg-white"}`}>
+      {/* Cabeçalho da ação (divisão clara) */}
+      <div className={`flex items-center gap-2 px-3 py-2 border-b ${a.feito ? "bg-gray-100 border-gray-200" : atrasada ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-200"}`}>
         <button
           onClick={() => persistAcao(a.id, { feito: !a.feito })}
           title={a.feito ? "Marcar como não feito" : "Marcar como feito"}
-          className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
+          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
             a.feito ? "bg-green-600 border-green-600 text-white" : "border-gray-300 bg-white hover:border-green-400"
           }`}
         >
           {a.feito && <Check className="w-3.5 h-3.5" />}
         </button>
-        <div className="flex-1 min-w-0">
-          <Input
-            value={a.titulo}
-            onChange={(e) => patchLocal(a.id, { titulo: e.target.value })}
-            placeholder="Título da ação (ex: OPP da Semana — MIA)"
-            className={`text-sm font-semibold ${a.feito ? "line-through text-gray-400" : ""}`}
+        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Ação {idx + 1}</span>
+        {a.feito ? (
+          <span className="text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 flex items-center gap-1">
+            <Check className="w-3 h-3" /> feito
+          </span>
+        ) : atrasada ? (
+          <span className="text-[11px] font-medium text-red-700 bg-red-100 border border-red-200 rounded-full px-2 py-0.5 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" /> não feito (atrasada)
+          </span>
+        ) : (
+          <span className="text-[11px] font-medium text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">a fazer</span>
+        )}
+        <div className="ml-auto flex items-center gap-1.5">
+          <input
+            type="date"
+            value={`${a.mes}-${pad2(a.dia)}`}
+            onChange={(e) => moverData(a, e.target.value)}
+            title="Mudar a data da ação"
+            className="text-xs border border-gray-300 rounded-md px-2 py-1"
           />
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="text-[11px] text-gray-400 uppercase tracking-wide font-semibold">Data</span>
-            <input
-              type="date"
-              value={`${a.mes}-${pad2(a.dia)}`}
-              onChange={(e) => moverData(a, e.target.value)}
-              className="text-xs border border-gray-300 rounded-md px-2 py-1"
-            />
-            {a.feito ? (
-              <span className="text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 flex items-center gap-1">
-                <Check className="w-3 h-3" /> feito
-              </span>
-            ) : (
-              <span className="text-[11px] font-medium text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">a fazer</span>
-            )}
-          </div>
+          <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-600 h-8 w-8" onClick={() => deleteAcao(a.id)}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-600 h-8 w-8 shrink-0" onClick={() => deleteAcao(a.id)}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
       </div>
+
+      {/* Corpo */}
+      <div className="p-4">
+      <Input
+        value={a.titulo}
+        onChange={(e) => patchLocal(a.id, { titulo: e.target.value })}
+        placeholder="Título da ação (ex: OPP da Semana — MIA)"
+        className={`text-sm font-semibold ${a.feito ? "line-through text-gray-400" : ""}`}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
         <div>
@@ -311,6 +353,12 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
         </div>
       </div>
 
+      {/* [RD] Campanha — logo acima das anotações */}
+      <div className="mt-3">
+        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">[RD] Campanha</label>
+        <Input value={a.rdCampanha ?? ""} onChange={(e) => patchLocal(a.id, { rdCampanha: e.target.value })} className="text-sm mt-1" placeholder="Código da campanha no RD Station" />
+      </div>
+
       <div className="mt-3">
         <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Anotações</label>
         <Textarea value={a.anotacoes ?? ""} onChange={(e) => patchLocal(a.id, { anotacoes: e.target.value })} rows={2} className="text-sm mt-1" placeholder="Observações livres…" />
@@ -321,8 +369,10 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
           <Check className="w-4 h-4" /> {savingId === a.id ? "Salvando..." : "Salvar"}
         </Button>
       </div>
+      </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -373,11 +423,69 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
         <button onClick={addFrente} className="rounded-full border border-dashed border-gray-300 text-gray-500 px-3 py-1.5 text-sm font-semibold hover:bg-gray-50">+ Nova frente</button>
       </div>
 
+      {/* Busca por mês (em todas as frentes) */}
+      <div className="relative mb-5">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder={`Buscar em ${mesLabel(mesAtivo)} — título, base, mensagem, [RD], links…`}
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="pl-10 h-10"
+        />
+        {busca && (
+          <button onClick={() => setBusca("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
       {!frenteAtiva ? (
         <div className="text-center py-16 text-gray-400">
           <CalendarDays className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p>Nenhuma frente ainda.</p>
           <p className="text-sm">Crie a primeira frente para começar o planejamento.</p>
+        </div>
+      ) : buscaResultados ? (
+        /* ── Resultados da busca ── */
+        <div>
+          <p className="text-sm text-gray-500 mb-3">
+            {buscaResultados.length} resultado(s) em <span className="capitalize">{mesLabel(mesAtivo)}</span> para “{busca}”
+          </p>
+          {buscaResultados.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p>Nada encontrado neste mês.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {buscaResultados.map((a) => {
+                const f = frentes.find((x) => x.id === a.frenteId);
+                const fc = cor(f?.cor ?? "teal");
+                const st = chipState(a);
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => { setFrenteAtivaId(a.frenteId); setSelectedDay(a.dia); setView("calendario"); setBusca(""); }}
+                    className="w-full text-left rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50 flex items-start gap-3"
+                  >
+                    <span className={`w-9 h-9 rounded-lg ${fc.dot} text-white text-sm font-bold grid place-items-center shrink-0`}>{a.dia}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold flex items-center gap-2">
+                        {a.titulo || "(sem título)"}
+                        {st === "feito" && <Check className="w-3.5 h-3.5 text-green-600" />}
+                        {st === "alerta" && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+                      </p>
+                      <p className="text-[11px] text-gray-400">{f?.nome} · dia {a.dia}</p>
+                      {(a.base || a.empreendimentos) && (
+                        <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">{a.empreendimentos || a.base}</p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : view === "calendario" ? (
         <>
@@ -390,20 +498,47 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
               {cells.map((day, idx) => {
                 const list = day ? porDia.get(day) ?? [] : [];
                 const isSel = day !== null && selectedDay === day;
+                const temAlerta = list.some((a) => chipState(a) === "alerta");
                 return (
                   <div
                     key={idx}
                     onClick={() => day && setSelectedDay(day)}
-                    className={`min-h-[92px] border-r border-b border-gray-100 p-1.5 ${day ? "cursor-pointer hover:bg-gray-50/70" : "bg-gray-50/40"} ${isSel ? `${c.chip} ring-2 ring-inset` : ""}`}
+                    className={`min-h-[92px] border-r border-b border-gray-100 p-1.5 ${day ? "cursor-pointer hover:bg-gray-50/70" : "bg-gray-50/40"} ${
+                      isSel ? `${c.chip} ring-2 ring-inset` : temAlerta ? "bg-red-50/60" : ""
+                    }`}
                   >
                     {day && (
                       <>
                         <div className="text-xs font-bold text-gray-500 mb-1">{day}</div>
-                        {list.slice(0, 3).map((a) => (
-                          <span key={a.id} className={`block text-[10px] leading-tight px-1.5 py-0.5 rounded mb-1 border truncate font-semibold ${c.chip} ${a.feito ? "opacity-55 line-through" : ""}`}>
-                            {a.feito ? "✓ " : ""}{a.titulo || "(sem título)"}
-                          </span>
-                        ))}
+                        {list.slice(0, 3).map((a) => {
+                          const st = chipState(a);
+                          const cls =
+                            st === "feito"
+                              ? "bg-gray-100 text-gray-400 border-gray-200 line-through"
+                              : st === "alerta"
+                              ? "bg-red-100 text-red-700 border-red-300"
+                              : c.chip;
+                          return (
+                            <span
+                              key={a.id}
+                              onMouseEnter={(e) => {
+                                const r = e.currentTarget.getBoundingClientRect();
+                                const w = typeof window !== "undefined" ? window.innerWidth : 1000;
+                                setTip({
+                                  text: a.titulo || "(sem título)",
+                                  sub: a.empreendimentos || a.base || undefined,
+                                  top: r.bottom + 6,
+                                  left: Math.max(8, Math.min(r.left, w - 296)),
+                                });
+                              }}
+                              onMouseLeave={() => setTip(null)}
+                              className={`block text-[10px] leading-tight px-1.5 py-0.5 rounded mb-1 border truncate font-semibold ${cls}`}
+                            >
+                              {st === "feito" ? "✓ " : st === "alerta" ? "⚠ " : ""}
+                              {a.titulo || "(sem título)"}
+                            </span>
+                          );
+                        })}
                         {list.length > 3 && <span className="text-[10px] text-gray-400 font-semibold">+{list.length - 3}</span>}
                       </>
                     )}
@@ -420,9 +555,9 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
                 <h3 className="font-bold text-sm">Ações de {pad2(selectedDay)}/{mesAtivo.split("-")[1]} · {frenteAtiva.nome}</h3>
                 <button onClick={() => setSelectedDay(null)} className="text-gray-500 hover:text-gray-800"><X className="w-4 h-4" /></button>
               </div>
-              <div className="p-4 space-y-3 bg-white">
-                {(porDia.get(selectedDay) ?? []).map(renderAcaoCard)}
-                <button onClick={() => addAcao(selectedDay)} className={`w-full border border-dashed rounded-lg py-2.5 font-semibold text-sm ${c.tab}`}>
+              <div className="p-4 space-y-4 bg-gray-50/40">
+                {(porDia.get(selectedDay) ?? []).map((a, i) => renderAcaoCard(a, i))}
+                <button onClick={() => addAcao(selectedDay)} className={`w-full border border-dashed rounded-lg py-2.5 font-semibold text-sm bg-white ${c.tab}`}>
                   + Adicionar ação em {pad2(selectedDay)}/{mesAtivo.split("-")[1]}
                 </button>
               </div>
@@ -447,10 +582,21 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
                   <span className={`w-7 h-7 rounded-lg ${c.dot} text-white text-xs font-bold grid place-items-center`}>{dia}</span>
                   <span className="text-sm font-semibold text-gray-700">{pad2(dia)}/{mesAtivo.split("-")[1]}</span>
                 </div>
-                <div className="space-y-3 pl-2">{(porDia.get(dia) ?? []).map(renderAcaoCard)}</div>
+                <div className="space-y-4 pl-2">{(porDia.get(dia) ?? []).map((a, i) => renderAcaoCard(a, i))}</div>
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Tooltip do calendário (lê a linha toda no hover) */}
+      {tip && (
+        <div
+          style={{ position: "fixed", top: tip.top, left: tip.left, maxWidth: 288, zIndex: 50 }}
+          className="pointer-events-none rounded-lg bg-gray-900 text-white text-xs px-3 py-2 shadow-lg"
+        >
+          <p className="font-semibold leading-snug">{tip.text}</p>
+          {tip.sub && <p className="text-gray-300 mt-0.5 leading-snug">{tip.sub}</p>}
         </div>
       )}
     </div>

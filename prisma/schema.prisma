@@ -274,6 +274,7 @@ model PlanejamentoAcao {
   empreendimentos String?
   whatsapp       String?
   email          String?
+  rdCampanha     String?
   anotacoes      String?
   links          Json               @default("[]") // [{ label, url }]
   feito          Boolean            @default(false)
