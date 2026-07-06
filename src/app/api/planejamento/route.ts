@@ -8,6 +8,7 @@ const ACAO_FIELDS = [
   "empreendimentos",
   "whatsapp",
   "email",
+  "rdCampanha",
   "anotacoes",
   "links",
   "dia",
