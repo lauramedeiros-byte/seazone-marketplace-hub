@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Megaphone,
   TrendingUp as TrendingUpIcon,
+  CalendarDays,
 } from "lucide-react";
 import { SubCardSearch } from "@/components/sub-card-search";
 
@@ -51,6 +52,14 @@ const subCards = [
       "Registro semanal das oportunidades em destaque e textos criados",
     icone: TrendingUp,
     cor: "text-blue-600",
+  },
+  {
+    href: "/planejamento-organico",
+    titulo: "Planejamento Orgânico",
+    descricao:
+      "Calendário mensal de ações por frente: disparos, comunidade, social e ideias",
+    icone: CalendarDays,
+    cor: "text-teal-600",
   },
   {
     href: "/respescagem",
