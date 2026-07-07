@@ -34,6 +34,7 @@ import {
   MapPin,
   Repeat,
   Radio,
+  PenLine,
 } from "lucide-react";
 
 interface OppItem {
@@ -703,40 +704,50 @@ export function OppsClient({ semanas: initial, passoInicial }: Props) {
 
         <TabsContent value="fluxo">
 
-      {/* Links úteis (compactos) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-        <a
-          href="https://opps-seazone.vercel.app/#marketplace"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50/50 px-3 py-2 hover:bg-purple-50 transition-colors"
-        >
-          <Users className="w-4 h-4 text-purple-600 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-gray-700 truncate">Opps Mônica</p>
-            <p className="text-[10.5px] text-gray-500 truncate">Preencher p/ comunidade</p>
-          </div>
-          <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-500 shrink-0" />
-        </a>
-        <a
-          href="https://claude.ai/artifacts/latest/63177553-77d0-4911-89d2-01a5114de546"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2 hover:bg-blue-50 transition-colors"
-        >
-          <Repeat className="w-4 h-4 text-blue-600 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-gray-700 truncate">Transformar Opps</p>
-            <p className="text-[10.5px] text-gray-500 truncate">P/ formato da Mônica</p>
-          </div>
-          <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0" />
-        </a>
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2">
-          <MessageSquare className="w-4 h-4 text-amber-600 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-gray-700 truncate">Montar textos 2 top opps</p>
-            <p className="text-[10.5px] text-gray-500 truncate">Skill /textos-2-top-opps-marketplace</p>
-          </div>
+      {/* Grupo: tudo para o artefato da Mônica */}
+      <div className="mb-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/30 p-4">
+        <h2 className="text-xs font-bold text-fuchsia-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Users className="w-3.5 h-3.5" />
+          Tudo que você precisa pro artefato da Mônica
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <a
+            href="https://opps-seazone.vercel.app/#marketplace"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 rounded-lg border border-purple-200 bg-white px-3 py-2 hover:bg-purple-50 transition-colors"
+          >
+            <Users className="w-4 h-4 text-purple-600 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-gray-700 truncate">Opps Mônica</p>
+              <p className="text-[10.5px] text-gray-500 truncate">Preencher p/ comunidade</p>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-500 shrink-0" />
+          </a>
+          <a
+            href="https://claude.ai/artifacts/latest/63177553-77d0-4911-89d2-01a5114de546"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 hover:bg-blue-50 transition-colors"
+          >
+            <Repeat className="w-4 h-4 text-blue-600 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-gray-700 truncate">Transformar Opps</p>
+              <p className="text-[10.5px] text-gray-500 truncate">P/ formato da Mônica</p>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0" />
+          </a>
+          <a
+            href="/opps-textos-monica"
+            className="group flex items-center gap-2 rounded-lg border border-fuchsia-200 bg-white px-3 py-2 hover:bg-fuchsia-50 transition-colors"
+          >
+            <PenLine className="w-4 h-4 text-fuchsia-600 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-gray-700 truncate">Textos p/ opps escolhidas</p>
+              <p className="text-[10.5px] text-gray-500 truncate">Passo a passo + prompt</p>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-fuchsia-500 shrink-0" />
+          </a>
         </div>
       </div>
 
