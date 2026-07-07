@@ -115,6 +115,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
       }
 
+      case "save-calendario": {
+        // Salva o calendário semanal das opps (registro único)
+        const { conteudo } = data;
+        await db.oppsCalendarioSemana.upsert({
+          where: { id: "singleton" },
+          update: { conteudoJson: conteudo },
+          create: { id: "singleton", conteudoJson: conteudo },
+        });
+        return NextResponse.json({ success: true });
+      }
+
       case "save-passo": {
         // Salva o conteúdo editável da aba "Passo a passo" (registro único)
         const { conteudo } = data;
