@@ -253,6 +253,13 @@ model OppsPassoAPasso {
   atualizadoEm DateTime @updatedAt
 }
 
+model OppsCalendarioSemana {
+  id           String   @id @default("singleton")
+  conteudoJson Json
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
 model PlanejamentoFrente {
   id           String              @id @default(cuid())
   nome         String
