@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, TextCursorInput, Image as ImageIcon, Save, Search, RefreshCw, Pencil, Check } from "lucide-react";
-import { createRepescagemEmpreendimento, updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento, resetarEdicaoManual } from "@/lib/actions";
+import { Plus, Trash2, TextCursorInput, Image as ImageIcon, Save, Search, Copy, Check, HelpCircle, ExternalLink } from "lucide-react";
+import { updateRepescagemTextoEImagem, deleteRepescagemEmpreendimento } from "@/lib/actions";
 
 interface Numero {
   id: string;
@@ -43,6 +43,8 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
   const [addingEmp, setAddingEmp] = useState(false);
   const [newEmpNome, setNewEmpNome] = useState("");
   const [busca, setBusca] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showGuia, setShowGuia] = useState(false);
 
   const empreendimentosFiltrados = useMemo(() => {
     if (!busca.trim()) return empreendimentos;
@@ -88,7 +90,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
       setEmpreendimentos((prev) =>
         prev.map((e) =>
           e.id === id
-            ? { ...e, textoConteudo: texto, linkImagem: imagem, dataUltimaAtualizacao: new Date(), editadoManualmente: true }
+            ? { ...e, textoConteudo: texto, linkImagem: imagem, dataUltimaAtualizacao: new Date() }
             : e
         )
       );
@@ -99,51 +101,24 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
     }
   };
 
-  const handleResetarEdicaoManual = async (id: string) => {
-    if (!confirm("Permitir auditoria automática para este empreendimento?")) return;
-    await resetarEdicaoManual(id);
-    setEmpreendimentos((prev) =>
-      prev.map((e) => e.id === id ? { ...e, editadoManualmente: false } : e)
-    );
-  };
-
-  const [auditando, setAuditando] = useState(false);
-  const [auditResult, setAuditResult] = useState<{
-    gerados: number;
-    mantidos: number;
-    manuais: number;
-    erros: number;
-    detalhes: { nome: string; status: string; valorNovo?: string; motivo?: string }[];
-    data: string;
-  } | null>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("repescagem_audit_result");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch { /* ignore */ }
-      }
-    }
-    return null;
-  });
-
-  const handleAuditar = async () => {
-    if (!confirm("Auditar números da planilha? Isso vai atualizar os textos de TODOS os empreendimentos.")) return;
-    setAuditando(true);
+  const handleCopiarTexto = async (emp: Empreendimento) => {
+    const texto = getTexto(emp);
+    if (!texto) return;
     try {
-      const res = await fetch("/api/auditar-repescagem", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.erro);
-      const resultWithDate = { ...data, data: new Date().toLocaleString("pt-BR") };
-      setAuditResult(resultWithDate);
-      localStorage.setItem("repescagem_audit_result", JSON.stringify(resultWithDate));
-      if (data.gerados > 0 || data.erros > 0) window.location.reload();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      alert("Erro na auditoria: " + msg);
-    } finally {
-      setAuditando(false);
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      // Fallback para navegadores/contextos sem clipboard API
+      const ta = document.createElement("textarea");
+      ta.value = texto;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
     }
+    setCopiedId(emp.id);
+    setTimeout(() => setCopiedId((cur) => (cur === emp.id ? null : cur)), 2000);
   };
 
   const getTexto = (emp: Empreendimento) =>
@@ -167,7 +142,45 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
         </p>
       </div>
 
-      {/* Barra de busca + botão auditar */}
+      {/* Passo a passo para ajustar os números */}
+      <Card className="mb-4 border-blue-200 bg-blue-50/50">
+        <button
+          onClick={() => setShowGuia((v) => !v)}
+          className="w-full flex items-center gap-2 p-4 text-left"
+        >
+          <HelpCircle className="w-4 h-4 text-blue-600 shrink-0" />
+          <span className="text-sm font-semibold text-blue-800">
+            Como ajustar os números (passo a passo)
+          </span>
+          <span className="ml-auto text-blue-600 text-sm">{showGuia ? "▼" : "▶"}</span>
+        </button>
+        {showGuia && (
+          <CardContent className="pt-0 pb-4">
+            <ol className="list-decimal ml-5 space-y-2 text-sm text-gray-700">
+              <li>
+                Acesse o{" "}
+                <a
+                  href="https://spotometro.seazone.com.br/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-blue-600 font-medium hover:underline"
+                >
+                  Spotômetro
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                .
+              </li>
+              <li>Vá na aba <strong>Revendas</strong>.</li>
+              <li>No filtro à esquerda, selecione apenas os <strong>Disponíveis</strong>.</li>
+              <li>Por empreendimento, pegue o <strong>menor &ldquo;Valor de repasse&rdquo;</strong>.</li>
+              <li>Ajuste esse valor no <strong>texto do empreendimento</strong> aqui.</li>
+              <li>Confira também se o <strong>faturamento do empreendimento</strong> não mudou.</li>
+            </ol>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Barra de busca */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -179,71 +192,7 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
             className="pl-10 h-10"
           />
         </div>
-        <Button
-          variant="outline"
-          onClick={handleAuditar}
-          disabled={auditando}
-          className="shrink-0 h-10 border-blue-200 text-blue-600 hover:bg-blue-50"
-        >
-          {auditando ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
-          ) : (
-            <RefreshCw className="w-4 h-4" />
-          )}
-          Auditar números
-        </Button>
       </div>
-
-      {/* Resultado da auditoria */}
-      {auditResult && !auditando && (
-        <Card className="mb-4 border-green-200 bg-green-50">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-600" />
-                <p className="text-sm font-semibold text-green-800">Auditoria completa!</p>
-              </div>
-              <p className="text-xs text-green-600">{auditResult.data}</p>
-            </div>
-            <div className="flex flex-wrap gap-4 text-xs text-green-700 ml-6">
-              {auditResult.gerados > 0 && (
-                <span className="flex items-center gap-1">
-                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">ajustado</span>
-                  {auditResult.gerados}
-                </span>
-              )}
-              {auditResult.mantidos > 0 && (
-                <span className="flex items-center gap-1">
-                  <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">mantido</span>
-                  {auditResult.mantidos}
-                </span>
-              )}
-              {auditResult.manuais > 0 && (
-                <span className="flex items-center gap-1">
-                  <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">editado</span>
-                  {auditResult.manuais}
-                </span>
-              )}
-              {auditResult.erros > 0 && (
-                <span className="flex items-center gap-1">
-                  <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">erro</span>
-                  {auditResult.erros}
-                </span>
-              )}
-            </div>
-            {auditResult.detalhes.filter(d => d.status === "erro" || d.status === "manual").length > 0 && (
-              <div className="mt-2 ml-6 space-y-1">
-                {auditResult.detalhes.filter(d => d.status === "erro").map(d => (
-                  <p key={d.nome} className="text-xs text-red-600">{d.nome}: {d.motivo}</p>
-                ))}
-                {auditResult.detalhes.filter(d => d.status === "manual").map(d => (
-                  <p key={d.nome} className="text-xs text-yellow-600">{d.nome}: edição manual — não atualizado</p>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Form adicionar empreendimento */}
       <Card className="mb-6">
@@ -277,11 +226,6 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
         <div className="space-y-4">
           <p className="text-sm text-gray-500">{empreendimentosFiltrados.length} de {empreendimentos.length} empreendimentos</p>
           {empreendimentosFiltrados.map((emp) => {
-            const numValor = emp.numeros.find(n => n.campoNome.toLowerCase().includes("valor") && n.campoNome.toLowerCase().includes("total"));
-            const numEntrada = emp.numeros.find(n => n.campoNome.toLowerCase().includes("entrada"));
-            const temValor = numValor?.valorAtual;
-            const temEntrada = numEntrada?.valorAtual;
-
             return (
               <Card key={emp.id} className="overflow-hidden">
                 <CardHeader className="pb-3">
@@ -297,9 +241,6 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
                       {emp.linkImagem && (
                         <ImageIcon className="w-4 h-4 text-blue-500" />
                       )}
-                      {emp.editadoManualmente && (
-                        <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">editado</span>
-                      )}
                     </div>
                     <Button
                       variant="ghost"
@@ -312,7 +253,13 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
                   </div>
                   {emp.dataUltimaAtualizacao && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Atualizado em {new Date(emp.dataUltimaAtualizacao).toLocaleDateString("pt-BR")}
+                      Última edição: {new Date(emp.dataUltimaAtualizacao).toLocaleString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </p>
                   )}
                 </CardHeader>
@@ -354,16 +301,23 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
                     </div>
 
                     <div className="flex justify-end gap-2">
-                      {emp.editadoManualmente && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleResetarEdicaoManual(emp.id)}
-                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
-                        >
-                          Liberar auditoria
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        onClick={() => handleCopiarTexto(emp)}
+                        disabled={!getTexto(emp)}
+                      >
+                        {copiedId === emp.id ? (
+                          <>
+                            <Check className="w-4 h-4 text-green-600" />
+                            Copiado!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copiar texto
+                          </>
+                        )}
+                      </Button>
                       <Button
                         onClick={() => handleSave(emp.id)}
                         disabled={saving === emp.id || !hasChanges(emp)}
@@ -380,24 +334,12 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
                           <label className="text-sm font-medium text-gray-700">Valores da Cota</label>
                         </div>
                         <div className="space-y-2">
-                          {emp.numeros.map((num) => {
-                            const isValor = num.campoNome.toLowerCase().includes("valor") && num.campoNome.toLowerCase().includes("total");
-                            const isEntrada = num.campoNome.toLowerCase().includes("entrada");
-                            if (!isValor && !isEntrada) {
-                              return (
-                                <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
-                                  <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
-                                  <span className="ml-auto text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
-                                </div>
-                              );
-                            }
-                            return (
-                              <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
-                                <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
-                                <span className="ml-auto text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
-                              </div>
-                            );
-                          })}
+                          {emp.numeros.map((num) => (
+                            <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
+                              <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
+                              <span className="ml-auto text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
