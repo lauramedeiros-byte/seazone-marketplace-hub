@@ -326,23 +326,6 @@ export function RepescagemClient({ empreendimentos: initial }: Props) {
                         {saving === emp.id ? "Salvando..." : "Salvar Tudo"}
                       </Button>
                     </div>
-
-                    {/* Valores da Cota */}
-                    {emp.numeros.length > 0 && (
-                      <div className="pt-4 border-t border-gray-100">
-                        <div className="mb-2">
-                          <label className="text-sm font-medium text-gray-700">Valores da Cota</label>
-                        </div>
-                        <div className="space-y-2">
-                          {emp.numeros.map((num) => (
-                            <div key={num.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 border-gray-200">
-                              <span className="text-sm font-medium text-gray-600">{num.campoNome}</span>
-                              <span className="ml-auto text-sm text-gray-500 font-mono">{num.valorAtual ?? "—"}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 )}
               </Card>
