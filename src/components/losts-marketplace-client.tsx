@@ -26,7 +26,9 @@ const GRID = "#e2e8f0";
 const CANAL_COR: Record<string, string> = { "Midia Paga": "#2a78d6", "Base Interna": "#1baf7a", Outros: GRAY };
 const corSerie = (nome: string, i: number) => (nome === "Outros" ? GRAY : PALETTE[i % PALETTE.length]);
 
-interface StackRow { label: string; ordem: number; total: number; [serie: string]: number | string }
+interface MotivoN { motivo: string; n: number; pct: number }
+interface EmpreendAgg { label: string; total: number; motivos: MotivoN[] }
+interface EtapaAgg { label: string; ordem: number; total: number; stack: Record<string, number>; full: { motivo: string; n: number }[] }
 interface Payload {
   meta: { funil: string; fonte: string; canalRegra: string; grao: string };
   minDate: string;
@@ -35,11 +37,10 @@ interface Payload {
   to: string;
   total: number;
   trend: { mes: string; n: number }[];
-  motivos: { motivo: string; n: number; pct: number }[];
+  motivos: MotivoN[];
   canais: { canal: string; n: number; pct: number }[];
-  empreendimentos: StackRow[];
-  motivosTop3: string[];
-  etapas: StackRow[];
+  empreendimentos: EmpreendAgg[];
+  etapas: EtapaAgg[];
   motivosEtapa: string[];
 }
 
@@ -71,20 +72,31 @@ function ChartCard({ titulo, subtitulo, altura, children }: { titulo: string; su
   );
 }
 
-// Tooltip compartilhado: lista todas as séries daquela categoria, com valor e %
+// Tooltip compartilhado. Se a linha carregar `__full` (lista completa de motivos),
+// mostra TODOS os motivos daquela etapa — sem agrupar em "Outros".
 function TT({ active, payload, label, showPct = true }: any) {
   if (!active || !payload?.length) return null;
-  const items = payload.filter((p: any) => p.value).sort((a: any, b: any) => b.value - a.value);
-  const soma = items.reduce((s: number, p: any) => s + p.value, 0);
+  const full = payload[0]?.payload?.__full as { motivo: string; n: number }[] | undefined;
+  type TItem = { name: string; value: number; color?: string };
+  const items: TItem[] = full
+    ? full.map((f) => ({ name: f.motivo, value: f.n }))
+    : payload.filter((p: any) => p.value).map((p: any) => ({ name: p.name, value: p.value, color: p.color || p.fill }));
+  const vis = items.filter((i) => i.value).sort((a, b) => b.value - a.value);
+  const soma = vis.reduce((s, i) => s + i.value, 0);
   return (
-    <div className="rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-xs shadow-md">
-      {label != null && <div className="mb-1 font-semibold text-slate-900">{label}</div>}
-      {items.map((p: any) => (
-        <div key={p.dataKey ?? p.name} className="flex items-center gap-2">
-          <span className="inline-block h-2 w-2 rounded-sm" style={{ background: p.color || p.fill }} />
+    <div className="max-w-xs rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-xs shadow-md">
+      {label != null && (
+        <div className="mb-1 font-semibold text-slate-900">
+          {label}
+          {full && <span className="ml-1 font-normal text-slate-400">· {nf.format(soma)} no total</span>}
+        </div>
+      )}
+      {vis.map((p, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 flex-none rounded-sm" style={{ background: p.color || "#94a3b8" }} />
           <span className="text-slate-600">{p.name}:</span>
           <span className="font-medium tabular-nums text-slate-900">{nf.format(p.value)}</span>
-          {showPct && soma > 1 && items.length > 1 && (
+          {showPct && soma > 1 && vis.length > 1 && (
             <span className="tabular-nums text-slate-400">({((p.value / soma) * 100).toFixed(0)}%)</span>
           )}
         </div>
@@ -234,23 +246,46 @@ export function LostsMarketplaceClient() {
               </BarChart>
             </ChartCard>
 
-            {/* 2 — Motivo por empreendimento (barras AGRUPADAS: 3 motivos lado a lado) */}
-            <ChartCard titulo="2 · Motivo por empreendimento" subtitulo="Top 10 empreendimentos · 3 motivos de maior volume (barras lado a lado)" altura={Math.max(340, data.empreendimentos.length * 58 + 40)}>
-              <BarChart data={data.empreendimentos} layout="vertical" margin={{ top: 4, right: 20, left: 8, bottom: 4 }} barCategoryGap={14} barGap={2}>
-                <CartesianGrid horizontal={false} stroke={GRID} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="label" width={150} tick={{ fontSize: 11, fill: INK }} axisLine={false} tickLine={false} />
-                <Tooltip content={<TT showPct />} cursor={{ fill: "rgba(148,163,184,.12)" }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                {data.motivosTop3.map((m, i) => (
-                  <Bar key={m} dataKey={m} name={cut(m, 24)} fill={corSerie(m, i)} radius={[0, 3, 3, 0]} />
-                ))}
-              </BarChart>
-            </ChartCard>
+            {/* 2 — Motivo por empreendimento (TODOS os empreendimentos, 5 motivos de cada) */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="text-sm font-semibold text-slate-900">2 · Motivo por empreendimento</div>
+              <div className="mb-3 mt-0.5 text-xs text-slate-500">
+                Todos os {data.empreendimentos.length} empreendimentos · 5 motivos de maior volume de cada
+              </div>
+              <div className="max-h-[560px] space-y-2.5 overflow-y-auto pr-1">
+                {data.empreendimentos.map((e) => {
+                  const maxM = e.motivos[0]?.n || 1;
+                  return (
+                    <div key={e.label} className="rounded-lg border border-slate-100 bg-slate-50/60 p-3">
+                      <div className="mb-2 flex items-baseline justify-between gap-2">
+                        <span className="truncate text-xs font-semibold text-slate-800" title={e.label}>{e.label}</span>
+                        <span className="flex-none text-[11px] tabular-nums text-slate-400">{nf.format(e.total)} perdas</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {e.motivos.map((m) => (
+                          <div key={m.motivo} className="grid grid-cols-[130px_1fr_auto] items-center gap-2">
+                            <span className="truncate text-[11px] text-slate-600" title={m.motivo}>{cut(m.motivo, 22)}</span>
+                            <div className="h-2.5 overflow-hidden rounded bg-slate-200/70">
+                              <div className="h-full rounded bg-blue-500" style={{ width: `${(m.n / maxM) * 100}%` }} />
+                            </div>
+                            <span className="min-w-[62px] text-right text-[11px] tabular-nums text-slate-500">{nf.format(m.n)} · {m.pct.toFixed(0)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-            {/* 4 — Motivo por etapa (empilhado; tooltip lista todos os motivos) */}
-            <ChartCard titulo="4 · Motivo de perda por etapa" subtitulo="Quantidade e motivo de lost em cada etapa do funil — passe o mouse para ver todos os motivos" altura={Math.max(380, data.etapas.length * 32 + 40)}>
-              <BarChart data={data.etapas} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }} barCategoryGap={6}>
+            {/* 4 — Motivo por etapa (empilhado; tooltip lista TODOS os motivos, sem "Outros") */}
+            <ChartCard titulo="4 · Motivo de perda por etapa" subtitulo="Quantidade e motivo de lost em cada etapa — passe o mouse para ver a lista completa de motivos" altura={Math.max(380, data.etapas.length * 32 + 40)}>
+              <BarChart
+                data={data.etapas.map((e) => ({ label: e.label, __full: e.full, ...e.stack }))}
+                layout="vertical"
+                margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
+                barCategoryGap={6}
+              >
                 <CartesianGrid horizontal={false} stroke={GRID} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="label" width={130} tick={{ fontSize: 11, fill: INK }} axisLine={false} tickLine={false} />

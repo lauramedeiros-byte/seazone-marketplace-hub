@@ -82,23 +82,35 @@ export async function getLostsData(): Promise<LostsData> {
 }
 
 // ─── Agregação por intervalo de datas (inclusivo) ─────────────────────────────
-export interface StackRow {
+export interface MotivoN {
+  motivo: string;
+  n: number;
+  pct: number;
+}
+/** Um empreendimento com seus 5 motivos de maior volume. */
+export interface EmpreendAgg {
+  label: string;
+  total: number;
+  motivos: MotivoN[]; // top 5 do próprio empreendimento
+}
+/** Uma etapa do funil: barra empilhada (top6+Outros) + lista completa p/ tooltip. */
+export interface EtapaAgg {
   label: string;
   ordem: number;
   total: number;
-  [serie: string]: number | string;
+  stack: Record<string, number>; // séries visíveis (top6 globais + Outros)
+  full: { motivo: string; n: number }[]; // TODOS os motivos, sem agrupar
 }
 export interface Aggregated {
   from: string;
   to: string;
   total: number;
   trend: { mes: string; n: number }[];
-  motivos: { motivo: string; n: number; pct: number }[];
+  motivos: MotivoN[];
   canais: { canal: string; n: number; pct: number }[];
-  empreendimentos: StackRow[];
-  motivosTop3: string[];
-  etapas: StackRow[];
-  motivosEtapa: string[];
+  empreendimentos: EmpreendAgg[]; // TODOS
+  etapas: EtapaAgg[];
+  motivosEtapa: string[]; // séries do gráfico 4 (top6 globais + Outros)
 }
 
 export function aggregate(data: LostsData, from: string, to: string): Aggregated {
@@ -143,41 +155,44 @@ export function aggregate(data: LostsData, from: string, to: string): Aggregated
 
   const trend = [...trendMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([mes, n]) => ({ mes, n }));
 
-  // top motivos globais no período (índices)
+  // top motivos globais no período (índices) — usados só nas cores/séries do gráfico 4
   const rankMotivos = motivoN.map((n, i) => [i, n] as [number, number]).sort((a, b) => b[1] - a[1]);
-  const top3 = rankMotivos.slice(0, 3).filter(([, n]) => n > 0).map(([i]) => i);
   const top6 = rankMotivos.slice(0, 6).filter(([, n]) => n > 0).map(([i]) => i);
-  const motivosTop3 = top3.map((i) => M[i]);
+  const top6Set = new Set(top6);
   const motivosEtapa = [...top6.map((i) => M[i]), OUTROS];
 
-  // Gráfico 2 — empreendimento × top3 motivos (top 10 empreendimentos)
-  const empreendimentos: StackRow[] = [...empPorMotivo.entries()]
+  // Gráfico 2 — TODOS os empreendimentos, cada um com seus 5 motivos de maior volume
+  const empreendimentos: EmpreendAgg[] = [...empPorMotivo.entries()]
     .map(([ei, mm]) => {
-      const row: StackRow = { label: E[ei], ordem: 0, total: 0 };
-      for (const mi of top3) row[M[mi]] = mm.get(mi) ?? 0;
-      row.total = [...mm.values()].reduce((a, b) => a + b, 0);
-      return row;
+      const label = E[ei];
+      const total = [...mm.values()].reduce((a, b) => a + b, 0);
+      const motivos = [...mm.entries()]
+        .map(([mi, n]) => ({ motivo: M[mi], n, pct: total ? (n / total) * 100 : 0 }))
+        .sort((a, b) => b.n - a.n)
+        .slice(0, 5);
+      return { label, total, motivos };
     })
-    .filter((r) => E.indexOf(r.label as string) >= 0 && r.label !== "" && r.label !== "Aguardando definição" && r.total > 0)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10);
+    .filter((e) => e.label && e.label !== "Aguardando definição" && e.total > 0)
+    .sort((a, b) => b.total - a.total);
 
-  // Gráfico 4 — etapa × (top6 motivos + Outros), ordem do funil
-  const top6Set = new Set(top6);
-  const etapas: StackRow[] = [...etapaPorMotivo.entries()]
+  // Gráfico 4 — etapa (ordem do funil): barra empilhada (top6+Outros) + lista completa
+  const etapas: EtapaAgg[] = [...etapaPorMotivo.entries()]
     .map(([si, mm]) => {
-      const row: StackRow = { label: S[si].nome, ordem: S[si].ordem, total: 0 };
-      for (const nome of motivosEtapa) row[nome] = 0;
+      const total = [...mm.values()].reduce((a, b) => a + b, 0);
+      const stack: Record<string, number> = {};
+      for (const nome of motivosEtapa) stack[nome] = 0;
+      const full: { motivo: string; n: number }[] = [];
       for (const [mi, n] of mm) {
-        const key = top6Set.has(mi) ? M[mi] : OUTROS;
-        row[key] = (row[key] as number) + n;
-        row.total += n;
+        const nome = M[mi];
+        full.push({ motivo: nome, n });
+        stack[top6Set.has(mi) ? nome : OUTROS] += n;
       }
-      return row;
+      full.sort((a, b) => b.n - a.n);
+      return { label: S[si].nome, ordem: S[si].ordem, total, stack, full };
     })
     .sort((a, b) => a.ordem - b.ordem);
 
-  return { from, to, total, trend, motivos, canais, empreendimentos, motivosTop3, etapas, motivosEtapa };
+  return { from, to, total, trend, motivos, canais, empreendimentos, etapas, motivosEtapa };
 }
 
 /** Intervalo padrão: últimos ~6 meses (do 1º dia do mês -5 até maxDate). */
