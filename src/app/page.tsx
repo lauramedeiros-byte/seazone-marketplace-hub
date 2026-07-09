@@ -46,6 +46,14 @@ const subCards = [
     cor: "text-red-600",
   },
   {
+    href: "/losts-marketplace",
+    titulo: "Losts — Marketplace (Dashboard)",
+    descricao:
+      "Motivos de perda do funil de Marketplace: por motivo, empreendimento, canal e etapa, com filtro de período",
+    icone: BarChart3,
+    cor: "text-rose-600",
+  },
+  {
     href: "/opps-da-semana",
     titulo: "Opps da Semana",
     descricao:

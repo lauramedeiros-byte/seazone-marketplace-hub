@@ -301,3 +301,20 @@ model AnaliseClaude {
   criadoEm   DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 }
+
+// Tabela alimentada pelo sync da Nekt (pipeline 37 = funil Marketplace, status=lost),
+// agregada por mês. Full-refresh a cada sync. Ver docs/sync-losts-marketplace.md.
+// chart: c1=motivos | c2=empreendimento×motivo | c3=canal | c4=etapa×motivo
+model MarketplaceLostAgg {
+  id         Int      @id @default(autoincrement())
+  mes        String // "AAAA-MM" (base = data de perda)
+  chart      String // c1 | c2 | c3 | c4
+  dimA       String   @map("dim_a")
+  dimB       String   @default("") @map("dim_b")
+  etapaOrdem Int?     @map("etapa_ordem")
+  n          Int
+  syncedAt   DateTime @default(now()) @map("synced_at")
+
+  @@index([chart, mes])
+  @@map("marketplace_lost_agg")
+}
