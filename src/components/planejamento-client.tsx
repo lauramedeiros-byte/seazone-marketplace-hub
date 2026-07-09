@@ -510,36 +510,37 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
                     {day && (
                       <>
                         <div className="text-xs font-bold text-gray-500 mb-1">{day}</div>
-                        {list.slice(0, 3).map((a) => {
-                          const st = chipState(a);
-                          const cls =
-                            st === "feito"
-                              ? "bg-gray-100 text-gray-400 border-gray-200 line-through"
-                              : st === "alerta"
-                              ? "bg-red-100 text-red-700 border-red-300"
-                              : c.chip;
-                          return (
-                            <span
-                              key={a.id}
-                              onMouseEnter={(e) => {
-                                const r = e.currentTarget.getBoundingClientRect();
-                                const w = typeof window !== "undefined" ? window.innerWidth : 1000;
-                                setTip({
-                                  text: a.titulo || "(sem título)",
-                                  sub: a.empreendimentos || a.base || undefined,
-                                  top: r.bottom + 6,
-                                  left: Math.max(8, Math.min(r.left, w - 296)),
-                                });
-                              }}
-                              onMouseLeave={() => setTip(null)}
-                              className={`block text-[10px] leading-tight px-1.5 py-0.5 rounded mb-1 border truncate font-semibold ${cls}`}
-                            >
-                              {st === "feito" ? "✓ " : st === "alerta" ? "⚠ " : ""}
-                              {a.titulo || "(sem título)"}
-                            </span>
-                          );
-                        })}
-                        {list.length > 3 && <span className="text-[10px] text-gray-400 font-semibold">+{list.length - 3}</span>}
+                        <div className={`${list.length > 3 ? "max-h-[66px] overflow-y-auto pr-0.5" : ""}`}>
+                          {list.map((a) => {
+                            const st = chipState(a);
+                            const cls =
+                              st === "feito"
+                                ? "bg-gray-100 text-gray-400 border-gray-200 line-through"
+                                : st === "alerta"
+                                ? "bg-red-100 text-red-700 border-red-300"
+                                : c.chip;
+                            return (
+                              <span
+                                key={a.id}
+                                onMouseEnter={(e) => {
+                                  const r = e.currentTarget.getBoundingClientRect();
+                                  const w = typeof window !== "undefined" ? window.innerWidth : 1000;
+                                  setTip({
+                                    text: a.titulo || "(sem título)",
+                                    sub: a.empreendimentos || a.base || undefined,
+                                    top: r.bottom + 6,
+                                    left: Math.max(8, Math.min(r.left, w - 296)),
+                                  });
+                                }}
+                                onMouseLeave={() => setTip(null)}
+                                className={`block text-[10px] leading-tight px-1.5 py-0.5 rounded mb-1 border truncate font-semibold ${cls}`}
+                              >
+                                {st === "feito" ? "✓ " : st === "alerta" ? "⚠ " : ""}
+                                {a.titulo || "(sem título)"}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </>
                     )}
                   </div>
