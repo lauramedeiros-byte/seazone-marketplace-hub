@@ -70,8 +70,8 @@ const subCards = [
   },
   {
     href: "/midia-paga",
-    titulo: "Análise de Mídia Paga",
-    descricao: "Análise de campanhas de mídia paga",
+    titulo: "Análises de pipeline - Claude",
+    descricao: "Análises de pipeline — mídia paga e base interna",
     icone: Megaphone,
     cor: "text-pink-600",
   },

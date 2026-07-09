@@ -22,11 +22,8 @@ export default function MidiaPagaPage() {
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">
-          Análise de Mídia Paga
+          Análises de pipeline - mídia paga e base interna - Claude
         </h1>
-        <p className="text-gray-500">
-          Análise e acompanhamento de campanhas de mídia paga
-        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
