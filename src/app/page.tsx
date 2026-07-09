@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   Target,
   FileText,
-  Inbox,
   TrendingUp,
   BarChart3,
   Search,
@@ -38,16 +37,8 @@ const subCards = [
     cor: "text-amber-600",
   },
   {
-    href: "/losts",
-    titulo: "Losts",
-    descricao:
-      "Agrupamento de motivos, criação de conteúdo e registro de disparos",
-    icone: Inbox,
-    cor: "text-red-600",
-  },
-  {
     href: "/losts-marketplace",
-    titulo: "Losts — Marketplace (Dashboard)",
+    titulo: "Losts — Marketplace",
     descricao:
       "Motivos de perda do funil de Marketplace: por motivo, empreendimento, canal e etapa, com filtro de período",
     icone: BarChart3,
