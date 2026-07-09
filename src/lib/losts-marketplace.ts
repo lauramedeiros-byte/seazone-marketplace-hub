@@ -1,104 +1,87 @@
 import snapshotRaw from "@/data/losts-marketplace.json";
 import { db } from "@/lib/db";
 
-// ─── Tipos ──────────────────────────────────────────────────────────────────
-export interface MotivoRow {
-  mes: string;
-  motivo: string;
-  n: number;
-}
-export interface EmpreendRow {
-  mes: string;
-  empreendimento: string;
-  motivo: string;
-  n: number;
-}
-export interface CanalRow {
-  mes: string;
-  canal: string;
-  n: number;
-}
-export interface EtapaRow {
-  mes: string;
-  etapaOrdem: number;
-  etapa: string;
-  motivo: string;
-  n: number;
+// ─── Tipos (grão = deal, com data exata da perda) ─────────────────────────────
+export interface Etapa {
+  nome: string;
+  ordem: number;
 }
 export interface LostsData {
   meta: {
     pipelineId: number;
     funil: string;
     criterioData: string;
-    desde: string;
-    ate: string;
     fonte: string;
     canalRegra: string;
-    obs: string;
+    grao: string;
   };
-  meses: string[];
-  chart1_motivos: MotivoRow[];
-  chart2_empreendimento: EmpreendRow[];
-  chart3_canal: CanalRow[];
-  chart4_etapa: EtapaRow[];
+  base: string; // "AAAA-MM-DD" — data base dos offsets
+  minDate: string;
+  maxDate: string;
+  motivos: string[];
+  empreendimentos: string[];
+  etapas: Etapa[];
+  canais: string[];
+  deals: number[][]; // [offsetDias, motivoIdx, empreendIdx, etapaIdx, canalIdx]
 }
 
 const snapshot = snapshotRaw as LostsData;
+const OUTROS = "Outros";
+const DIA = 86400000;
 
-// ─── Fonte dos dados ──────────────────────────────────────────────────────────
-// Preferência: tabela sincronizada da Nekt (marketplace_lost_agg). Se ela ainda
-// não existir / estiver vazia (ex.: sync não configurado), cai para o snapshot
-// versionado no repositório — assim o painel nunca quebra.
-interface FlatRow {
-  mes: string;
-  chart: string;
-  dimA: string;
-  dimB: string;
-  etapaOrdem: number | null;
-  n: number;
+const toUTC = (d: string) => Date.parse(d + "T00:00:00Z");
+export function offsetOf(base: string, date: string): number {
+  return Math.round((toUTC(date) - toUTC(base)) / DIA);
+}
+function mesDe(base: string, offset: number): string {
+  const d = new Date(toUTC(base) + offset * DIA);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-function buildFromRows(rows: FlatRow[]): LostsData {
-  const chart1_motivos: MotivoRow[] = [];
-  const chart2_empreendimento: EmpreendRow[] = [];
-  const chart3_canal: CanalRow[] = [];
-  const chart4_etapa: EtapaRow[] = [];
-  for (const r of rows) {
-    if (r.chart === "c1") chart1_motivos.push({ mes: r.mes, motivo: r.dimA, n: r.n });
-    else if (r.chart === "c3") chart3_canal.push({ mes: r.mes, canal: r.dimA, n: r.n });
-    else if (r.chart === "c2")
-      chart2_empreendimento.push({ mes: r.mes, empreendimento: r.dimA, motivo: r.dimB, n: r.n });
-    else if (r.chart === "c4")
-      chart4_etapa.push({
-        mes: r.mes,
-        etapa: r.dimA,
-        etapaOrdem: r.etapaOrdem ?? 0,
-        motivo: r.dimB,
-        n: r.n,
-      });
-  }
-  const meses = [...new Set(chart1_motivos.map((r) => r.mes))].sort();
-  return {
-    meta: { ...snapshot.meta, desde: meses[0] ?? snapshot.meta.desde, ate: meses[meses.length - 1] ?? snapshot.meta.ate, fonte: "Nekt (sync ao vivo) · pipeline 37, status=lost" },
-    meses,
-    chart1_motivos,
-    chart2_empreendimento,
-    chart3_canal,
-    chart4_etapa,
+// ─── Fonte: tabela sincronizada da Nekt (fallback = snapshot) ─────────────────
+interface DealRow {
+  lostDate: Date;
+  motivo: string;
+  empreendimento: string;
+  etapa: string;
+  etapaOrdem: number;
+  canal: string;
+}
+function buildFromRows(rows: DealRow[]): LostsData {
+  const motivos: string[] = [], mI = new Map<string, number>();
+  const emps: string[] = [], eI = new Map<string, number>();
+  const etapas: Etapa[] = [], sI = new Map<string, number>();
+  const canais: string[] = [], cI = new Map<string, number>();
+  const idx = (arr: string[], map: Map<string, number>, v: string) => {
+    let i = map.get(v);
+    if (i === undefined) { i = arr.length; arr.push(v); map.set(v, i); }
+    return i;
   };
+  const base = "2025-01-01";
+  const deals: number[][] = [];
+  let min = "9999", max = "0";
+  for (const r of rows) {
+    const iso = r.lostDate.toISOString().slice(0, 10);
+    if (iso < min) min = iso;
+    if (iso > max) max = iso;
+    let si = sI.get(r.etapa);
+    if (si === undefined) { si = etapas.length; etapas.push({ nome: r.etapa, ordem: r.etapaOrdem }); sI.set(r.etapa, si); }
+    deals.push([offsetOf(base, iso), idx(motivos, mI, r.motivo), idx(emps, eI, r.empreendimento), si, idx(canais, cI, r.canal)]);
+  }
+  return { meta: { ...snapshot.meta, fonte: "Nekt (sync ao vivo) · pipeline 37, status=lost" }, base, minDate: min, maxDate: max, motivos, empreendimentos: emps, etapas, canais, deals };
 }
 
 export async function getLostsData(): Promise<LostsData> {
   try {
-    const rows = (await db.marketplaceLostAgg.findMany()) as FlatRow[];
+    const rows = (await db.marketplaceLost.findMany()) as unknown as DealRow[];
     if (rows && rows.length > 0) return buildFromRows(rows);
   } catch {
-    // tabela ainda não migrada / sync não configurado → usa snapshot
+    // tabela não migrada / sync não configurado → snapshot
   }
   return snapshot;
 }
 
-// ─── Agregação por período (filtro por mês, base = data de perda) ─────────────
+// ─── Agregação por intervalo de datas (inclusivo) ─────────────────────────────
 export interface StackRow {
   label: string;
   ordem: number;
@@ -118,96 +101,92 @@ export interface Aggregated {
   motivosEtapa: string[];
 }
 
-const OUTROS = "Outros";
-
-function somaPorChave<T>(
-  rows: T[],
-  chave: (r: T) => string,
-  valor: (r: T) => number
-): Map<string, number> {
-  const m = new Map<string, number>();
-  for (const r of rows) {
-    const k = chave(r);
-    m.set(k, (m.get(k) ?? 0) + valor(r));
-  }
-  return m;
-}
-
-function topN(totais: Map<string, number>, n: number): string[] {
-  return [...totais.entries()]
-    .filter(([k]) => k !== OUTROS)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, n)
-    .map(([k]) => k);
-}
-
 export function aggregate(data: LostsData, from: string, to: string): Aggregated {
-  const dentro = (mes: string) => mes >= from && mes <= to;
+  const fromOff = offsetOf(data.base, from);
+  const toOff = offsetOf(data.base, to);
+  const { motivos: M, empreendimentos: E, etapas: S, canais: C } = data;
 
-  // Gráfico 1 — motivos
-  const c1 = data.chart1_motivos.filter((r) => dentro(r.mes));
-  const motivoTot = somaPorChave(c1, (r) => r.motivo, (r) => r.n);
-  const total = [...motivoTot.values()].reduce((a, b) => a + b, 0);
-  const motivos = [...motivoTot.entries()]
-    .map(([motivo, n]) => ({ motivo, n, pct: total ? (n / total) * 100 : 0 }))
+  const motivoN = new Array(M.length).fill(0);
+  const canalN = new Array(C.length).fill(0);
+  const trendMap = new Map<string, number>();
+  let total = 0;
+  // por empreendimento: empIdx -> (motivoIdx -> n)
+  const empPorMotivo = new Map<number, Map<number, number>>();
+  // por etapa: etapaIdx -> (motivoIdx -> n)
+  const etapaPorMotivo = new Map<number, Map<number, number>>();
+
+  for (const [off, mi, ei, si, ci] of data.deals) {
+    if (off < fromOff || off > toOff) continue;
+    total++;
+    motivoN[mi]++;
+    canalN[ci]++;
+    const mes = mesDe(data.base, off);
+    trendMap.set(mes, (trendMap.get(mes) ?? 0) + 1);
+    let em = empPorMotivo.get(ei);
+    if (!em) { em = new Map(); empPorMotivo.set(ei, em); }
+    em.set(mi, (em.get(mi) ?? 0) + 1);
+    let sm = etapaPorMotivo.get(si);
+    if (!sm) { sm = new Map(); etapaPorMotivo.set(si, sm); }
+    sm.set(mi, (sm.get(mi) ?? 0) + 1);
+  }
+
+  const motivos = motivoN
+    .map((n, i) => ({ motivo: M[i], n, pct: total ? (n / total) * 100 : 0 }))
+    .filter((x) => x.n > 0)
     .sort((a, b) => b.n - a.n);
 
-  const trendMap = somaPorChave(c1, (r) => r.mes, (r) => r.n);
-  const trend = [...trendMap.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([mes, n]) => ({ mes, n }));
-
-  // Gráfico 3 — canal
-  const c3 = data.chart3_canal.filter((r) => dentro(r.mes));
-  const canalTot = somaPorChave(c3, (r) => r.canal, (r) => r.n);
-  const totalCanal = [...canalTot.values()].reduce((a, b) => a + b, 0);
   const ordemCanal = ["Midia Paga", "Base Interna", "Outros"];
-  const canais = [...canalTot.entries()]
-    .map(([canal, n]) => ({ canal, n, pct: totalCanal ? (n / totalCanal) * 100 : 0 }))
+  const canais = canalN
+    .map((n, i) => ({ canal: C[i], n, pct: total ? (n / total) * 100 : 0 }))
+    .filter((x) => x.n > 0)
     .sort((a, b) => ordemCanal.indexOf(a.canal) - ordemCanal.indexOf(b.canal));
 
-  // Gráfico 2 — motivo por empreendimento (3 motivos de maior volume)
-  const c2 = data.chart2_empreendimento.filter((r) => dentro(r.mes));
-  const motivosTop3 = topN(somaPorChave(c2, (r) => r.motivo, (r) => r.n), 3);
-  const empMap = new Map<string, StackRow>();
-  for (const r of c2) {
-    if (!motivosTop3.includes(r.motivo)) continue;
-    let row = empMap.get(r.empreendimento);
-    if (!row) {
-      row = { label: r.empreendimento, ordem: 0, total: 0 };
-      for (const m of motivosTop3) row[m] = 0;
-      empMap.set(r.empreendimento, row);
-    }
-    row[r.motivo] = (row[r.motivo] as number) + r.n;
-    row.total += r.n;
-  }
-  const empreendimentos = [...empMap.values()]
+  const trend = [...trendMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([mes, n]) => ({ mes, n }));
+
+  // top motivos globais no período (índices)
+  const rankMotivos = motivoN.map((n, i) => [i, n] as [number, number]).sort((a, b) => b[1] - a[1]);
+  const top3 = rankMotivos.slice(0, 3).filter(([, n]) => n > 0).map(([i]) => i);
+  const top6 = rankMotivos.slice(0, 6).filter(([, n]) => n > 0).map(([i]) => i);
+  const motivosTop3 = top3.map((i) => M[i]);
+  const motivosEtapa = [...top6.map((i) => M[i]), OUTROS];
+
+  // Gráfico 2 — empreendimento × top3 motivos (top 10 empreendimentos)
+  const empreendimentos: StackRow[] = [...empPorMotivo.entries()]
+    .map(([ei, mm]) => {
+      const row: StackRow = { label: E[ei], ordem: 0, total: 0 };
+      for (const mi of top3) row[M[mi]] = mm.get(mi) ?? 0;
+      row.total = [...mm.values()].reduce((a, b) => a + b, 0);
+      return row;
+    })
+    .filter((r) => E.indexOf(r.label as string) >= 0 && r.label !== "" && r.label !== "Aguardando definição" && r.total > 0)
     .sort((a, b) => b.total - a.total)
     .slice(0, 10);
 
-  // Gráfico 4 — motivo por etapa (ordem do funil)
-  const c4 = data.chart4_etapa.filter((r) => dentro(r.mes));
-  const top6 = topN(somaPorChave(c4, (r) => r.motivo, (r) => r.n), 6);
-  const seriesEtapa = [...top6, OUTROS];
-  const etapaMap = new Map<number, StackRow>();
-  for (const r of c4) {
-    let row = etapaMap.get(r.etapaOrdem);
-    if (!row) {
-      row = { label: r.etapa, ordem: r.etapaOrdem, total: 0 };
-      for (const s of seriesEtapa) row[s] = 0;
-      etapaMap.set(r.etapaOrdem, row);
-    }
-    const serie = top6.includes(r.motivo) ? r.motivo : OUTROS;
-    row[serie] = (row[serie] as number) + r.n;
-    row.total += r.n;
-  }
-  const etapas = [...etapaMap.values()].sort((a, b) => a.ordem - b.ordem);
+  // Gráfico 4 — etapa × (top6 motivos + Outros), ordem do funil
+  const top6Set = new Set(top6);
+  const etapas: StackRow[] = [...etapaPorMotivo.entries()]
+    .map(([si, mm]) => {
+      const row: StackRow = { label: S[si].nome, ordem: S[si].ordem, total: 0 };
+      for (const nome of motivosEtapa) row[nome] = 0;
+      for (const [mi, n] of mm) {
+        const key = top6Set.has(mi) ? M[mi] : OUTROS;
+        row[key] = (row[key] as number) + n;
+        row.total += n;
+      }
+      return row;
+    })
+    .sort((a, b) => a.ordem - b.ordem);
 
-  return { from, to, total, trend, motivos, canais, empreendimentos, motivosTop3, etapas, motivosEtapa: seriesEtapa };
+  return { from, to, total, trend, motivos, canais, empreendimentos, motivosTop3, etapas, motivosEtapa };
 }
 
-export function defaultRange(meses: string[]): { from: string; to: string } {
-  const to = meses[meses.length - 1];
-  const from = meses[Math.max(0, meses.length - 6)];
-  return { from, to };
+/** Intervalo padrão: últimos ~6 meses (do 1º dia do mês -5 até maxDate). */
+export function defaultRange(data: LostsData): { from: string; to: string } {
+  const max = new Date(toUTC(data.maxDate));
+  const y = max.getUTCFullYear();
+  const m = max.getUTCMonth();
+  const fromDate = new Date(Date.UTC(y, m - 5, 1));
+  const fromIso = fromDate.toISOString().slice(0, 10);
+  const from = fromIso < data.minDate ? data.minDate : fromIso;
+  return { from, to: data.maxDate };
 }

@@ -1,25 +1,29 @@
 import { NextResponse } from "next/server";
 import { aggregate, defaultRange, getLostsData } from "@/lib/losts-marketplace";
 
-// Fonte: tabela sincronizada da Nekt (marketplace_lost_agg) com fallback para o
-// snapshot versionado. Ver docs/sync-losts-marketplace.md para configurar o sync.
+// Fonte: tabela sincronizada da Nekt (marketplace_lost) com fallback para o
+// snapshot versionado. Ver docs/sync-losts-marketplace.md.
+// Filtro por intervalo de datas exatas (?from=AAAA-MM-DD&to=AAAA-MM-DD).
 export async function GET(request: Request) {
   try {
     const data = await getLostsData();
-    const meses = data.meses;
-    const min = meses[0];
-    const max = meses[meses.length - 1];
-    const def = defaultRange(meses);
-
+    const def = defaultRange(data);
     const { searchParams } = new URL(request.url);
-    let from = searchParams.get("from") || def.from;
-    let to = searchParams.get("to") || def.to;
-    if (from < min) from = min;
-    if (to > max) to = max;
+
+    const isDate = (s: string | null): s is string => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+    let from = isDate(searchParams.get("from")) ? searchParams.get("from")! : def.from;
+    let to = isDate(searchParams.get("to")) ? searchParams.get("to")! : def.to;
+    if (from < data.minDate) from = data.minDate;
+    if (to > data.maxDate) to = data.maxDate;
     if (from > to) [from, to] = [to, from];
 
     const result = aggregate(data, from, to);
-    return NextResponse.json({ meta: data.meta, mesesDisponiveis: meses, ...result });
+    return NextResponse.json({
+      meta: data.meta,
+      minDate: data.minDate,
+      maxDate: data.maxDate,
+      ...result,
+    });
   } catch (error) {
     console.error("Erro ao agregar losts marketplace:", error);
     return NextResponse.json(
