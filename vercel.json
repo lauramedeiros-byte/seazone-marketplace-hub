@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/sync-disparos", "schedule": "0 */4 * * *" }
+  ]
+}
