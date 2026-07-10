@@ -7,8 +7,8 @@ interface Campanha {
   c: string;
   d: string | null;
   leads: number;
-  sql: number;
-  fup: number;
+  sql: number; // chegou à faixa Contatados→Reunião Agendada
+  fup: number; // Reunião Realizada concluída (>= FUP) ou won
   contrato: number;
   won: number;
 }
@@ -17,25 +17,19 @@ interface Payload {
   campaigns: Campanha[];
 }
 
-const PESOS = { won: 15, contrato: 8, fup: 4, sql: 1 };
-const scoreDe = (c: Campanha) => c.won * PESOS.won + c.contrato * PESOS.contrato + c.fup * PESOS.fup + c.sql * PESOS.sql;
 const nf = new Intl.NumberFormat("pt-BR");
 const fmtData = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "—");
 
-// melhor etapa alcançada → cor/rótulo do termômetro
-function tier(c: Campanha): { label: string; cor: string } {
-  if (c.won > 0) return { label: "WON", cor: "#059669" };
-  if (c.contrato > 0) return { label: "Contrato", cor: "#2a78d6" };
-  if (c.fup > 0) return { label: "Reunião", cor: "#eda100" };
-  if (c.sql > 0) return { label: "SQL", cor: "#8b93a7" };
-  return { label: "—", cor: "#cbd5e1" };
+// Farol: quão fundo a campanha levou os leads
+function farol(c: Campanha): { cor: string; bg: string; label: string } {
+  if (c.fup > 0) return { cor: "#059669", bg: "#ecfdf5", label: "Levou à Reunião+" };
+  if (c.sql > 0) return { cor: "#b45309", bg: "#fffbeb", label: "Só até SQL" };
+  return { cor: "#dc2626", bg: "#fef2f2", label: "Não avançou" };
 }
 
-const norm = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const compact = (s: string) => norm(s).replace(/[\s_\-]/g, "");
 
-// padrões extraídos do nome do [RD] Campanha (match no nome "compactado")
 const PADROES: { label: string; test: (c: string) => boolean }[] = [
   { label: "Timing (lost por timing)", test: (c) => c.includes("timing") },
   { label: "Oportunidade da semana", test: (c) => c.includes("oportunidadedasemana") },
@@ -51,6 +45,10 @@ const PADROES: { label: string; test: (c: string) => boolean }[] = [
   { label: "Lost (menção geral)", test: (c) => c.includes("lost") },
 ];
 
+// ordena da campanha que levou leads mais fundo para a que menos levou
+const porAvanco = (a: Campanha, b: Campanha) =>
+  b.won - a.won || b.contrato - a.contrato || b.fup - a.fup || b.sql - a.sql || b.leads - a.leads;
+
 function ultimosMeses(maxD: string, n: number, minD: string) {
   const [y, m] = maxD.split("-").map(Number);
   const d = new Date(Date.UTC(y, m - 1 - (n - 1), 1)).toISOString().slice(0, 10);
@@ -64,6 +62,7 @@ export function DisparosMarketplaceClient() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [cur, setCur] = useState<string>("6");
+  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
 
   const carregar = useCallback(async () => {
@@ -89,32 +88,34 @@ export function DisparosMarketplaceClient() {
     else { const r = ultimosMeses(max, n, min); setFrom(r.from); setTo(r.to); }
   };
 
-  // campanhas no período (sem data entram sempre)
   const campanhas = useMemo(() => {
     if (!data) return [];
+    const termo = norm(q.trim());
     return data.campaigns
       .filter((c) => !c.d || (c.d >= from && c.d <= to))
-      .map((c) => ({ ...c, score: scoreDe(c) }))
-      .sort((a, b) => b.score - a.score || b.won - a.won || b.contrato - a.contrato || b.fup - a.fup);
-  }, [data, from, to]);
+      .filter((c) => !termo || norm(c.c).includes(termo))
+      .slice()
+      .sort(porAvanco);
+  }, [data, from, to, q]);
 
-  const maxScore = Math.max(...campanhas.map((c) => c.score), 1);
   const tot = campanhas.reduce(
     (a, c) => ({ leads: a.leads + c.leads, sql: a.sql + c.sql, fup: a.fup + c.fup, contrato: a.contrato + c.contrato, won: a.won + c.won }),
     { leads: 0, sql: 0, fup: 0, contrato: 0, won: 0 }
   );
+  const verdes = campanhas.filter((c) => c.fup > 0).length;
 
-  // padrões
+  // padrões — ranqueados por % de leads que chegaram à Reunião/FUP
   const padroes = useMemo(() => {
-    const list = PADROES.map((p) => {
+    return PADROES.map((p) => {
       const ms = campanhas.filter((c) => p.test(compact(c.c)));
       const agg = ms.reduce(
-        (a, c) => ({ leads: a.leads + c.leads, sql: a.sql + c.sql, fup: a.fup + c.fup, contrato: a.contrato + c.contrato, won: a.won + c.won, score: a.score + c.score }),
-        { leads: 0, sql: 0, fup: 0, contrato: 0, won: 0, score: 0 }
+        (a, c) => ({ leads: a.leads + c.leads, sql: a.sql + c.sql, fup: a.fup + c.fup, won: a.won + c.won }),
+        { leads: 0, sql: 0, fup: 0, won: 0 }
       );
-      return { label: p.label, nCamp: ms.length, ...agg, perLead: agg.leads ? agg.score / agg.leads : 0, sqlRate: agg.leads ? (agg.sql / agg.leads) * 100 : 0, fupRate: agg.leads ? (agg.fup / agg.leads) * 100 : 0 };
-    }).filter((p) => p.nCamp > 0 && p.leads > 0);
-    return list.sort((a, b) => b.perLead - a.perLead);
+      return { label: p.label, nCamp: ms.length, ...agg, sqlRate: agg.leads ? (agg.sql / agg.leads) * 100 : 0, fupRate: agg.leads ? (agg.fup / agg.leads) * 100 : 0 };
+    })
+      .filter((p) => p.nCamp > 0 && p.leads > 0)
+      .sort((a, b) => b.fupRate - a.fupRate || b.fup - a.fup || b.leads - a.leads);
   }, [campanhas]);
 
   const th = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400";
@@ -126,8 +127,8 @@ export function DisparosMarketplaceClient() {
       <div className="mb-6 mt-2">
         <h1 className="text-2xl font-bold text-slate-900">Análise de disparo — base interna</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Ranking das campanhas de disparo da base interna (Pipedrive · pipeline 37). Base interna = disparos RD/MIA (não mídia paga).
-          Termômetro pondera as etapas alcançadas: <strong>WON › Contrato › Reunião Realizada › SQL</strong>.
+          Campanhas de disparo da base interna (Pipedrive · pipeline 37 — disparos RD/MIA, sem mídia paga). Para cada campanha,
+          quantos leads <strong>avançaram em cada etapa</strong> do funil, e um <strong>farol</strong> de quão fundo ela levou.
         </p>
       </div>
 
@@ -154,6 +155,17 @@ export function DisparosMarketplaceClient() {
           até
           <input type="date" value={to} min={from || min} max={max} onChange={(e) => { setCur(""); setTo(e.target.value); }} className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800" />
         </label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">🔎</span>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar campanha…"
+            className="w-56 rounded-md border border-slate-200 bg-white py-1.5 pl-7 pr-2 text-xs text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        {q && <span className="text-xs text-slate-400">{campanhas.length} resultado(s)</span>}
         {loading && <span className="text-xs text-slate-400">carregando…</span>}
       </div>
 
@@ -162,59 +174,57 @@ export function DisparosMarketplaceClient() {
           {/* resumo */}
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
             {[
-              { k: "Campanhas", v: campanhas.length },
-              { k: "Leads", v: tot.leads },
-              { k: "SQL", v: tot.sql },
-              { k: "Reunião/FUP", v: tot.fup },
-              { k: "WON", v: tot.won },
+              { k: "Campanhas", v: nf.format(campanhas.length) },
+              { k: "🟢 Levaram à Reunião+", v: nf.format(verdes) },
+              { k: "Leads", v: nf.format(tot.leads) },
+              { k: "→ Reunião/FUP", v: nf.format(tot.fup) },
+              { k: "→ WON", v: nf.format(tot.won) },
             ].map((s) => (
               <div key={s.k} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                 <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{s.k}</div>
-                <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{nf.format(s.v)}</div>
+                <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{s.v}</div>
               </div>
             ))}
           </div>
 
-          {/* Tabela 1 — ranking */}
+          {/* Tabela 1 — leads por etapa + farol */}
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-semibold text-slate-900">Ranking das campanhas</div>
-            <div className="mb-3 mt-0.5 text-xs text-slate-500">Ordenadas pelo termômetro (quanto mais fundo levou o lead, melhor). Atualiza com o sync da Nekt.</div>
+            <div className="text-sm font-semibold text-slate-900">Leads que avançaram, por etapa</div>
+            <div className="mb-3 mt-0.5 text-xs text-slate-500">
+              Cada coluna = quantos leads da campanha <strong>chegaram até aquela etapa</strong> (acumulado). Farol: 🟢 levou à Reunião ou além · 🟡 só até SQL · 🔴 não avançou. Ordenado do que levou mais fundo.
+            </div>
             <div className="max-h-[620px] overflow-auto">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 bg-white">
                   <tr className="border-b border-slate-200">
-                    <th className={th}>#</th>
+                    <th className={th}>Farol</th>
                     <th className={th}>Campanha</th>
                     <th className={th}>Data</th>
                     <th className={`${th} text-right`}>Leads</th>
-                    <th className={`${th} text-right`}>SQL</th>
-                    <th className={`${th} text-right`}>Reunião/FUP</th>
-                    <th className={`${th} text-right`}>Contrato</th>
-                    <th className={`${th} text-right`}>WON</th>
-                    <th className={th}>Termômetro</th>
+                    <th className={`${th} text-right`}>→ SQL</th>
+                    <th className={`${th} text-right`}>→ Reunião/FUP</th>
+                    <th className={`${th} text-right`}>→ Contrato</th>
+                    <th className={`${th} text-right`}>→ WON</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {campanhas.map((c, i) => {
-                    const t = tier(c);
+                  {campanhas.map((c) => {
+                    const f = farol(c);
                     return (
                       <tr key={c.c} className="border-b border-slate-100 hover:bg-slate-50/60">
-                        <td className={`${td} text-slate-400`}>{i + 1}</td>
-                        <td className="max-w-[320px] truncate px-3 py-2 text-sm text-slate-800" title={c.c}>{c.c}</td>
+                        <td className="px-3 py-2">
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ color: f.cor, background: f.bg }}>
+                            <span className="h-2 w-2 rounded-full" style={{ background: f.cor }} />
+                            {f.label}
+                          </span>
+                        </td>
+                        <td className="max-w-[300px] truncate px-3 py-2 text-sm text-slate-800" title={c.c}>{c.c}</td>
                         <td className={`${td} whitespace-nowrap text-slate-500`}>{fmtData(c.d)}</td>
                         <td className={`${td} text-right`}>{nf.format(c.leads)}</td>
                         <td className={`${td} text-right`}>{nf.format(c.sql)}</td>
-                        <td className={`${td} text-right`}>{nf.format(c.fup)}</td>
-                        <td className={`${td} text-right`}>{nf.format(c.contrato)}</td>
+                        <td className={`${td} text-right font-semibold ${c.fup ? "text-amber-600" : "text-slate-300"}`}>{nf.format(c.fup)}</td>
+                        <td className={`${td} text-right ${c.contrato ? "text-blue-600" : "text-slate-300"}`}>{nf.format(c.contrato)}</td>
                         <td className={`${td} text-right font-semibold ${c.won ? "text-emerald-600" : "text-slate-300"}`}>{nf.format(c.won)}</td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            <div className="h-2.5 w-28 overflow-hidden rounded-full bg-slate-100">
-                              <div className="h-full rounded-full" style={{ width: `${Math.max((c.score / maxScore) * 100, 3)}%`, background: t.cor }} />
-                            </div>
-                            <span className="w-16 text-[11px] font-medium" style={{ color: t.cor }}>{t.label}</span>
-                          </div>
-                        </td>
                       </tr>
                     );
                   })}
@@ -227,11 +237,11 @@ export function DisparosMarketplaceClient() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="text-sm font-semibold text-slate-900">Padrões que mais avançam leads</div>
             <div className="mb-3 mt-0.5 text-xs text-slate-500">
-              Agrupa campanhas por padrão no nome do <code>[RD] Campanha</code>. Índice = pontuação do termômetro por lead (quanto maior, mais o padrão empurra leads pro fundo do funil).
+              Agrupa campanhas por padrão no nome do <code>[RD] Campanha</code>, ordenado pela <strong>% de leads que chegaram à Reunião/FUP</strong>.
             </div>
             {padroes[0] && (
-              <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs text-slate-700">
-                💡 Destaque: campanhas com <strong>{padroes[0].label}</strong> têm o melhor índice de avanço ({padroes[0].fupRate.toFixed(1)}% chegam à Reunião/FUP, em {padroes[0].nCamp} campanha{padroes[0].nCamp > 1 ? "s" : ""}).
+              <div className="mb-3 rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-xs text-slate-700">
+                💡 Destaque: campanhas com <strong>{padroes[0].label}</strong> levam mais leads pra frente — {padroes[0].fupRate.toFixed(1)}% chegam à Reunião/FUP ({nf.format(padroes[0].fup)} de {nf.format(padroes[0].leads)} leads, em {padroes[0].nCamp} campanha{padroes[0].nCamp > 1 ? "s" : ""}).
               </div>
             )}
             <div className="overflow-x-auto">
@@ -241,10 +251,9 @@ export function DisparosMarketplaceClient() {
                     <th className={th}>Padrão</th>
                     <th className={`${th} text-right`}>Campanhas</th>
                     <th className={`${th} text-right`}>Leads</th>
-                    <th className={`${th} text-right`}>SQL %</th>
-                    <th className={`${th} text-right`}>Reunião/FUP %</th>
+                    <th className={`${th} text-right`}>% até SQL</th>
+                    <th className={`${th} text-right`}>% até Reunião/FUP</th>
                     <th className={`${th} text-right`}>WON</th>
-                    <th className={`${th} text-right`}>Índice /lead</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,9 +263,8 @@ export function DisparosMarketplaceClient() {
                       <td className={`${td} text-right`}>{p.nCamp}</td>
                       <td className={`${td} text-right`}>{nf.format(p.leads)}</td>
                       <td className={`${td} text-right`}>{p.sqlRate.toFixed(1)}%</td>
-                      <td className={`${td} text-right`}>{p.fupRate.toFixed(1)}%</td>
+                      <td className={`${td} text-right font-semibold text-amber-600`}>{p.fupRate.toFixed(1)}%</td>
                       <td className={`${td} text-right ${p.won ? "font-semibold text-emerald-600" : "text-slate-300"}`}>{nf.format(p.won)}</td>
-                      <td className={`${td} text-right font-semibold text-slate-900`}>{p.perLead.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
