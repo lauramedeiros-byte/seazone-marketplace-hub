@@ -318,3 +318,20 @@ model MarketplaceLost {
   @@index([lostDate])
   @@map("marketplace_lost")
 }
+
+// Análise de disparos da base interna (p37) — agregado por campanha (rd_campanha).
+// Base interna = rd_source/rd_campanha contém 'campaign' e nenhum 'pag'. Full-refresh.
+// Ver docs/sync-disparos-marketplace.md.
+model MarketplaceDisparo {
+  id       Int      @id @default(autoincrement())
+  campanha String
+  dataCamp String?  @map("data_camp") // AAAA-MM-DD extraído do nome, quando houver
+  leads    Int
+  sql      Int // chegou à faixa Contatados→Reunião Agendada (etapa >= 2)
+  fup      Int // Reunião Realizada concluída (etapa >= FUP) ou won
+  contrato Int // chegou a Contrato ou won
+  won      Int // status won
+  syncedAt DateTime @default(now()) @map("synced_at")
+
+  @@map("marketplace_disparo")
+}
