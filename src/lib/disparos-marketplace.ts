@@ -19,14 +19,19 @@ export interface DisparosData {
     fonte: string;
     faixasSQL: string;
     criterioData: string;
+    snapshotAt?: string;
   };
   campaigns: Campanha[];
+}
+export interface DisparosResult extends DisparosData {
+  source: "nekt" | "snapshot";
+  lastSync: string | null; // ISO — última atualização vinda do sync
 }
 
 const snapshot = snapshotRaw as DisparosData;
 
 // Fonte: tabela sincronizada da Nekt (marketplace_disparo); fallback = snapshot.
-export async function getDisparos(): Promise<DisparosData> {
+export async function getDisparos(): Promise<DisparosResult> {
   try {
     const rows = (await db.marketplaceDisparo.findMany()) as unknown as {
       campanha: string;
@@ -36,6 +41,7 @@ export async function getDisparos(): Promise<DisparosData> {
       fup: number;
       contrato: number;
       won: number;
+      syncedAt: Date;
     }[];
     if (rows && rows.length > 0) {
       const campaigns: Campanha[] = rows
@@ -49,12 +55,20 @@ export async function getDisparos(): Promise<DisparosData> {
           won: r.won,
         }))
         .sort((a, b) => b.won - a.won || b.contrato - a.contrato || b.fup - a.fup || b.sql - a.sql || b.leads - a.leads);
-      return { meta: { ...snapshot.meta, fonte: "Nekt (sync ao vivo) · p37" }, campaigns };
+      const lastSync = rows
+        .map((r) => new Date(r.syncedAt).getTime())
+        .reduce((mx, t) => (t > mx ? t : mx), 0);
+      return {
+        meta: { ...snapshot.meta, fonte: "Nekt (sync automático) · p37" },
+        campaigns,
+        source: "nekt",
+        lastSync: lastSync ? new Date(lastSync).toISOString() : null,
+      };
     }
   } catch {
     // tabela não migrada / sync não configurado → snapshot
   }
-  return snapshot;
+  return { ...snapshot, source: "snapshot", lastSync: null };
 }
 
 // Peso por etapa alcançada (termômetro): WON >> Contrato > Reunião/FUP > SQL.

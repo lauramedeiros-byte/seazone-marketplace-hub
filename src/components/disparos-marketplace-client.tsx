@@ -13,8 +13,23 @@ interface Campanha {
   won: number;
 }
 interface Payload {
-  meta: { tipo: string; filtro: string; fonte: string; faixasSQL: string };
+  meta: { tipo: string; filtro: string; fonte: string; faixasSQL: string; snapshotAt?: string };
+  source: "nekt" | "snapshot";
+  lastSync: string | null;
   campaigns: Campanha[];
+}
+
+// status do sync (a cada 4h): verde ok / amarelo atrasado / cinza snapshot
+function statusSync(p: Payload): { cor: string; bg: string; txt: string } {
+  if (p.source === "nekt" && p.lastSync) {
+    const dt = new Date(p.lastSync);
+    const ageH = (Date.now() - dt.getTime()) / 3.6e6;
+    const quando = dt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    if (ageH <= 5) return { cor: "#059669", bg: "#ecfdf5", txt: `Dados atualizados · última sincronização ${quando}` };
+    return { cor: "#b45309", bg: "#fffbeb", txt: `Sync atrasado — última sincronização ${quando} (há ~${Math.round(ageH)}h). Pode ter falhado.` };
+  }
+  const q = p.meta.snapshotAt ? ` de ${p.meta.snapshotAt.split("-").reverse().join("/")}` : "";
+  return { cor: "#64748b", bg: "#f1f5f9", txt: `Snapshot fixo${q} — sync automático ainda não ativo (dados não atualizam sozinhos).` };
 }
 
 const nf = new Intl.NumberFormat("pt-BR");
@@ -171,6 +186,17 @@ export function DisparosMarketplaceClient() {
 
       {data && (
         <>
+          {/* status do sync / última atualização */}
+          {(() => {
+            const s = statusSync(data);
+            return (
+              <div className="mb-4 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium" style={{ color: s.cor, background: s.bg }}>
+                <span className="h-2 w-2 rounded-full" style={{ background: s.cor }} />
+                {s.txt}
+              </div>
+            );
+          })()}
+
           {/* resumo */}
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
             {[
