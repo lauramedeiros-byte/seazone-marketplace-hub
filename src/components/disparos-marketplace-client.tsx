@@ -107,7 +107,7 @@ export function DisparosMarketplaceClient() {
     if (!data) return [];
     const termo = norm(q.trim());
     return data.campaigns
-      .filter((c) => !c.d || (c.d >= from && c.d <= to))
+      .filter((c) => c.d != null && c.d >= from && c.d <= to)
       .filter((c) => !termo || norm(c.c).includes(termo))
       .slice()
       .sort(porAvanco);
