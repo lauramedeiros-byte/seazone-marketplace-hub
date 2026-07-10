@@ -10,9 +10,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send, MessageSquare, Activity, Zap } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, BarChart, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send, MessageSquare, Activity, Zap, CalendarDays } from "lucide-react";
 
 const links = [
+  {
+    url: "https://marketing-hub-ruddy.vercel.app/social-midia/calendario-seazone",
+    titulo: "Calendário de postagens de social",
+    descricao:
+      "Calendário de postagens de social media da Seazone — planejamento e agenda de publicações.",
+    icone: CalendarDays,
+    cor: "bg-fuchsia-50 text-fuchsia-600 border-fuchsia-100",
+  },
   {
     url: "https://marketplacevendas.lovable.app/",
     titulo: "Cotas de Marketplace",
