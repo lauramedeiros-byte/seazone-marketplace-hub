@@ -30,7 +30,9 @@ interface MotivoN { motivo: string; n: number; pct: number }
 interface EmpreendAgg { label: string; total: number; motivos: MotivoN[] }
 interface EtapaAgg { label: string; ordem: number; total: number; stack: Record<string, number>; full: { motivo: string; n: number }[] }
 interface Payload {
-  meta: { funil: string; fonte: string; canalRegra: string; grao: string };
+  meta: { funil: string; fonte: string; canalRegra: string; grao: string; snapshotAt?: string };
+  source: "nekt" | "snapshot";
+  lastSync: string | null;
   minDate: string;
   maxDate: string;
   from: string;
@@ -42,6 +44,19 @@ interface Payload {
   empreendimentos: EmpreendAgg[];
   etapas: EtapaAgg[];
   motivosEtapa: string[];
+}
+
+// status do sync (1x/dia): verde ok / amarelo atrasado / cinza snapshot
+function statusSync(p: Payload): { cor: string; bg: string; txt: string } {
+  if (p.source === "nekt" && p.lastSync) {
+    const dt = new Date(p.lastSync);
+    const ageH = (Date.now() - dt.getTime()) / 3.6e6;
+    const quando = dt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    if (ageH <= 30) return { cor: "#059669", bg: "#ecfdf5", txt: `Dados atualizados · última sincronização ${quando}` };
+    return { cor: "#b45309", bg: "#fffbeb", txt: `Sync atrasado — última sincronização ${quando} (há ~${Math.round(ageH)}h). Pode ter falhado.` };
+  }
+  const q = p.meta.snapshotAt ? ` de ${p.meta.snapshotAt.split("-").reverse().join("/")}` : "";
+  return { cor: "#64748b", bg: "#f1f5f9", txt: `Snapshot fixo${q} — sync automático ainda não ativo.` };
 }
 
 const MES3 = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -185,6 +200,17 @@ export function LostsMarketplaceClient() {
 
       {data && (
         <>
+          {/* status do sync / última atualização */}
+          {(() => {
+            const s = statusSync(data);
+            return (
+              <div className="mb-4 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium" style={{ color: s.cor, background: s.bg }}>
+                <span className="h-2 w-2 rounded-full" style={{ background: s.cor }} />
+                {s.txt}
+              </div>
+            );
+          })()}
+
           {/* Hero + tendência */}
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

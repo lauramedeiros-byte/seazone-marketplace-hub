@@ -20,6 +20,8 @@ export async function GET(request: Request) {
     const result = aggregate(data, from, to);
     return NextResponse.json({
       meta: data.meta,
+      source: data.source,
+      lastSync: data.lastSync,
       minDate: data.minDate,
       maxDate: data.maxDate,
       ...result,

@@ -14,6 +14,7 @@ export interface LostsData {
     fonte: string;
     canalRegra: string;
     grao: string;
+    snapshotAt?: string;
   };
   base: string; // "AAAA-MM-DD" — data base dos offsets
   minDate: string;
@@ -71,14 +72,22 @@ function buildFromRows(rows: DealRow[]): LostsData {
   return { meta: { ...snapshot.meta, fonte: "Nekt (sync ao vivo) · pipeline 37, status=lost" }, base, minDate: min, maxDate: max, motivos, empreendimentos: emps, etapas, canais, deals };
 }
 
-export async function getLostsData(): Promise<LostsData> {
+export type LostsResult = LostsData & { source: "nekt" | "snapshot"; lastSync: string | null };
+
+export async function getLostsData(): Promise<LostsResult> {
   try {
-    const rows = (await db.marketplaceLost.findMany()) as unknown as DealRow[];
-    if (rows && rows.length > 0) return buildFromRows(rows);
+    const rows = (await db.marketplaceLost.findMany()) as unknown as (DealRow & { syncedAt: Date })[];
+    if (rows && rows.length > 0) {
+      const lastSyncMs = rows.reduce((mx, r) => {
+        const t = new Date(r.syncedAt).getTime();
+        return t > mx ? t : mx;
+      }, 0);
+      return { ...buildFromRows(rows), source: "nekt", lastSync: lastSyncMs ? new Date(lastSyncMs).toISOString() : null };
+    }
   } catch {
     // tabela não migrada / sync não configurado → snapshot
   }
-  return snapshot;
+  return { ...snapshot, source: "snapshot", lastSync: null };
 }
 
 // ─── Agregação por intervalo de datas (inclusivo) ─────────────────────────────
