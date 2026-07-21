@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "pipelineId": 37,
+    "funil": "Marketplace",
+    "tipo": "Criativos de mídia paga",
+    "filtro": "rd_source contém 'pag' e não contém 'campaign'",
+    "fonte": "Aguardando primeiro sync da Nekt (pipeline 37)",
+    "faixasSQL": "Cumulativo: SQL = chegou a Contatados+ · Reunião = chegou à Reunião Realizada+ · Contrato = chegou a Contrato · WON = ganho",
+    "snapshotAt": "2025-01-01"
+  },
+  "criativos": []
+}

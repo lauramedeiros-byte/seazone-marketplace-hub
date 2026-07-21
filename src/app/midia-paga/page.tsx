@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BackButton } from "@/components/back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BrainCircuit, ExternalLink, Send } from "lucide-react";
+import { BrainCircuit, ExternalLink, Send, Megaphone } from "lucide-react";
 
 const subcards = [
   {
@@ -20,6 +20,15 @@ const subcards = [
     icone: Send,
     cor: "bg-emerald-50 text-emerald-600",
     bordaCor: "border-l-emerald-400",
+    externo: false,
+  },
+  {
+    href: "/midia-paga/analise-midia-paga",
+    titulo: "Análise mídia paga",
+    descricao: "Criativos de mídia paga rankeados por avanço no funil (WON, Contrato, Reunião). Números cumulativos, filtro por período e plataforma.",
+    icone: Megaphone,
+    cor: "bg-blue-50 text-blue-600",
+    bordaCor: "border-l-blue-400",
     externo: false,
   },
 ];
