@@ -38,7 +38,7 @@ interface Acao {
   empreendimentos: string | null;
   whatsapp: string | null;
   email: string | null;
-  rdCampanha: string | null;
+  rdCampanhas: string[];
   anotacoes: string | null;
   links: LinkItem[];
   feito: boolean;
@@ -52,8 +52,17 @@ interface Frente {
 }
 interface Props {
   frentesInit: Frente[];
-  acoesInit: Array<Omit<Acao, "links"> & { links: unknown }>;
+  acoesInit: Array<Omit<Acao, "links" | "rdCampanhas"> & { links: unknown; rdCampanha: string | null }>;
 }
+
+// [RD] campanhas são guardadas no banco como um texto único (coluna rdCampanha),
+// com uma campanha por linha. Aqui convertemos entre texto <-> lista.
+const parseRds = (s: string | null | undefined): string[] =>
+  (s ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+const joinRds = (arr: string[]): string | null => {
+  const v = arr.map((x) => x.trim()).filter(Boolean).join("\n");
+  return v || null;
+};
 
 const CORES: Record<string, { dot: string; chip: string; tab: string }> = {
   teal: { dot: "bg-teal-500", chip: "bg-teal-50 text-teal-700 border-teal-200", tab: "border-teal-500 bg-teal-50 text-teal-700" },
@@ -92,7 +101,11 @@ function firstWeekdayMonday(mes: string) {
 export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const [frentes, setFrentes] = useState<Frente[]>(frentesInit);
   const [acoes, setAcoes] = useState<Acao[]>(
-    acoesInit.map((a) => ({ ...a, links: Array.isArray(a.links) ? (a.links as LinkItem[]) : [] }))
+    acoesInit.map(({ rdCampanha, links, ...rest }) => ({
+      ...rest,
+      links: Array.isArray(links) ? (links as LinkItem[]) : [],
+      rdCampanhas: parseRds(rdCampanha),
+    }))
   );
 
   const now = new Date();
@@ -141,7 +154,8 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
       .filter((a) => a.mes === mesAtivo)
       .filter((a) => {
         const linksStr = (a.links ?? []).map((l) => `${l.label ?? ""} ${l.url}`).join(" ");
-        return [a.titulo, a.base, a.empreendimentos, a.whatsapp, a.email, a.rdCampanha, a.anotacoes, linksStr]
+        const rdStr = (a.rdCampanhas ?? []).join(" ");
+        return [a.titulo, a.base, a.empreendimentos, a.whatsapp, a.email, rdStr, a.anotacoes, linksStr]
           .filter(Boolean)
           .some((v) => (v as string).toLowerCase().includes(q));
       })
@@ -171,7 +185,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
         empreendimentos: a.empreendimentos,
         whatsapp: a.whatsapp,
         email: a.email,
-        rdCampanha: a.rdCampanha,
+        rdCampanha: joinRds(a.rdCampanhas),
         anotacoes: a.anotacoes,
         links: a.links,
       });
@@ -185,7 +199,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
     const res = await api({ action: "create-acao", frenteId: frenteAtiva.id, mes: mesAtivo, dia, titulo: "" });
     const d = await res.json();
     if (d.acao) {
-      setAcoes((prev) => [...prev, { ...d.acao, links: Array.isArray(d.acao.links) ? d.acao.links : [] }]);
+      setAcoes((prev) => [...prev, { ...d.acao, links: Array.isArray(d.acao.links) ? d.acao.links : [], rdCampanhas: parseRds(d.acao.rdCampanha) }]);
       setSelectedDay(dia);
     }
   };
@@ -208,6 +222,12 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const updateLink = (a: Acao, i: number, patch: Partial<LinkItem>) =>
     setLinks(a, a.links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
   const removeLink = (a: Acao, i: number) => setLinks(a, a.links.filter((_, idx) => idx !== i));
+
+  // [RD] campanhas (uma ação pode ter várias)
+  const setRds = (a: Acao, rdCampanhas: string[]) => patchLocal(a.id, { rdCampanhas });
+  const addRd = (a: Acao) => setRds(a, [...a.rdCampanhas, ""]);
+  const updateRd = (a: Acao, i: number, value: string) => setRds(a, a.rdCampanhas.map((r, idx) => (idx === i ? value : r)));
+  const removeRd = (a: Acao, i: number) => setRds(a, a.rdCampanhas.filter((_, idx) => idx !== i));
 
   // ── Frentes ────────────────────────────────────────────────────────────────
   const addFrente = async () => {
@@ -353,10 +373,22 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
         </div>
       </div>
 
-      {/* [RD] Campanha — logo acima das anotações */}
+      {/* [RD] Campanha(s) — uma ação pode ter várias; logo acima das anotações */}
       <div className="mt-3">
-        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">[RD] Campanha</label>
-        <Input value={a.rdCampanha ?? ""} onChange={(e) => patchLocal(a.id, { rdCampanha: e.target.value })} className="text-sm mt-1" placeholder="Código da campanha no RD Station" />
+        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">[RD] Campanha(s)</label>
+        <div className="space-y-2 mt-1">
+          {a.rdCampanhas.map((rd, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <Input value={rd} onChange={(e) => updateRd(a, i, e.target.value)} placeholder="Código da campanha no RD Station" className="text-sm flex-1" />
+              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-600 h-8 w-8 shrink-0" onClick={() => removeRd(a, i)} title="Remover esta campanha">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => addRd(a)}>
+            <Plus className="w-3.5 h-3.5" /> adicionar [RD] campanha
+          </Button>
+        </div>
       </div>
 
       <div className="mt-3">

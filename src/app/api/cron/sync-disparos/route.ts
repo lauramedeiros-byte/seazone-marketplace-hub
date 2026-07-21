@@ -28,8 +28,12 @@ SELECT campanha,
   coalesce(nome_data, date_format(max(dt), '%Y-%m-%d')) AS data_camp,
   count(*) AS leads,
   count(*) FILTER (WHERE ord >= 2) AS sql,
-  count(*) FILTER (WHERE ord >= 9 OR st = 'won') AS fup,
-  count(*) FILTER (WHERE ord >= 13 OR st = 'won') AS contrato,
+  -- Reunião/FUP = da "Reunião Realizada" (ordem 8) até a etapa anterior a Contrato
+  -- ("Reserva", ordem 12). Contrato (13) e won contam só nas colunas Contrato/WON.
+  count(*) FILTER (WHERE ord >= 8 AND ord <= 12) AS fup,
+  -- Contrato = só quem está na etapa "Contrato" (ordem 13) e ainda não é won.
+  count(*) FILTER (WHERE ord >= 13 AND st <> 'won') AS contrato,
+  -- WON = só negócio ganho.
   count(*) FILTER (WHERE st = 'won') AS won
 FROM j
 GROUP BY campanha, nome_data`;

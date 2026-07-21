@@ -128,6 +128,10 @@ export function LostsMarketplaceClient() {
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // teto do calendário = hoje (local), para permitir filtrar até o dia atual
+  const dNow = new Date();
+  const hoje = `${dNow.getFullYear()}-${String(dNow.getMonth() + 1).padStart(2, "0")}-${String(dNow.getDate()).padStart(2, "0")}`;
+
   const carregar = useCallback(async (f?: string, t?: string) => {
     setLoading(true);
     const qs = new URLSearchParams();
@@ -185,13 +189,13 @@ export function LostsMarketplaceClient() {
         <div className="mx-1 h-6 w-px bg-slate-200" />
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
           De
-          <input type="date" value={from} min={min} max={to || max}
+          <input type="date" value={from} min={min} max={to || hoje}
             onChange={(e) => { setFrom(e.target.value); carregar(e.target.value, to); }}
             className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800" />
         </label>
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
           até
-          <input type="date" value={to} min={from || min} max={max}
+          <input type="date" value={to} min={from || min} max={hoje}
             onChange={(e) => { setTo(e.target.value); carregar(from, e.target.value); }}
             className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800" />
         </label>

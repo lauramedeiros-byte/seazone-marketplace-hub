@@ -19,13 +19,14 @@ interface Payload {
   campaigns: Campanha[];
 }
 
-// status do sync (a cada 4h): verde ok / amarelo atrasado / cinza snapshot
+// status do sync (1x/dia, cron 06:00 UTC): verde ok / amarelo atrasado / cinza snapshot
+// tolerância de 30h = um ciclo diário + folga; só acusa atraso se pulou um dia inteiro.
 function statusSync(p: Payload): { cor: string; bg: string; txt: string } {
   if (p.source === "nekt" && p.lastSync) {
     const dt = new Date(p.lastSync);
     const ageH = (Date.now() - dt.getTime()) / 3.6e6;
     const quando = dt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-    if (ageH <= 5) return { cor: "#059669", bg: "#ecfdf5", txt: `Dados atualizados · última sincronização ${quando}` };
+    if (ageH <= 30) return { cor: "#059669", bg: "#ecfdf5", txt: `Dados atualizados · última sincronização ${quando}` };
     return { cor: "#b45309", bg: "#fffbeb", txt: `Sync atrasado — última sincronização ${quando} (há ~${Math.round(ageH)}h). Pode ter falhado.` };
   }
   const q = p.meta.snapshotAt ? ` de ${p.meta.snapshotAt.split("-").reverse().join("/")}` : "";
@@ -37,7 +38,7 @@ const fmtData = (iso: string | null) => (iso ? iso.split("-").reverse().join("/"
 
 // Farol: quão fundo a campanha levou os leads
 function farol(c: Campanha): { cor: string; bg: string; label: string } {
-  if (c.fup > 0) return { cor: "#059669", bg: "#ecfdf5", label: "Levou à Reunião+" };
+  if (c.fup > 0 || c.contrato > 0 || c.won > 0) return { cor: "#059669", bg: "#ecfdf5", label: "Levou à Reunião+" };
   if (c.sql > 0) return { cor: "#b45309", bg: "#fffbeb", label: "Só até SQL" };
   return { cor: "#dc2626", bg: "#fef2f2", label: "Não avançou" };
 }
@@ -80,6 +81,13 @@ export function DisparosMarketplaceClient() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // teto do calendário = hoje (local), para permitir filtrar fim de semana/hoje
+  // mesmo que ainda não haja campanha datada nesses dias.
+  const hoje = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
+
   const carregar = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/disparos-marketplace");
@@ -117,7 +125,7 @@ export function DisparosMarketplaceClient() {
     (a, c) => ({ leads: a.leads + c.leads, sql: a.sql + c.sql, fup: a.fup + c.fup, contrato: a.contrato + c.contrato, won: a.won + c.won }),
     { leads: 0, sql: 0, fup: 0, contrato: 0, won: 0 }
   );
-  const verdes = campanhas.filter((c) => c.fup > 0).length;
+  const verdes = campanhas.filter((c) => c.fup > 0 || c.contrato > 0 || c.won > 0).length;
 
   // padrões — ranqueados por % de leads que chegaram à Reunião/FUP
   const padroes = useMemo(() => {
@@ -164,11 +172,11 @@ export function DisparosMarketplaceClient() {
         <div className="mx-1 h-6 w-px bg-slate-200" />
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
           De
-          <input type="date" value={from} min={min} max={to || max} onChange={(e) => { setCur(""); setFrom(e.target.value); }} className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800" />
+          <input type="date" value={from} min={min} max={to || hoje} onChange={(e) => { setCur(""); setFrom(e.target.value); }} className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800" />
         </label>
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
           até
-          <input type="date" value={to} min={from || min} max={max} onChange={(e) => { setCur(""); setTo(e.target.value); }} className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800" />
+          <input type="date" value={to} min={from || min} max={hoje} onChange={(e) => { setCur(""); setTo(e.target.value); }} className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800" />
         </label>
         <div className="relative">
           <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">🔎</span>
@@ -217,7 +225,15 @@ export function DisparosMarketplaceClient() {
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="text-sm font-semibold text-slate-900">Leads que avançaram, por etapa</div>
             <div className="mb-3 mt-0.5 text-xs text-slate-500">
-              Cada coluna = quantos leads da campanha <strong>chegaram até aquela etapa</strong> (acumulado). Farol: 🟢 levou à Reunião ou além · 🟡 só até SQL · 🔴 não avançou. Ordenado do que levou mais fundo.
+              Cada coluna mostra quantos leads da campanha estão em cada faixa do funil de Marketplace (pipeline 37). Farol: 🟢 chegou à Reunião Realizada ou além · 🟡 só até SQL · 🔴 não avançou. Ordenado do que levou mais fundo.
+            </div>
+            {/* Legenda — o que cada coluna considera no funil */}
+            <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-[11px] leading-relaxed text-slate-600">
+              <div className="mb-1.5 font-semibold uppercase tracking-wide text-slate-400">O que cada coluna considera (etapas do funil)</div>
+              <div><strong className="text-slate-700">→ SQL</strong> — a partir de <strong>Contatados</strong> <span className="text-slate-400">(Contatados · Qualificação · Qualificado · Aguardando data · Reunião Agendada)</span></div>
+              <div><strong className="text-amber-700">→ Reunião/FUP</strong> — de <strong>Reunião Realizada</strong> até <strong>Reserva</strong> <span className="text-slate-400">(Reunião Realizada · FUP · Negociação · Proposta Aprovada · Reserva)</span></div>
+              <div><strong className="text-blue-700">→ Contrato</strong> — só quem está na etapa <strong>Contrato</strong> <span className="text-slate-400">(ainda não ganho)</span></div>
+              <div><strong className="text-emerald-700">→ WON</strong> — só negócio ganho</div>
             </div>
             <div className="max-h-[620px] overflow-auto">
               <table className="w-full border-collapse">
