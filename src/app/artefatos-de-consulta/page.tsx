@@ -38,16 +38,6 @@ const links: Link[] = [
   // Use para montar conteúdos de Marketplace
   {
     grupo: "conteudos",
-    interno: true,
-    url: "/artefatos-de-consulta/criativos-que-funcionaram",
-    titulo: "Criativos que funcionaram no passado",
-    descricao:
-      "Aqui você encontra o criativo + o resultado que ele trouxe no passado, para ajudar a criar novas artes.",
-    icone: Sparkles,
-    cor: "bg-violet-100 text-violet-700 border-violet-200",
-  },
-  {
-    grupo: "conteudos",
     url: "https://marketplacevendas.lovable.app/",
     titulo: "Cotas de Marketplace",
     descricao:
@@ -75,7 +65,7 @@ const links: Link[] = [
   },
   {
     grupo: "conteudos",
-    url: "https://seazone-insight-hub.lovable.app/",
+    url: "https://big-numbers.seazone.dev/",
     titulo: "Insight Hub — Big Numbers",
     descricao:
       "Big numbers de SZI e SZS + cases de sucesso.",
@@ -90,6 +80,16 @@ const links: Link[] = [
       "Onde ficam todas as apresentações da empresa, organizadas por frente.",
     icone: Presentation,
     cor: "bg-sky-50 text-sky-600 border-sky-100",
+  },
+  {
+    grupo: "conteudos",
+    interno: true,
+    url: "/artefatos-de-consulta/criativos-que-funcionaram",
+    titulo: "Criativos que funcionaram no passado",
+    descricao:
+      "Aqui você encontra o criativo + o resultado que ele trouxe no passado, para ajudar a criar novas artes.",
+    icone: Sparkles,
+    cor: "bg-violet-100 text-violet-700 border-violet-200",
   },
 
   // Growth & Criativos

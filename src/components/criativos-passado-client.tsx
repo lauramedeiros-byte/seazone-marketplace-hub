@@ -25,6 +25,7 @@ import {
   Link2,
   X,
   Loader2,
+  BarChart3,
 } from "lucide-react";
 
 // ── Tipos ────────────────────────────────────────────────────────────────
@@ -317,10 +318,19 @@ export function CriativosPassadoClient({ pastasInit }: { pastasInit: Pasta[] }) 
             criar novas artes.
           </p>
         </div>
-        <Button onClick={criarPasta} disabled={salvandoPasta} className="gap-2 shrink-0">
-          <FolderPlus className="w-4 h-4" />
-          Nova pasta
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <a href="https://artefatos-growth-seazone.vercel.app/resultados" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" className="gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Veja os resultados anteriores
+              <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+            </Button>
+          </a>
+          <Button onClick={criarPasta} disabled={salvandoPasta} className="gap-2">
+            <FolderPlus className="w-4 h-4" />
+            Nova pasta
+          </Button>
+        </div>
       </div>
 
       {pastas.length === 0 ? (
