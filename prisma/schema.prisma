@@ -353,3 +353,38 @@ model MarketplaceDisparo {
 
   @@map("marketplace_disparo")
 }
+
+// ── Criativos que funcionaram no passado ──────────────────────────────────
+// Pasta = um empreendimento. Dentro dela, registros de criativos que
+// performaram bem, com links/imagem + resultados que trouxeram.
+model CriativoPastaEmp {
+  id           String              @id @default(cuid())
+  nome         String // nome do empreendimento
+  ordem        Int                 @default(0)
+  criadoEm     DateTime            @default(now())
+  atualizadoEm DateTime            @updatedAt
+  registros    CriativoRegistro[]
+
+  @@map("criativo_pasta_emp")
+}
+
+model CriativoRegistro {
+  id             String   @id @default(cuid())
+  pastaId        String
+  pasta          CriativoPastaEmp @relation(fields: [pastaId], references: [id], onDelete: Cascade)
+  titulo         String? // rótulo opcional do criativo
+  links          Json     @default("[]") // string[] — links que levam ao criativo
+  imagem         String? // imagem do criativo em base64 (data URL)
+  idAnuncio      String? // ID do anúncio
+  valorInvestido Float? // R$ investido
+  mql            Int? // MQLs gerados
+  sql            Int? // SQLs gerados
+  opp            Int? // Oportunidades geradas
+  won            Int? // WONs
+  custoPorWon    Float? // custo por WON
+  ordem          Int      @default(0)
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  @@map("criativo_registro")
+}

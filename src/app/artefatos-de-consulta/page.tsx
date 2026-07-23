@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send, MessageSquare, Activity, Zap, CalendarDays, Presentation } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send, MessageSquare, Activity, Zap, CalendarDays, Presentation, Sparkles, ArrowRight } from "lucide-react";
 
 type Link = {
   url: string;
@@ -20,6 +20,7 @@ type Link = {
   icone: LucideIcon;
   cor: string;
   grupo: string;
+  interno?: boolean;
 };
 
 const links: Link[] = [
@@ -35,6 +36,16 @@ const links: Link[] = [
   },
 
   // Use para montar conteúdos de Marketplace
+  {
+    grupo: "conteudos",
+    interno: true,
+    url: "/artefatos-de-consulta/criativos-que-funcionaram",
+    titulo: "Criativos que funcionaram no passado",
+    descricao:
+      "Aqui você encontra o criativo + o resultado que ele trouxe no passado, para ajudar a criar novas artes.",
+    icone: Sparkles,
+    cor: "bg-violet-100 text-violet-700 border-violet-200",
+  },
   {
     grupo: "conteudos",
     url: "https://marketplacevendas.lovable.app/",
@@ -237,13 +248,11 @@ const ORDEM_GRUPOS = ["conteudos", "growth", "disparos", "resultados"];
 
 function CardLink({ link, borda }: { link: Link; borda: string }) {
   const Icon = link.icone;
+  const linkProps = link.interno
+    ? {}
+    : { target: "_blank", rel: "noopener noreferrer" };
   return (
-    <a
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block group"
-    >
+    <a href={link.url} {...linkProps} className="block group">
       <Card className={`hover:shadow-md hover:-translate-y-0.5 transition-all h-full border-l-4 bg-white ${borda}`}>
         <CardHeader className="pb-2">
           <div className="flex items-start gap-3">
@@ -253,7 +262,11 @@ function CardLink({ link, borda }: { link: Link; borda: string }) {
             <div className="flex-1 min-w-0">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 {link.titulo}
-                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                {link.interno ? (
+                  <ArrowRight className="w-3 h-3 text-violet-400 group-hover:text-violet-600 transition-colors shrink-0" />
+                ) : (
+                  <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                )}
               </CardTitle>
             </div>
           </div>
