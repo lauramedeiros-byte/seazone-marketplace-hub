@@ -22,6 +22,7 @@ import {
   Building2,
   Search,
   AlertTriangle,
+  Send,
 } from "lucide-react";
 
 interface LinkItem {
@@ -43,6 +44,8 @@ interface Acao {
   links: LinkItem[];
   feito: boolean;
   ordem: number;
+  slackTs: string | null;
+  slackEnviadoEm: string | Date | null;
 }
 interface Frente {
   id: string;
@@ -92,6 +95,10 @@ function daysInMonth(mes: string) {
   const [y, m] = mes.split("-").map(Number);
   return new Date(y, m, 0).getDate();
 }
+function fmtEnvio(v: string | Date) {
+  const d = typeof v === "string" ? new Date(v) : v;
+  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} às ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
 function firstWeekdayMonday(mes: string) {
   const [y, m] = mes.split("-").map(Number);
   const wd = new Date(y, m - 1, 1).getDay(); // 0=Dom
@@ -114,6 +121,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [view, setView] = useState<"calendario" | "lista">("calendario");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [tip, setTip] = useState<{ text: string; sub?: string; top: number; left: number } | null>(null);
 
@@ -191,6 +199,38 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
       });
     } finally {
       setSavingId(null);
+    }
+  };
+
+  // ── Slack (#entrega_disparos) ────────────────────────────────────────────
+  const enviarSlack = async (a: Acao, force = false) => {
+    if (!a.whatsapp?.trim() && !a.email?.trim()) {
+      alert("Esta ação não tem mensagem de WhatsApp nem de e-mail para enviar.");
+      return;
+    }
+    if (!force && a.slackTs) {
+      if (!confirm(`Esta ação já foi enviada no Slack${a.slackEnviadoEm ? ` em ${fmtEnvio(a.slackEnviadoEm)}` : ""}. Enviar de novo (cria outra thread)?`)) return;
+      force = true;
+    }
+    if (!force && !confirm(`Enviar "${a.titulo || "(sem título)"}" no #entrega_disparos?`)) return;
+
+    setEnviandoId(a.id);
+    try {
+      const res = await fetch("/api/planejamento/slack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acaoId: a.id, force }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.success) {
+        alert(d.error ?? "Não foi possível enviar no Slack.");
+        return;
+      }
+      patchLocal(a.id, { slackTs: d.slackTs, slackEnviadoEm: d.slackEnviadoEm });
+    } catch (e) {
+      alert(`Falha ao enviar no Slack: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setEnviandoId(null);
     }
   };
 
@@ -312,6 +352,21 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
           <span className="text-[11px] font-medium text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">a fazer</span>
         )}
         <div className="ml-auto flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-8 text-xs ${a.slackTs ? "text-green-700 border-green-300 bg-green-50 hover:bg-green-100" : "text-gray-600"}`}
+            onClick={() => enviarSlack(a)}
+            disabled={enviandoId === a.id}
+            title={
+              a.slackTs
+                ? `Já enviado no #entrega_disparos${a.slackEnviadoEm ? ` em ${fmtEnvio(a.slackEnviadoEm)}` : ""} — clique para enviar de novo`
+                : "Enviar esta ação no #entrega_disparos como uma thread"
+            }
+          >
+            <Send className="w-3.5 h-3.5" />
+            {enviandoId === a.id ? "Enviando…" : a.slackTs ? "Enviado no Slack" : "Enviar no Slack"}
+          </Button>
           <input
             type="date"
             value={`${a.mes}-${pad2(a.dia)}`}

@@ -286,6 +286,8 @@ model PlanejamentoAcao {
   links          Json               @default("[]") // [{ label, url }]
   feito          Boolean            @default(false)
   ordem          Int                @default(0)
+  slackTs        String?            // ts da thread criada no Slack (entrega_disparos)
+  slackEnviadoEm DateTime?
   criadoEm       DateTime           @default(now())
   atualizadoEm   DateTime           @updatedAt
 
