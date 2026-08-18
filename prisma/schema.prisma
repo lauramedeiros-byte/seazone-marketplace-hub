@@ -286,6 +286,8 @@ model PlanejamentoAcao {
   links          Json               @default("[]") // [{ label, url }]
   feito          Boolean            @default(false)
   ordem          Int                @default(0)
+  slackTs        String?            // ts da thread criada no Slack (entrega_disparos)
+  slackEnviadoEm DateTime?
   criadoEm       DateTime           @default(now())
   atualizadoEm   DateTime           @updatedAt
 
@@ -300,4 +302,91 @@ model AnaliseClaude {
   dataAnalise DateTime
   criadoEm   DateTime @default(now())
   atualizadoEm DateTime @updatedAt
+}
+
+// Tabela alimentada pelo sync da Nekt (pipeline 37 = funil Marketplace, status=lost).
+// Grão = deal (um lost por linha, com a data exata da perda). Full-refresh a cada sync.
+// Ver docs/sync-losts-marketplace.md.
+model MarketplaceLost {
+  id            Int      @id @default(autoincrement())
+  lostDate      DateTime @map("lost_date") // data da perda (base do filtro)
+  motivo        String
+  empreendimento String
+  etapa         String
+  etapaOrdem    Int      @map("etapa_ordem")
+  canal         String // Midia Paga | Base Interna | Outros
+  syncedAt      DateTime @default(now()) @map("synced_at")
+
+  @@index([lostDate])
+  @@map("marketplace_lost")
+}
+
+// Análise de disparos da base interna (p37) — agregado por campanha (rd_campanha).
+// Base interna = rd_source/rd_campanha contém 'campaign' e nenhum 'pag'. Full-refresh.
+// Ver docs/sync-disparos-marketplace.md.
+// Criativos de mídia paga (p37 Marketplace). Grão = criativo (rd_campanha sem ID
+// da plataforma). Filtro: rd_source contém 'pag' e NÃO contém 'campaign'.
+// Contagens CUMULATIVAS: chegar a uma etapa conta em todas as anteriores (won conta em contrato/reunião/sql).
+model PaidCreative {
+  id         Int      @id @default(autoincrement())
+  criativo   String
+  plataforma String   @default("Outros") // Meta | Google | Outros
+  dataCamp   String?  @map("data_camp")
+  leads      Int
+  sql        Int // chegou a Contatados+ (ord>=2 ou won)
+  reuniao    Int // chegou à Reunião Realizada+ (ord>=8 ou won)
+  contrato   Int // chegou a Contrato (ord>=13 ou won)
+  won        Int // status won
+  syncedAt   DateTime @default(now()) @map("synced_at")
+
+  @@map("paid_creative")
+}
+
+model MarketplaceDisparo {
+  id       Int      @id @default(autoincrement())
+  campanha String
+  dataCamp String?  @map("data_camp") // AAAA-MM-DD extraído do nome, quando houver
+  leads    Int
+  sql      Int // chegou à faixa Contatados→Reunião Agendada (etapa >= 2)
+  fup      Int // faixa Reunião Realizada..Reserva (etapa_ordem 8 a 12); Contrato/won não entram aqui
+  contrato Int // só na etapa Contrato (etapa_ordem 13) e não won
+  won      Int // status won
+  syncedAt DateTime @default(now()) @map("synced_at")
+
+  @@map("marketplace_disparo")
+}
+
+// ── Criativos que funcionaram no passado ──────────────────────────────────
+// Pasta = um empreendimento. Dentro dela, registros de criativos que
+// performaram bem, com links/imagem + resultados que trouxeram.
+model CriativoPastaEmp {
+  id           String              @id @default(cuid())
+  nome         String // nome do empreendimento
+  ordem        Int                 @default(0)
+  criadoEm     DateTime            @default(now())
+  atualizadoEm DateTime            @updatedAt
+  registros    CriativoRegistro[]
+
+  @@map("criativo_pasta_emp")
+}
+
+model CriativoRegistro {
+  id             String   @id @default(cuid())
+  pastaId        String
+  pasta          CriativoPastaEmp @relation(fields: [pastaId], references: [id], onDelete: Cascade)
+  titulo         String? // rótulo opcional do criativo
+  links          Json     @default("[]") // string[] — links que levam ao criativo
+  imagem         String? // imagem do criativo em base64 (data URL)
+  idAnuncio      String? // ID do anúncio
+  valorInvestido Float? // R$ investido
+  mql            Int? // MQLs gerados
+  sql            Int? // SQLs gerados
+  opp            Int? // Oportunidades geradas
+  won            Int? // WONs
+  custoPorWon    Float? // custo por WON
+  ordem          Int      @default(0)
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  @@map("criativo_registro")
 }

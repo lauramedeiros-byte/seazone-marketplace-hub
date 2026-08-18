@@ -22,6 +22,7 @@ import {
   Building2,
   Search,
   AlertTriangle,
+  Send,
 } from "lucide-react";
 
 interface LinkItem {
@@ -38,11 +39,13 @@ interface Acao {
   empreendimentos: string | null;
   whatsapp: string | null;
   email: string | null;
-  rdCampanha: string | null;
+  rdCampanhas: string[];
   anotacoes: string | null;
   links: LinkItem[];
   feito: boolean;
   ordem: number;
+  slackTs: string | null;
+  slackEnviadoEm: string | Date | null;
 }
 interface Frente {
   id: string;
@@ -52,8 +55,17 @@ interface Frente {
 }
 interface Props {
   frentesInit: Frente[];
-  acoesInit: Array<Omit<Acao, "links"> & { links: unknown }>;
+  acoesInit: Array<Omit<Acao, "links" | "rdCampanhas"> & { links: unknown; rdCampanha: string | null }>;
 }
+
+// [RD] campanhas são guardadas no banco como um texto único (coluna rdCampanha),
+// com uma campanha por linha. Aqui convertemos entre texto <-> lista.
+const parseRds = (s: string | null | undefined): string[] =>
+  (s ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+const joinRds = (arr: string[]): string | null => {
+  const v = arr.map((x) => x.trim()).filter(Boolean).join("\n");
+  return v || null;
+};
 
 const CORES: Record<string, { dot: string; chip: string; tab: string }> = {
   teal: { dot: "bg-teal-500", chip: "bg-teal-50 text-teal-700 border-teal-200", tab: "border-teal-500 bg-teal-50 text-teal-700" },
@@ -83,6 +95,10 @@ function daysInMonth(mes: string) {
   const [y, m] = mes.split("-").map(Number);
   return new Date(y, m, 0).getDate();
 }
+function fmtEnvio(v: string | Date) {
+  const d = typeof v === "string" ? new Date(v) : v;
+  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} às ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
 function firstWeekdayMonday(mes: string) {
   const [y, m] = mes.split("-").map(Number);
   const wd = new Date(y, m - 1, 1).getDay(); // 0=Dom
@@ -92,7 +108,11 @@ function firstWeekdayMonday(mes: string) {
 export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const [frentes, setFrentes] = useState<Frente[]>(frentesInit);
   const [acoes, setAcoes] = useState<Acao[]>(
-    acoesInit.map((a) => ({ ...a, links: Array.isArray(a.links) ? (a.links as LinkItem[]) : [] }))
+    acoesInit.map(({ rdCampanha, links, ...rest }) => ({
+      ...rest,
+      links: Array.isArray(links) ? (links as LinkItem[]) : [],
+      rdCampanhas: parseRds(rdCampanha),
+    }))
   );
 
   const now = new Date();
@@ -101,6 +121,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [view, setView] = useState<"calendario" | "lista">("calendario");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [tip, setTip] = useState<{ text: string; sub?: string; top: number; left: number } | null>(null);
 
@@ -141,7 +162,8 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
       .filter((a) => a.mes === mesAtivo)
       .filter((a) => {
         const linksStr = (a.links ?? []).map((l) => `${l.label ?? ""} ${l.url}`).join(" ");
-        return [a.titulo, a.base, a.empreendimentos, a.whatsapp, a.email, a.rdCampanha, a.anotacoes, linksStr]
+        const rdStr = (a.rdCampanhas ?? []).join(" ");
+        return [a.titulo, a.base, a.empreendimentos, a.whatsapp, a.email, rdStr, a.anotacoes, linksStr]
           .filter(Boolean)
           .some((v) => (v as string).toLowerCase().includes(q));
       })
@@ -171,7 +193,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
         empreendimentos: a.empreendimentos,
         whatsapp: a.whatsapp,
         email: a.email,
-        rdCampanha: a.rdCampanha,
+        rdCampanha: joinRds(a.rdCampanhas),
         anotacoes: a.anotacoes,
         links: a.links,
       });
@@ -180,12 +202,44 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
     }
   };
 
+  // ── Slack (#entrega_disparos) ────────────────────────────────────────────
+  const enviarSlack = async (a: Acao, force = false) => {
+    if (!a.whatsapp?.trim() && !a.email?.trim()) {
+      alert("Esta ação não tem mensagem de WhatsApp nem de e-mail para enviar.");
+      return;
+    }
+    if (!force && a.slackTs) {
+      if (!confirm(`Esta ação já foi enviada no Slack${a.slackEnviadoEm ? ` em ${fmtEnvio(a.slackEnviadoEm)}` : ""}. Enviar de novo (cria outra thread)?`)) return;
+      force = true;
+    }
+    if (!force && !confirm(`Enviar "${a.titulo || "(sem título)"}" no #entrega_disparos?`)) return;
+
+    setEnviandoId(a.id);
+    try {
+      const res = await fetch("/api/planejamento/slack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acaoId: a.id, force }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.success) {
+        alert(d.error ?? "Não foi possível enviar no Slack.");
+        return;
+      }
+      patchLocal(a.id, { slackTs: d.slackTs, slackEnviadoEm: d.slackEnviadoEm });
+    } catch (e) {
+      alert(`Falha ao enviar no Slack: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setEnviandoId(null);
+    }
+  };
+
   const addAcao = async (dia: number) => {
     if (!frenteAtiva) return;
     const res = await api({ action: "create-acao", frenteId: frenteAtiva.id, mes: mesAtivo, dia, titulo: "" });
     const d = await res.json();
     if (d.acao) {
-      setAcoes((prev) => [...prev, { ...d.acao, links: Array.isArray(d.acao.links) ? d.acao.links : [] }]);
+      setAcoes((prev) => [...prev, { ...d.acao, links: Array.isArray(d.acao.links) ? d.acao.links : [], rdCampanhas: parseRds(d.acao.rdCampanha) }]);
       setSelectedDay(dia);
     }
   };
@@ -208,6 +262,12 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
   const updateLink = (a: Acao, i: number, patch: Partial<LinkItem>) =>
     setLinks(a, a.links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
   const removeLink = (a: Acao, i: number) => setLinks(a, a.links.filter((_, idx) => idx !== i));
+
+  // [RD] campanhas (uma ação pode ter várias)
+  const setRds = (a: Acao, rdCampanhas: string[]) => patchLocal(a.id, { rdCampanhas });
+  const addRd = (a: Acao) => setRds(a, [...a.rdCampanhas, ""]);
+  const updateRd = (a: Acao, i: number, value: string) => setRds(a, a.rdCampanhas.map((r, idx) => (idx === i ? value : r)));
+  const removeRd = (a: Acao, i: number) => setRds(a, a.rdCampanhas.filter((_, idx) => idx !== i));
 
   // ── Frentes ────────────────────────────────────────────────────────────────
   const addFrente = async () => {
@@ -292,6 +352,21 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
           <span className="text-[11px] font-medium text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">a fazer</span>
         )}
         <div className="ml-auto flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-8 text-xs ${a.slackTs ? "text-green-700 border-green-300 bg-green-50 hover:bg-green-100" : "text-gray-600"}`}
+            onClick={() => enviarSlack(a)}
+            disabled={enviandoId === a.id}
+            title={
+              a.slackTs
+                ? `Já enviado no #entrega_disparos${a.slackEnviadoEm ? ` em ${fmtEnvio(a.slackEnviadoEm)}` : ""} — clique para enviar de novo`
+                : "Enviar esta ação no #entrega_disparos como uma thread"
+            }
+          >
+            <Send className="w-3.5 h-3.5" />
+            {enviandoId === a.id ? "Enviando…" : a.slackTs ? "Enviado no Slack" : "Enviar no Slack"}
+          </Button>
           <input
             type="date"
             value={`${a.mes}-${pad2(a.dia)}`}
@@ -353,10 +428,22 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
         </div>
       </div>
 
-      {/* [RD] Campanha — logo acima das anotações */}
+      {/* [RD] Campanha(s) — uma ação pode ter várias; logo acima das anotações */}
       <div className="mt-3">
-        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">[RD] Campanha</label>
-        <Input value={a.rdCampanha ?? ""} onChange={(e) => patchLocal(a.id, { rdCampanha: e.target.value })} className="text-sm mt-1" placeholder="Código da campanha no RD Station" />
+        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">[RD] Campanha(s)</label>
+        <div className="space-y-2 mt-1">
+          {a.rdCampanhas.map((rd, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <Input value={rd} onChange={(e) => updateRd(a, i, e.target.value)} placeholder="Código da campanha no RD Station" className="text-sm flex-1" />
+              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-600 h-8 w-8 shrink-0" onClick={() => removeRd(a, i)} title="Remover esta campanha">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => addRd(a)}>
+            <Plus className="w-3.5 h-3.5" /> adicionar [RD] campanha
+          </Button>
+        </div>
       </div>
 
       <div className="mt-3">
