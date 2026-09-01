@@ -390,3 +390,19 @@ model CriativoRegistro {
 
   @@map("criativo_registro")
 }
+
+// ── Materiais do time comercial (Revendas) ────────────────────────────────
+// Lista editável de materiais que o comercial consulta. Cada item aponta
+// para um link externo ou para uma rota interna do hub.
+model MaterialComercial {
+  id           String   @id @default(cuid())
+  titulo       String
+  descricao    String?
+  url          String
+  interno      Boolean  @default(false)
+  ordem        Int      @default(0)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("material_comercial")
+}

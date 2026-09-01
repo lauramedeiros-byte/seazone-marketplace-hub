@@ -92,6 +92,18 @@ const links: Link[] = [
     cor: "bg-violet-100 text-violet-700 border-violet-200",
   },
 
+  // Time comercial — Revendas (material deles, não acompanhamento de marketing)
+  {
+    grupo: "comercial",
+    interno: true,
+    url: "/artefatos-de-consulta/materiais-comercial-revendas",
+    titulo: "Materiais comercial Revendas",
+    descricao:
+      "Material de apoio do time comercial: o que cada criativo no ar promete e o que sondar do lead. Editável — dá para adicionar e remover materiais.",
+    icone: Megaphone,
+    cor: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+
   // Growth & Criativos
   {
     grupo: "growth",
@@ -218,6 +230,14 @@ const GRUPOS: Record<
     borda: "border-l-violet-400",
     count: "text-violet-400",
   },
+  comercial: {
+    titulo: "Time comercial — Revendas",
+    icone: Megaphone,
+    box: "bg-orange-50/60 border-orange-200",
+    head: "text-orange-600",
+    borda: "border-l-orange-400",
+    count: "text-orange-400",
+  },
   growth: {
     titulo: "Growth & Criativos",
     icone: TrendingUp,
@@ -244,7 +264,7 @@ const GRUPOS: Record<
   },
 };
 
-const ORDEM_GRUPOS = ["conteudos", "growth", "disparos", "resultados"];
+const ORDEM_GRUPOS = ["comercial", "conteudos", "growth", "disparos", "resultados"];
 
 function CardLink({ link, borda }: { link: Link; borda: string }) {
   const Icon = link.icone;
@@ -263,7 +283,7 @@ function CardLink({ link, borda }: { link: Link; borda: string }) {
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 {link.titulo}
                 {link.interno ? (
-                  <ArrowRight className="w-3 h-3 text-violet-400 group-hover:text-violet-600 transition-colors shrink-0" />
+                  <ArrowRight className={`w-3 h-3 transition-colors shrink-0 ${link.grupo === "comercial" ? "text-orange-400 group-hover:text-orange-600" : "text-violet-400 group-hover:text-violet-600"}`} />
                 ) : (
                   <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
                 )}
