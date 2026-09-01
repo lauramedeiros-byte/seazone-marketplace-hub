@@ -345,3 +345,52 @@
 .crv .group,
 .crv #objecoes { scroll-margin-top: 76px; }   /* âncoras não somem atrás do header */
 .crv .wrap { padding-top: 8px; }              /* o BackButton já dá respiro no topo */
+
+/* ---------- busca por ID do criativo ---------- */
+.crv .busca{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.crv .busca-label{
+  font-family:var(--font-plex-mono), ui-monospace, monospace;font-size:10.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+}
+.crv .busca-input{
+  width:100%;font-family:var(--font-plex-mono), ui-monospace, monospace;
+  font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:9px;
+  padding:10px 13px;
+}
+.crv .busca-input::placeholder{font-family:var(--font-plex-sans), system-ui, sans-serif;color:var(--muted)}
+.crv .busca-input:focus{outline:2px solid var(--coral);outline-offset:1px;border-color:var(--coral)}
+
+.crv .busca-hit{
+  display:flex;align-items:center;gap:11px;text-decoration:none;
+  background:var(--good-soft);border:1px solid var(--good);border-radius:10px;padding:10px 13px;
+}
+.crv .busca-num{
+  font-family:var(--font-archivo), sans-serif;font-weight:800;font-size:22px;line-height:1;
+  color:var(--good);flex:none;
+}
+.crv .busca-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.crv .busca-txt b{font-size:14px;font-weight:600;color:var(--ink);line-height:1.2}
+.crv .busca-txt small{
+  font-family:var(--font-plex-mono), ui-monospace, monospace;font-size:11px;color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.crv .busca-seta{font-size:12px;font-weight:600;color:var(--good);white-space:nowrap;flex:none}
+.crv .busca-hit:hover .busca-seta{text-decoration:underline}
+.crv .busca-hit:focus-visible{outline:2px solid var(--good);outline-offset:2px}
+
+.crv .busca-miss{
+  margin:0;font-size:12.5px;color:var(--muted);line-height:1.45;
+  background:var(--surface-2);border:1px dashed var(--line);border-radius:9px;padding:9px 12px;
+}
+
+/* chips de ID: monoespaçado e com números alinhados */
+.crv .chips-row.ids span{
+  font-family:var(--font-plex-mono), ui-monospace, monospace;font-size:11.5px;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;
+}
+
+@media (max-width:420px){
+  .crv .busca-hit{flex-wrap:wrap}
+  .crv .busca-seta{width:100%;text-align:right}
+}

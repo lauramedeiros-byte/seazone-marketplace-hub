@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { BackButton } from "@/components/back-button";
+import { BuscaId, IdsDoGrupo } from "./busca-id";
 import "./crv.css";
 
 const archivo = Archivo({
@@ -46,6 +47,7 @@ export default function CriativosRevendaPage() {
             <a href="#g3">3 · Entrada parcelada</a>
             <a href="#objecoes">Objeções</a>
           </nav>
+          <BuscaId />
         </header>
 
         {/* ══════ GRUPO 1 ══════ */}
@@ -101,6 +103,8 @@ export default function CriativosRevendaPage() {
                 <a href="https://drive.google.com/drive/u/0/folders/1E5AhJXGzm2MSwC3t3WA8waFUzCOo1Rsr" target="_blank" rel="noopener">Abrir no Drive →</a>
               </div>
             </div>
+
+            <IdsDoGrupo grupo="1" />
 
           </div>
         </section>
@@ -282,6 +286,8 @@ export default function CriativosRevendaPage() {
               </div>
             </div>
 
+            <IdsDoGrupo grupo="2" />
+
           </div>
         </section>
 
@@ -426,6 +432,8 @@ export default function CriativosRevendaPage() {
                 <span className="nm">Peças em vídeo do grupo 3<small>Link ainda não enviado pelo marketing</small></span>
               </div>
             </div>
+
+            <IdsDoGrupo grupo="3" />
 
           </div>
         </section>
