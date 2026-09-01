@@ -264,7 +264,7 @@ const GRUPOS: Record<
   },
 };
 
-const ORDEM_GRUPOS = ["comercial", "conteudos", "growth", "disparos", "resultados"];
+const ORDEM_GRUPOS = ["conteudos", "comercial", "growth", "disparos", "resultados"];
 
 function CardLink({ link, borda }: { link: Link; borda: string }) {
   const Icon = link.icone;
