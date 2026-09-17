@@ -69,6 +69,8 @@ export type NomeSeparado = {
   chave: string;
   /** A cota/unidade, quando dá para identificar. */
   cota: string | null;
+  /** O nome sem a cota, como veio escrito. Use quando `empreendimento` for null. */
+  nomeLimpo: string;
 };
 
 const POR_CHAVE = new Map(
@@ -126,7 +128,8 @@ export function separarNomeECota(raw: string): NomeSeparado {
   }
 
   const chave = chaveEmpreendimento(nome);
-  return { empreendimento: POR_CHAVE.get(chave) ?? null, chave, cota };
+  const nomeLimpo = nome.replace(/[,\-|]\s*$/, "").trim();
+  return { empreendimento: POR_CHAVE.get(chave) ?? null, chave, cota, nomeLimpo };
 }
 
 /** Semanas inteiras entre duas segundas-feiras. */

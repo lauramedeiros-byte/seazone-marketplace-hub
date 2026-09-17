@@ -8,11 +8,12 @@ export async function POST(request: Request) {
 
     switch (action) {
       case "create": {
-        const { semanaId, nomeEmpreendimento, localizacao, preco, condicoes, observacoes } = data;
+        const { semanaId, nomeEmpreendimento, cota, localizacao, preco, condicoes, observacoes } = data;
         const item = await db.oppItem.create({
           data: {
             semanaId,
             nomeEmpreendimento,
+            cota: cota || null,
             localizacao: localizacao || null,
             preco: preco || null,
             condicoes: condicoes || null,
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
           data: {
             semanaId,
             nomeEmpreendimento: src.nomeEmpreendimento,
+            cota: src.cota,
             localizacao: src.localizacao,
             preco: src.preco,
             condicoes: src.condicoes,

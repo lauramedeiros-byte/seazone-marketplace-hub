@@ -47,6 +47,7 @@ import {
   semanasEntre,
   SEMANAS_PARA_ESFRIAR,
 } from "@/lib/empreendimentos-revenda";
+import { lerOpps, FORMATO_MODELO, type OppLida, type LeituraOpps } from "@/lib/opps-formato";
 import {
   Dialog,
   DialogTrigger,
@@ -58,6 +59,7 @@ import {
 interface OppItem {
   id: string;
   nomeEmpreendimento: string;
+  cota: string | null;
   localizacao: string | null;
   preco: string | null;
   condicoes: string | null;
@@ -160,85 +162,6 @@ function novoBlocoId(): string {
   return String(Date.now()) + Math.random().toString(16).slice(2);
 }
 
-// ── Parser do formato rico (blocos separados por --- com emojis) ───────────
-function stripEmoji(s: string): string {
-  return s.replace(/:[a-z0-9_+\-]+:/gi, " ").replace(/\s+/g, " ").trim();
-}
-
-function splitOppBlocks(text: string): string[] {
-  // separa o texto antes de cada cabeçalho "Oportunidade —", tolerando ou não os "---"
-  return text
-    .split(/(?=(?::fire:\s*)?Oportunidade\s*[—–-]\s)/i)
-    .map((p) => p.replace(/\n\s*-{3,}\s*\n?/g, "\n").trim())
-    .filter((p) => /Oportunidade\s*[—–-]/i.test(p));
-}
-
-interface ParsedOpp {
-  nome: string;
-  preco: string | null;
-  localizacao: string | null;
-  condicoes: string;
-  observacoes: string;
-}
-
-function parseOppBlock(raw: string): ParsedOpp | null {
-  const original = raw.trim();
-  const lines = original.split("\n").map((l) => l.trim()).filter(Boolean);
-  let nome = "";
-  let preco: string | null = null;
-  let localizacao: string | null = null;
-  const cond: string[] = [];
-  const push = (v: string) => {
-    const t = v.trim();
-    if (!t || t.length <= 1) return;
-    if (/^Unidade\s+\S+$/i.test(t)) return; // a unidade já vai no nome
-    if (!cond.includes(t)) cond.push(t);
-  };
-
-  for (const line of lines) {
-    const clean = stripEmoji(line);
-    if (!clean) continue;
-
-    const hdr = clean.match(/Oportunidade\s*[—–-]\s*(.+)/i);
-    if (hdr) {
-      nome = hdr[1].trim();
-      continue;
-    }
-
-    const isMoney = /moneybag/i.test(line) || (!preco && /^R\$/.test(clean));
-    if (isMoney) {
-      const m = clean.match(/R\$\s*[\d.]+(?:,\d{2})?/);
-      if (m) preco = m[0].replace(/\s+/g, " ").trim();
-      const parts = clean.split("|").map((s) => s.trim());
-      for (let i = 1; i < parts.length; i++) push(parts[i]); // condições após o preço (Distrato, Entrada em 6x…)
-      continue;
-    }
-
-    // linha de localização (cidade/UF)
-    if (/round_pushpin/i.test(line) && /\/[A-Za-z]{2}\b/.test(clean) && !localizacao) {
-      localizacao = clean;
-      continue;
-    }
-
-    // demais linhas de benefício: quebra por "|" em itens separados
-    for (const part of clean.split("|")) push(part);
-  }
-
-  if (!nome) return null;
-  return {
-    nome: nome.substring(0, 160),
-    preco,
-    localizacao,
-    condicoes: cond.join(" · "),
-    observacoes: original,
-  };
-}
-
-function parseOppsText(text: string): ParsedOpp[] | null {
-  const blocks = splitOppBlocks(text);
-  if (blocks.length === 0) return null; // não é o formato rico → usar parser antigo (linha a linha)
-  return blocks.map(parseOppBlock).filter((b): b is ParsedOpp => b !== null);
-}
 
 // ── Conteúdo editável da aba "Passo a passo" ───────────────────────────────
 interface PassoSecao {
@@ -359,6 +282,8 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
   const [bulkOppText, setBulkOppText] = useState("");
   const [bulkError, setBulkError] = useState<string | null>(null);
   const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
+  /** Leitura que precisa de conferência na tela antes de virar registro no banco. */
+  const [leituraPendente, setLeituraPendente] = useState<LeituraOpps | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editingOpp, setEditingOpp] = useState<string | null>(null);
   const [editOppData, setEditOppData] = useState({ nome: "", preco: "", condicoes: "" });
@@ -421,7 +346,6 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
         nome: string;
         cota: string | null;
         preco: string | null;
-        foiAoAr: boolean;
         escolhivel: OppItem | null;
       }[];
     }[] = [];
@@ -431,7 +355,9 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
       for (const item of s.items) {
         // a cópia trazida da semana anterior já foi contada na semana de origem
         if (item.tipoDestaque === "semana-anterior") continue;
-        const { empreendimento, chave, cota } = separarNomeECota(item.nomeEmpreendimento);
+        const lido = separarNomeECota(item.nomeEmpreendimento);
+        const { empreendimento, chave } = lido;
+        const cota = item.cota ?? lido.cota;
         if (!chave) continue;
 
         const anterior = ultimoToque.get(chave);
@@ -442,7 +368,6 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
           nome: empreendimento ?? item.nomeEmpreendimento.split("|")[0].trim(),
           cota,
           preco: item.preco,
-          foiAoAr: item.destaque || item.tipoDestaque === "monica",
           escolhivel:
             prevWeekTime !== null &&
             s.weekStart.getTime() === prevWeekTime &&
@@ -472,121 +397,40 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
     };
   }, [semanas, activeSemana, prevSemana]);
 
-  function parseBulkOpp(line: string): { nome: string; preco: string | null; condicoes: string } {
-    const texto = line.trim();
-    let preco: string | null = null;
-    const condicoes: string[] = [];
-
-    const precoMatch = texto.match(/(R\$\s*[\d\.,]+)/);
-    if (precoMatch) {
-      preco = precoMatch[1].trim();
-    }
-
-    const keywords = [
-      "ágio zero", "lançamento", "condição de lançamento", "condição lançamento",
-      "entrega", "vista mar", "vista lateral", "garden", "garten",
-      "parcelamento", "parcelas", "abaixo do mercado", "abaixo de mercado", "abaixo",
-      "6x", "10x", "3x", "5x", "8x", "até 3x", "até 6x", "até 8x", "até 10x",
-      "aceita", "previsão", "obra", "obras", "distrato", "beira-mar",
-      "menor", "maior", "flexível", "flexivel", "flex",
-      "checkout", "chekout", "cota mais", "cabana", "faturamento",
-      "localização", "localizacao", "certeza", "certeza de parcelamento",
-    ];
-
-    const lowerTexto = texto.toLowerCase();
-    for (const kw of keywords) {
-      if (lowerTexto.includes(kw)) {
-        const idx = lowerTexto.indexOf(kw);
-        const start = Math.max(0, idx - 10);
-        const end = Math.min(texto.length, idx + kw.length + 20);
-        let context = texto.substring(start, end).trim();
-        context = context.replace(/R\$\s*[\d\.,]+/g, "").trim();
-        if (context && context.length > 3) {
-          context = context.replace(/[;:\-]\s*$/, "").trim();
-          if (!condicoes.includes(context)) {
-            condicoes.push(context);
-          }
-        }
-      }
-    }
-
-    let nome = texto
-      .replace(/R\$\s*[\d\.,]+/g, "")
-      .replace(/\s*;\s*/g, " ")
-      .replace(/\s*:\s*/g, " - ")
-      .replace(/^\s*-\s*/, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (nome.length < 3) {
-      nome = texto.split(/[;:]/)[0].trim();
-    }
-
-    return {
-      nome: nome.substring(0, 100),
-      preco,
-      condicoes: condicoes.join("; "),
-    };
-  }
-
-  const handleAddBulkOpps = async () => {
-    if (!bulkOppText.trim() || !activeSemana) return;
+  /** Grava no banco as opps já lidas. Devolve quantas entraram. */
+  const gravarOpps = async (opps: OppLida[]) => {
+    if (!activeSemana) return;
     setAddingOpp(true);
     setBulkError(null);
     setBulkSuccess(null);
     try {
       const errors: string[] = [];
-      let parsed: ParsedOpp[] = [];
-
-      const structured = parseOppsText(bulkOppText);
-      if (structured && structured.length > 0) {
-        // formato rico (blocos com emojis)
-        parsed = structured;
-      } else {
-        // formato antigo: uma opp por linha
-        const lines = bulkOppText.split("\n").filter((l) => l.trim());
-        for (const line of lines) {
-          const { nome, preco, condicoes } = parseBulkOpp(line);
-          if (!nome || nome.length < 2) {
-            errors.push(`Não consegui entender: "${line.substring(0, 50)}..."`);
-            continue;
-          }
-          parsed.push({ nome, preco, localizacao: null, condicoes, observacoes: "" });
-        }
-      }
-
-      if (parsed.length === 0) {
-        setBulkError(
-          errors.length
-            ? `Não consegui entender:\n${errors.join("\n")}`
-            : "Não consegui identificar nenhuma opp no texto colado."
-        );
-        return;
-      }
-
       let added = 0;
-      for (const p of parsed) {
+
+      for (const o of opps) {
         const result = await fetch("/api/opps", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "create",
             semanaId: activeSemana.id,
-            nomeEmpreendimento: p.nome.trim(),
-            localizacao: p.localizacao,
-            preco: p.preco,
-            condicoes: p.condicoes || null,
-            observacoes: p.observacoes || null,
+            nomeEmpreendimento: o.nome.trim(),
+            cota: o.cota,
+            localizacao: o.localizacao,
+            preco: o.preco,
+            condicoes: o.condicoes || null,
+            observacoes: o.observacoes || null,
           }),
         });
         if (result.ok) {
           added++;
         } else {
           const d = await result.json();
-          errors.push(`${p.nome}: ${d.error || "erro"}`);
+          errors.push(`${o.nome}: ${d.error || "erro"}`);
         }
       }
 
+      setLeituraPendente(null);
       setBulkOppText("");
       if (added > 0) {
         setBulkSuccess(`${added} opp(s) adicionada(s) com sucesso!`);
@@ -598,6 +442,33 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
     } finally {
       setAddingOpp(false);
     }
+  };
+
+  /**
+   * Lê o texto colado. Quando a leitura é segura (formato oficial ou o formato rico
+   * do Marketplace, e todo empreendimento reconhecido), grava direto. Quando é chute,
+   * mostra na tela o que entendeu e espera a confirmação — é o que evita a colagem
+   * torta entrar inteira no campo do nome.
+   */
+  const handleAddBulkOpps = () => {
+    if (!bulkOppText.trim() || !activeSemana) return;
+    setBulkError(null);
+    setBulkSuccess(null);
+
+    const leitura = lerOpps(bulkOppText);
+    if (leitura.opps.length === 0) {
+      setBulkError(
+        "Não consegui identificar nenhuma opp no texto colado. Confira o modelo abaixo do campo."
+      );
+      return;
+    }
+
+    const precisaConferir = leitura.incerto || leitura.opps.some((o) => !o.reconhecido);
+    if (precisaConferir) {
+      setLeituraPendente(leitura);
+      return;
+    }
+    void gravarOpps(leitura.opps);
   };
 
   const patchItem = (id: string, patch: Partial<OppItem>) => {
@@ -1235,22 +1106,87 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
             </div>
           )}
           <Textarea
-            placeholder={`Cole aqui as opps do Marketplace (pode colar as 5 de uma vez, separadas por ---).\nEu leio automaticamente o nome do empreendimento, o valor e os benefícios de cada uma.`}
+            placeholder={`Cole aqui as opps do Marketplace (pode colar as 5 de uma vez, separadas por ---).\nEu leio o empreendimento, a cota, o valor e os diferenciais de cada uma.`}
             value={bulkOppText}
             onChange={(e) => {
               setBulkOppText(e.target.value);
               setBulkError(null);
               setBulkSuccess(null);
+              setLeituraPendente(null);
             }}
             rows={6}
             className="text-sm font-mono"
           />
-          <div className="flex justify-end mt-2">
-            <Button onClick={handleAddBulkOpps} disabled={addingOpp || !bulkOppText.trim()}>
+          <div className="flex items-center justify-between gap-3 mt-2">
+            <details className="text-[11px] text-gray-500 min-w-0">
+              <summary className="cursor-pointer hover:text-gray-700">
+                Modelo que nunca erra a leitura
+              </summary>
+              <pre className="mt-1.5 p-2 bg-gray-50 border border-gray-200 rounded text-[10.5px] font-mono text-gray-600 whitespace-pre-wrap">
+                {FORMATO_MODELO}
+              </pre>
+            </details>
+            <Button
+              onClick={handleAddBulkOpps}
+              disabled={addingOpp || !bulkOppText.trim()}
+              className="shrink-0"
+            >
               <Plus className="w-4 h-4" />
               {addingOpp ? "Adicionando..." : "Adicionar opps"}
             </Button>
           </div>
+
+          {/* Conferência: só aparece quando a leitura foi chute */}
+          {leituraPendente && (
+            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-900 font-medium">
+                Confira antes de gravar
+              </p>
+              <p className="text-[11px] text-amber-800 mt-0.5">
+                {leituraPendente.incerto
+                  ? "O texto não veio num formato que eu leia com certeza, então separei no chute."
+                  : "Li o texto, mas tem empreendimento que não está na lista de revenda."}{" "}
+                Se algo estiver torto, ajuste o texto colado (ou use o modelo) e leia de novo.
+              </p>
+              <div className="mt-2 space-y-1.5">
+                {leituraPendente.opps.map((o, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 text-[12px] bg-white border border-amber-200 rounded px-2 py-1.5"
+                  >
+                    <span className="font-medium text-gray-800">{o.nome}</span>
+                    {o.cota ? (
+                      <span className="font-mono text-[10.5px] text-gray-600 bg-gray-100 rounded px-1.5 py-0.5 shrink-0">
+                        {o.cota}
+                      </span>
+                    ) : (
+                      <span className="text-[10.5px] text-amber-700 shrink-0">sem cota</span>
+                    )}
+                    {!o.reconhecido && (
+                      <span className="text-[10.5px] text-amber-700 shrink-0">
+                        fora da lista de revenda
+                      </span>
+                    )}
+                    <span className="text-gray-500 ml-auto shrink-0">{o.preco ?? "sem valor"}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2 mt-2.5">
+                <Button variant="outline" size="sm" onClick={() => setLeituraPendente(null)}>
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => void gravarOpps(leituraPendente.opps)}
+                  disabled={addingOpp}
+                >
+                  {addingOpp
+                    ? "Adicionando..."
+                    : `Está certo, adicionar ${leituraPendente.opps.length}`}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Legenda */}
           {oppsDaSemana.length > 0 && (
@@ -1388,10 +1324,6 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
                     <div className="space-y-1">
                       {g.ofertas.map((o) => (
                         <div key={o.id} className="flex items-center gap-2">
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${o.foiAoAr ? "bg-teal-500" : "bg-gray-300"}`}
-                            title={o.foiAoAr ? "foi ao ar" : "chegou, mas não foi publicada"}
-                          />
                           <span className="text-[13px] text-gray-800 truncate flex-1 min-w-0">{o.nome}</span>
                           {o.cota && (
                             <span className="font-mono text-[10.5px] text-gray-600 bg-gray-100 rounded px-1.5 py-0.5 shrink-0">
@@ -1418,16 +1350,9 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
                   <p className="text-sm text-gray-400 text-center py-6">Nenhuma opp registrada ainda.</p>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[10.5px] text-gray-400">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500" /> foi ao ar
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> só chegou
-                </span>
-                <span className="text-gray-300">·</span>
-                <span>&ldquo;Escolher&rdquo; aparece nas que sobraram da semana passada</span>
-              </div>
+              <p className="mt-1.5 text-[10.5px] text-gray-400">
+                &ldquo;Escolher&rdquo; aparece nas que sobraram da semana passada.
+              </p>
             </div>
 
             {/* Painel B — quem está esfriando */}
