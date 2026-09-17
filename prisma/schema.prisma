@@ -65,6 +65,7 @@ model OppSemana {
 model OppItem {
   id                 String    @id @default(cuid())
   nomeEmpreendimento String
+  cota               String?
   localizacao        String?
   preco              String?
   condicoes          String?

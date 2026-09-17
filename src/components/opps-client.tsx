@@ -37,7 +37,17 @@ import {
   PenLine,
   CalendarDays,
   GripVertical,
+  Snowflake,
+  RotateCcw,
 } from "lucide-react";
+import {
+  EMPREENDIMENTOS_REVENDA,
+  chaveEmpreendimento,
+  separarNomeECota,
+  semanasEntre,
+  SEMANAS_PARA_ESFRIAR,
+} from "@/lib/empreendimentos-revenda";
+import { lerOpps, FORMATO_MODELO, type OppLida, type LeituraOpps } from "@/lib/opps-formato";
 import {
   Dialog,
   DialogTrigger,
@@ -49,6 +59,7 @@ import {
 interface OppItem {
   id: string;
   nomeEmpreendimento: string;
+  cota: string | null;
   localizacao: string | null;
   preco: string | null;
   condicoes: string | null;
@@ -93,6 +104,9 @@ function Step({ n, children, tone = "dark" }: { n: number; children: ReactNode; 
 }
 
 const linkCls = "text-teal-700 font-medium underline underline-offset-2";
+
+/** Quantas semanas do histórico de opps aparecem antes de "ver todas". */
+const SEMANAS_VISIVEIS = 6;
 
 // ── Calendário semanal das opps ────────────────────────────────────────────
 interface CalBloco {
@@ -148,85 +162,6 @@ function novoBlocoId(): string {
   return String(Date.now()) + Math.random().toString(16).slice(2);
 }
 
-// ── Parser do formato rico (blocos separados por --- com emojis) ───────────
-function stripEmoji(s: string): string {
-  return s.replace(/:[a-z0-9_+\-]+:/gi, " ").replace(/\s+/g, " ").trim();
-}
-
-function splitOppBlocks(text: string): string[] {
-  // separa o texto antes de cada cabeçalho "Oportunidade —", tolerando ou não os "---"
-  return text
-    .split(/(?=(?::fire:\s*)?Oportunidade\s*[—–-]\s)/i)
-    .map((p) => p.replace(/\n\s*-{3,}\s*\n?/g, "\n").trim())
-    .filter((p) => /Oportunidade\s*[—–-]/i.test(p));
-}
-
-interface ParsedOpp {
-  nome: string;
-  preco: string | null;
-  localizacao: string | null;
-  condicoes: string;
-  observacoes: string;
-}
-
-function parseOppBlock(raw: string): ParsedOpp | null {
-  const original = raw.trim();
-  const lines = original.split("\n").map((l) => l.trim()).filter(Boolean);
-  let nome = "";
-  let preco: string | null = null;
-  let localizacao: string | null = null;
-  const cond: string[] = [];
-  const push = (v: string) => {
-    const t = v.trim();
-    if (!t || t.length <= 1) return;
-    if (/^Unidade\s+\S+$/i.test(t)) return; // a unidade já vai no nome
-    if (!cond.includes(t)) cond.push(t);
-  };
-
-  for (const line of lines) {
-    const clean = stripEmoji(line);
-    if (!clean) continue;
-
-    const hdr = clean.match(/Oportunidade\s*[—–-]\s*(.+)/i);
-    if (hdr) {
-      nome = hdr[1].trim();
-      continue;
-    }
-
-    const isMoney = /moneybag/i.test(line) || (!preco && /^R\$/.test(clean));
-    if (isMoney) {
-      const m = clean.match(/R\$\s*[\d.]+(?:,\d{2})?/);
-      if (m) preco = m[0].replace(/\s+/g, " ").trim();
-      const parts = clean.split("|").map((s) => s.trim());
-      for (let i = 1; i < parts.length; i++) push(parts[i]); // condições após o preço (Distrato, Entrada em 6x…)
-      continue;
-    }
-
-    // linha de localização (cidade/UF)
-    if (/round_pushpin/i.test(line) && /\/[A-Za-z]{2}\b/.test(clean) && !localizacao) {
-      localizacao = clean;
-      continue;
-    }
-
-    // demais linhas de benefício: quebra por "|" em itens separados
-    for (const part of clean.split("|")) push(part);
-  }
-
-  if (!nome) return null;
-  return {
-    nome: nome.substring(0, 160),
-    preco,
-    localizacao,
-    condicoes: cond.join(" · "),
-    observacoes: original,
-  };
-}
-
-function parseOppsText(text: string): ParsedOpp[] | null {
-  const blocks = splitOppBlocks(text);
-  if (blocks.length === 0) return null; // não é o formato rico → usar parser antigo (linha a linha)
-  return blocks.map(parseOppBlock).filter((b): b is ParsedOpp => b !== null);
-}
 
 // ── Conteúdo editável da aba "Passo a passo" ───────────────────────────────
 interface PassoSecao {
@@ -339,6 +274,7 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
   const calData = calEdit ? calDraft : calendario;
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
+  const [verTodoHistorico, setVerTodoHistorico] = useState(false);
   const [editWhatsapp, setEditWhatsapp] = useState<Record<string, string>>({});
   const [editEmail, setEditEmail] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
@@ -346,6 +282,8 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
   const [bulkOppText, setBulkOppText] = useState("");
   const [bulkError, setBulkError] = useState<string | null>(null);
   const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
+  /** Leitura que precisa de conferência na tela antes de virar registro no banco. */
+  const [leituraPendente, setLeituraPendente] = useState<LeituraOpps | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editingOpp, setEditingOpp] = useState<string | null>(null);
   const [editOppData, setEditOppData] = useState({ nome: "", preco: "", condicoes: "" });
@@ -370,15 +308,7 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
   const oppsDaSemana = (activeSemana?.items ?? []).filter((i) => i.tipoDestaque !== "semana-anterior");
   // Bloco 3: as escolhidas para publicar (destaque)
   const escolhidas = (activeSemana?.items ?? []).filter((i) => i.destaque);
-  // Bloco 2: opps da semana passada (também não são cópias)
-  const oppsSemanaPassada = (prevSemana?.items ?? []).filter((i) => i.tipoDestaque !== "semana-anterior");
   const podeEscolherMais = escolhidas.length < 2;
-  // Nomes já trazidos da semana passada (para marcar como "escolhida" no bloco 2)
-  const nomesTrazidos = new Set(
-    (activeSemana?.items ?? [])
-      .filter((i) => i.tipoDestaque === "semana-anterior")
-      .map((i) => i.nomeEmpreendimento)
-  );
   // "No ar esta semana" = as escolhidas na semana anterior (que estão sendo publicadas agora)
   const noAr = (prevSemana?.items ?? []).filter((i) => i.destaque);
   // Rótulo da semana de publicação (a semana seguinte à que está sendo montada)
@@ -390,121 +320,117 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
       })()
     : "";
 
-  function parseBulkOpp(line: string): { nome: string; preco: string | null; condicoes: string } {
-    const texto = line.trim();
-    let preco: string | null = null;
-    const condicoes: string[] = [];
+  // ── Consulta para escolher: o que já saiu e quem está esfriando ─────────
+  // "Abordado" = apareceu em qualquer opp daquela semana, tendo ido ao ar ou não.
+  // Tudo é contado só até a semana que está aberta, para a conta não mudar quando
+  // ela navega para uma semana passada.
+  const { ofertasPorSemana, esfriando, inicioHistorico } = useMemo(() => {
+    const semanaBase = activeSemana ? new Date(activeSemana.weekStart) : new Date();
+    const prevWeekTime = prevSemana ? new Date(prevSemana.weekStart).getTime() : null;
+    const trazidos = new Set(
+      (activeSemana?.items ?? [])
+        .filter((i) => i.tipoDestaque === "semana-anterior")
+        .map((i) => i.nomeEmpreendimento)
+    );
 
-    const precoMatch = texto.match(/(R\$\s*[\d\.,]+)/);
-    if (precoMatch) {
-      preco = precoMatch[1].trim();
-    }
+    const ate = [...semanas]
+      .map((s) => ({ ...s, weekStart: new Date(s.weekStart) }))
+      .filter((s) => s.weekStart.getTime() <= semanaBase.getTime())
+      .sort((a, b) => b.weekStart.getTime() - a.weekStart.getTime());
 
-    const keywords = [
-      "ágio zero", "lançamento", "condição de lançamento", "condição lançamento",
-      "entrega", "vista mar", "vista lateral", "garden", "garten",
-      "parcelamento", "parcelas", "abaixo do mercado", "abaixo de mercado", "abaixo",
-      "6x", "10x", "3x", "5x", "8x", "até 3x", "até 6x", "até 8x", "até 10x",
-      "aceita", "previsão", "obra", "obras", "distrato", "beira-mar",
-      "menor", "maior", "flexível", "flexivel", "flex",
-      "checkout", "chekout", "cota mais", "cabana", "faturamento",
-      "localização", "localizacao", "certeza", "certeza de parcelamento",
-    ];
+    const ultimoToque = new Map<string, Date>();
+    const grupos: {
+      weekStart: Date;
+      ofertas: {
+        id: string;
+        nome: string;
+        cota: string | null;
+        preco: string | null;
+        escolhivel: OppItem | null;
+      }[];
+    }[] = [];
 
-    const lowerTexto = texto.toLowerCase();
-    for (const kw of keywords) {
-      if (lowerTexto.includes(kw)) {
-        const idx = lowerTexto.indexOf(kw);
-        const start = Math.max(0, idx - 10);
-        const end = Math.min(texto.length, idx + kw.length + 20);
-        let context = texto.substring(start, end).trim();
-        context = context.replace(/R\$\s*[\d\.,]+/g, "").trim();
-        if (context && context.length > 3) {
-          context = context.replace(/[;:\-]\s*$/, "").trim();
-          if (!condicoes.includes(context)) {
-            condicoes.push(context);
-          }
-        }
+    for (const s of ate) {
+      const ofertas = [];
+      for (const item of s.items) {
+        // a cópia trazida da semana anterior já foi contada na semana de origem
+        if (item.tipoDestaque === "semana-anterior") continue;
+        const lido = separarNomeECota(item.nomeEmpreendimento);
+        const { empreendimento, chave } = lido;
+        const cota = item.cota ?? lido.cota;
+        if (!chave) continue;
+
+        const anterior = ultimoToque.get(chave);
+        if (!anterior || anterior < s.weekStart) ultimoToque.set(chave, s.weekStart);
+
+        ofertas.push({
+          id: item.id,
+          nome: empreendimento ?? item.nomeEmpreendimento.split("|")[0].trim(),
+          cota,
+          preco: item.preco,
+          escolhivel:
+            prevWeekTime !== null &&
+            s.weekStart.getTime() === prevWeekTime &&
+            !item.destaque &&
+            !trazidos.has(item.nomeEmpreendimento)
+              ? item
+              : null,
+        });
       }
+      if (ofertas.length) grupos.push({ weekStart: s.weekStart, ofertas });
     }
 
-    let nome = texto
-      .replace(/R\$\s*[\d\.,]+/g, "")
-      .replace(/\s*;\s*/g, " ")
-      .replace(/\s*:\s*/g, " - ")
-      .replace(/^\s*-\s*/, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (nome.length < 3) {
-      nome = texto.split(/[;:]/)[0].trim();
-    }
+    const frios = EMPREENDIMENTOS_REVENDA.map((nome) => {
+      const ultimo = ultimoToque.get(chaveEmpreendimento(nome)) ?? null;
+      return { nome, ultimo, semanas: ultimo ? semanasEntre(ultimo, semanaBase) : null };
+    })
+      .filter((e) => e.semanas === null || e.semanas >= SEMANAS_PARA_ESFRIAR)
+      .sort(
+        (a, b) =>
+          (b.semanas ?? Number.MAX_SAFE_INTEGER) - (a.semanas ?? Number.MAX_SAFE_INTEGER)
+      );
 
     return {
-      nome: nome.substring(0, 100),
-      preco,
-      condicoes: condicoes.join("; "),
+      ofertasPorSemana: grupos,
+      esfriando: frios,
+      inicioHistorico: ate.length ? ate[ate.length - 1].weekStart : null,
     };
-  }
+  }, [semanas, activeSemana, prevSemana]);
 
-  const handleAddBulkOpps = async () => {
-    if (!bulkOppText.trim() || !activeSemana) return;
+  /** Grava no banco as opps já lidas. Devolve quantas entraram. */
+  const gravarOpps = async (opps: OppLida[]) => {
+    if (!activeSemana) return;
     setAddingOpp(true);
     setBulkError(null);
     setBulkSuccess(null);
     try {
       const errors: string[] = [];
-      let parsed: ParsedOpp[] = [];
-
-      const structured = parseOppsText(bulkOppText);
-      if (structured && structured.length > 0) {
-        // formato rico (blocos com emojis)
-        parsed = structured;
-      } else {
-        // formato antigo: uma opp por linha
-        const lines = bulkOppText.split("\n").filter((l) => l.trim());
-        for (const line of lines) {
-          const { nome, preco, condicoes } = parseBulkOpp(line);
-          if (!nome || nome.length < 2) {
-            errors.push(`Não consegui entender: "${line.substring(0, 50)}..."`);
-            continue;
-          }
-          parsed.push({ nome, preco, localizacao: null, condicoes, observacoes: "" });
-        }
-      }
-
-      if (parsed.length === 0) {
-        setBulkError(
-          errors.length
-            ? `Não consegui entender:\n${errors.join("\n")}`
-            : "Não consegui identificar nenhuma opp no texto colado."
-        );
-        return;
-      }
-
       let added = 0;
-      for (const p of parsed) {
+
+      for (const o of opps) {
         const result = await fetch("/api/opps", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "create",
             semanaId: activeSemana.id,
-            nomeEmpreendimento: p.nome.trim(),
-            localizacao: p.localizacao,
-            preco: p.preco,
-            condicoes: p.condicoes || null,
-            observacoes: p.observacoes || null,
+            nomeEmpreendimento: o.nome.trim(),
+            cota: o.cota,
+            localizacao: o.localizacao,
+            preco: o.preco,
+            condicoes: o.condicoes || null,
+            observacoes: o.observacoes || null,
           }),
         });
         if (result.ok) {
           added++;
         } else {
           const d = await result.json();
-          errors.push(`${p.nome}: ${d.error || "erro"}`);
+          errors.push(`${o.nome}: ${d.error || "erro"}`);
         }
       }
 
+      setLeituraPendente(null);
       setBulkOppText("");
       if (added > 0) {
         setBulkSuccess(`${added} opp(s) adicionada(s) com sucesso!`);
@@ -516,6 +442,33 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
     } finally {
       setAddingOpp(false);
     }
+  };
+
+  /**
+   * Lê o texto colado. Quando a leitura é segura (formato oficial ou o formato rico
+   * do Marketplace, e todo empreendimento reconhecido), grava direto. Quando é chute,
+   * mostra na tela o que entendeu e espera a confirmação — é o que evita a colagem
+   * torta entrar inteira no campo do nome.
+   */
+  const handleAddBulkOpps = () => {
+    if (!bulkOppText.trim() || !activeSemana) return;
+    setBulkError(null);
+    setBulkSuccess(null);
+
+    const leitura = lerOpps(bulkOppText);
+    if (leitura.opps.length === 0) {
+      setBulkError(
+        "Não consegui identificar nenhuma opp no texto colado. Confira o modelo abaixo do campo."
+      );
+      return;
+    }
+
+    const precisaConferir = leitura.incerto || leitura.opps.some((o) => !o.reconhecido);
+    if (precisaConferir) {
+      setLeituraPendente(leitura);
+      return;
+    }
+    void gravarOpps(leitura.opps);
   };
 
   const patchItem = (id: string, patch: Partial<OppItem>) => {
@@ -1153,22 +1106,87 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
             </div>
           )}
           <Textarea
-            placeholder={`Cole aqui as opps do Marketplace (pode colar as 5 de uma vez, separadas por ---).\nEu leio automaticamente o nome do empreendimento, o valor e os benefícios de cada uma.`}
+            placeholder={`Cole aqui as opps do Marketplace (pode colar as 5 de uma vez, separadas por ---).\nEu leio o empreendimento, a cota, o valor e os diferenciais de cada uma.`}
             value={bulkOppText}
             onChange={(e) => {
               setBulkOppText(e.target.value);
               setBulkError(null);
               setBulkSuccess(null);
+              setLeituraPendente(null);
             }}
             rows={6}
             className="text-sm font-mono"
           />
-          <div className="flex justify-end mt-2">
-            <Button onClick={handleAddBulkOpps} disabled={addingOpp || !bulkOppText.trim()}>
+          <div className="flex items-center justify-between gap-3 mt-2">
+            <details className="text-[11px] text-gray-500 min-w-0">
+              <summary className="cursor-pointer hover:text-gray-700">
+                Modelo que nunca erra a leitura
+              </summary>
+              <pre className="mt-1.5 p-2 bg-gray-50 border border-gray-200 rounded text-[10.5px] font-mono text-gray-600 whitespace-pre-wrap">
+                {FORMATO_MODELO}
+              </pre>
+            </details>
+            <Button
+              onClick={handleAddBulkOpps}
+              disabled={addingOpp || !bulkOppText.trim()}
+              className="shrink-0"
+            >
               <Plus className="w-4 h-4" />
               {addingOpp ? "Adicionando..." : "Adicionar opps"}
             </Button>
           </div>
+
+          {/* Conferência: só aparece quando a leitura foi chute */}
+          {leituraPendente && (
+            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-900 font-medium">
+                Confira antes de gravar
+              </p>
+              <p className="text-[11px] text-amber-800 mt-0.5">
+                {leituraPendente.incerto
+                  ? "O texto não veio num formato que eu leia com certeza, então separei no chute."
+                  : "Li o texto, mas tem empreendimento que não está na lista de revenda."}{" "}
+                Se algo estiver torto, ajuste o texto colado (ou use o modelo) e leia de novo.
+              </p>
+              <div className="mt-2 space-y-1.5">
+                {leituraPendente.opps.map((o, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 text-[12px] bg-white border border-amber-200 rounded px-2 py-1.5"
+                  >
+                    <span className="font-medium text-gray-800">{o.nome}</span>
+                    {o.cota ? (
+                      <span className="font-mono text-[10.5px] text-gray-600 bg-gray-100 rounded px-1.5 py-0.5 shrink-0">
+                        {o.cota}
+                      </span>
+                    ) : (
+                      <span className="text-[10.5px] text-amber-700 shrink-0">sem cota</span>
+                    )}
+                    {!o.reconhecido && (
+                      <span className="text-[10.5px] text-amber-700 shrink-0">
+                        fora da lista de revenda
+                      </span>
+                    )}
+                    <span className="text-gray-500 ml-auto shrink-0">{o.preco ?? "sem valor"}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2 mt-2.5">
+                <Button variant="outline" size="sm" onClick={() => setLeituraPendente(null)}>
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => void gravarOpps(leituraPendente.opps)}
+                  disabled={addingOpp}
+                >
+                  {addingOpp
+                    ? "Adicionando..."
+                    : `Está certo, adicionar ${leituraPendente.opps.length}`}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Legenda */}
           {oppsDaSemana.length > 0 && (
@@ -1263,49 +1281,131 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
         </CardContent>
       </Card>
 
-      {/* ── BLOCO 2: Opps da semana passada ───────────────────────────────── */}
-      {oppsSemanaPassada.length > 0 && (
-        <Card className="mb-4 border-dashed">
-          <CardHeader className="pb-3">
-            <div className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-              <div>
-                <CardTitle className="text-base flex items-center gap-2">
-                  Da semana passada
-                  <Badge variant="secondary">{formatWeek(new Date(prevSemana!.weekStart))}</Badge>
-                </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">Opps que não foram publicadas — você também pode escolher entre estas.</p>
+      {/* ── BLOCO 2: Consultar antes de escolher ──────────────────────────── */}
+      <Card className="mb-4">
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
+            <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <CardTitle className="text-base">Consultar antes de escolher</CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                O que já foi ofertado, para não repetir — e quem não aparece há{" "}
+                {SEMANAS_PARA_ESFRIAR}+ semanas, para não esquecer. Conta qualquer opp que
+                chegou na sexta, tendo ido ao ar ou não.
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+            {/* Painel A — o que já saiu */}
+            <div>
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5 text-gray-400" />
+                  Últimas cotas ofertadas
+                </h3>
+                {ofertasPorSemana.length > SEMANAS_VISIVEIS && (
+                  <button
+                    onClick={() => setVerTodoHistorico((v) => !v)}
+                    className="text-[11px] font-medium text-teal-700 hover:underline shrink-0"
+                  >
+                    {verTodoHistorico ? "ver menos" : `ver todas (${ofertasPorSemana.length})`}
+                  </button>
+                )}
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {oppsSemanaPassada.map((item) => {
-                const jaTrazida = nomesTrazidos.has(item.nomeEmpreendimento);
-                return (
-                  <div key={item.id} className={`flex items-center justify-between gap-2 p-3 rounded-lg border ${jaTrazida ? "border-teal-300 bg-teal-50" : "border-gray-200 bg-white"}`}>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-800">{item.nomeEmpreendimento}</p>
-                      <OppMeta item={item} />
+              <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
+                {(verTodoHistorico ? ofertasPorSemana : ofertasPorSemana.slice(0, SEMANAS_VISIVEIS)).map((g) => (
+                  <div key={g.weekStart.toISOString()} className="px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                      {formatWeek(g.weekStart)}
+                    </p>
+                    <div className="space-y-1">
+                      {g.ofertas.map((o) => (
+                        <div key={o.id} className="flex items-center gap-2">
+                          <span className="text-[13px] text-gray-800 truncate flex-1 min-w-0">{o.nome}</span>
+                          {o.cota && (
+                            <span className="font-mono text-[10.5px] text-gray-600 bg-gray-100 rounded px-1.5 py-0.5 shrink-0">
+                              {o.cota}
+                            </span>
+                          )}
+                          {o.escolhivel && podeEscolherMais && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[11px] text-teal-700 border-teal-300 shrink-0"
+                              onClick={() => handleChoosePrev(o.escolhivel!)}
+                              disabled={busyId === o.id}
+                            >
+                              Escolher
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    {jaTrazida ? (
-                      <Badge className="bg-teal-600 text-white flex items-center gap-1 shrink-0">
-                        <Check className="w-3 h-3" /> Escolhida
-                      </Badge>
-                    ) : (
-                      podeEscolherMais && (
-                        <Button size="sm" variant="outline" className="text-teal-700 border-teal-300 shrink-0" onClick={() => handleChoosePrev(item)} disabled={busyId === item.id}>
-                          Escolher
-                        </Button>
-                      )
-                    )}
                   </div>
-                );
-              })}
+                ))}
+                {ofertasPorSemana.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-6">Nenhuma opp registrada ainda.</p>
+                )}
+              </div>
+              <p className="mt-1.5 text-[10.5px] text-gray-400">
+                &ldquo;Escolher&rdquo; aparece nas que sobraram da semana passada.
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+
+            {/* Painel B — quem está esfriando */}
+            <div>
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Snowflake className="w-3.5 h-3.5 text-sky-400" />
+                  Esfriando · {SEMANAS_PARA_ESFRIAR}+ semanas fora
+                </h3>
+                <span className="text-[11px] text-gray-400 shrink-0">
+                  {esfriando.length} de {EMPREENDIMENTOS_REVENDA.length}
+                </span>
+              </div>
+              <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
+                {esfriando.map((e) => {
+                  const tom =
+                    e.semanas === null
+                      ? "bg-sky-50 text-sky-700 border-sky-200"
+                      : e.semanas >= 12
+                      ? "bg-red-50 text-red-700 border-red-200"
+                      : e.semanas >= 8
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-gray-50 text-gray-600 border-gray-200";
+                  return (
+                    <div key={e.nome} className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <span className="text-[13px] text-gray-800 truncate min-w-0">{e.nome}</span>
+                      <span
+                        className={`text-[10.5px] font-medium rounded-full border px-2 py-0.5 shrink-0 ${tom}`}
+                        title={e.ultimo ? `última vez: ${formatWeek(e.ultimo)}` : undefined}
+                      >
+                        {e.semanas === null ? "sem registro" : `${e.semanas} sem`}
+                      </span>
+                    </div>
+                  );
+                })}
+                {esfriando.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-6">
+                    Todos apareceram nas últimas {SEMANAS_PARA_ESFRIAR} semanas.
+                  </p>
+                )}
+              </div>
+              {inicioHistorico && (
+                <p className="text-[10.5px] text-gray-400 mt-1.5">
+                  &ldquo;Sem registro&rdquo; = não aparece desde{" "}
+                  {formatWeek(inicioHistorico).split("–")[0].trim()}, que é onde o histórico
+                  começa — não quer dizer que nunca foi ofertado.
+                </p>
+              )}
+            </div>
+
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ── BLOCO 3: Escolhidas para publicar ─────────────────────────────── */}
       <Card>
