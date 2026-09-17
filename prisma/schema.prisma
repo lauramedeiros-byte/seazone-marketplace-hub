@@ -65,7 +65,7 @@ model OppSemana {
 model OppItem {
   id                 String    @id @default(cuid())
   nomeEmpreendimento String
-  cota               String? // já existe no banco (branch feat/opps-historico-empreendimentos)
+  cota               String?
   localizacao        String?
   preco              String?
   condicoes          String?
