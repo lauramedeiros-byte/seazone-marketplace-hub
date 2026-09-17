@@ -37,7 +37,16 @@ import {
   PenLine,
   CalendarDays,
   GripVertical,
+  Snowflake,
+  RotateCcw,
 } from "lucide-react";
+import {
+  EMPREENDIMENTOS_REVENDA,
+  chaveEmpreendimento,
+  separarNomeECota,
+  semanasEntre,
+  SEMANAS_PARA_ESFRIAR,
+} from "@/lib/empreendimentos-revenda";
 import {
   Dialog,
   DialogTrigger,
@@ -93,6 +102,9 @@ function Step({ n, children, tone = "dark" }: { n: number; children: ReactNode; 
 }
 
 const linkCls = "text-teal-700 font-medium underline underline-offset-2";
+
+/** Quantas semanas do histórico de opps aparecem antes de "ver todas". */
+const SEMANAS_VISIVEIS = 6;
 
 // ── Calendário semanal das opps ────────────────────────────────────────────
 interface CalBloco {
@@ -339,6 +351,7 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
   const calData = calEdit ? calDraft : calendario;
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
+  const [verTodoHistorico, setVerTodoHistorico] = useState(false);
   const [editWhatsapp, setEditWhatsapp] = useState<Record<string, string>>({});
   const [editEmail, setEditEmail] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
@@ -370,15 +383,7 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
   const oppsDaSemana = (activeSemana?.items ?? []).filter((i) => i.tipoDestaque !== "semana-anterior");
   // Bloco 3: as escolhidas para publicar (destaque)
   const escolhidas = (activeSemana?.items ?? []).filter((i) => i.destaque);
-  // Bloco 2: opps da semana passada (também não são cópias)
-  const oppsSemanaPassada = (prevSemana?.items ?? []).filter((i) => i.tipoDestaque !== "semana-anterior");
   const podeEscolherMais = escolhidas.length < 2;
-  // Nomes já trazidos da semana passada (para marcar como "escolhida" no bloco 2)
-  const nomesTrazidos = new Set(
-    (activeSemana?.items ?? [])
-      .filter((i) => i.tipoDestaque === "semana-anterior")
-      .map((i) => i.nomeEmpreendimento)
-  );
   // "No ar esta semana" = as escolhidas na semana anterior (que estão sendo publicadas agora)
   const noAr = (prevSemana?.items ?? []).filter((i) => i.destaque);
   // Rótulo da semana de publicação (a semana seguinte à que está sendo montada)
@@ -389,6 +394,83 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
         return formatWeek(d);
       })()
     : "";
+
+  // ── Consulta para escolher: o que já saiu e quem está esfriando ─────────
+  // "Abordado" = apareceu em qualquer opp daquela semana, tendo ido ao ar ou não.
+  // Tudo é contado só até a semana que está aberta, para a conta não mudar quando
+  // ela navega para uma semana passada.
+  const { ofertasPorSemana, esfriando, inicioHistorico } = useMemo(() => {
+    const semanaBase = activeSemana ? new Date(activeSemana.weekStart) : new Date();
+    const prevWeekTime = prevSemana ? new Date(prevSemana.weekStart).getTime() : null;
+    const trazidos = new Set(
+      (activeSemana?.items ?? [])
+        .filter((i) => i.tipoDestaque === "semana-anterior")
+        .map((i) => i.nomeEmpreendimento)
+    );
+
+    const ate = [...semanas]
+      .map((s) => ({ ...s, weekStart: new Date(s.weekStart) }))
+      .filter((s) => s.weekStart.getTime() <= semanaBase.getTime())
+      .sort((a, b) => b.weekStart.getTime() - a.weekStart.getTime());
+
+    const ultimoToque = new Map<string, Date>();
+    const grupos: {
+      weekStart: Date;
+      ofertas: {
+        id: string;
+        nome: string;
+        cota: string | null;
+        preco: string | null;
+        foiAoAr: boolean;
+        escolhivel: OppItem | null;
+      }[];
+    }[] = [];
+
+    for (const s of ate) {
+      const ofertas = [];
+      for (const item of s.items) {
+        // a cópia trazida da semana anterior já foi contada na semana de origem
+        if (item.tipoDestaque === "semana-anterior") continue;
+        const { empreendimento, chave, cota } = separarNomeECota(item.nomeEmpreendimento);
+        if (!chave) continue;
+
+        const anterior = ultimoToque.get(chave);
+        if (!anterior || anterior < s.weekStart) ultimoToque.set(chave, s.weekStart);
+
+        ofertas.push({
+          id: item.id,
+          nome: empreendimento ?? item.nomeEmpreendimento.split("|")[0].trim(),
+          cota,
+          preco: item.preco,
+          foiAoAr: item.destaque || item.tipoDestaque === "monica",
+          escolhivel:
+            prevWeekTime !== null &&
+            s.weekStart.getTime() === prevWeekTime &&
+            !item.destaque &&
+            !trazidos.has(item.nomeEmpreendimento)
+              ? item
+              : null,
+        });
+      }
+      if (ofertas.length) grupos.push({ weekStart: s.weekStart, ofertas });
+    }
+
+    const frios = EMPREENDIMENTOS_REVENDA.map((nome) => {
+      const ultimo = ultimoToque.get(chaveEmpreendimento(nome)) ?? null;
+      return { nome, ultimo, semanas: ultimo ? semanasEntre(ultimo, semanaBase) : null };
+    })
+      .filter((e) => e.semanas === null || e.semanas >= SEMANAS_PARA_ESFRIAR)
+      .sort(
+        (a, b) =>
+          (b.semanas ?? Number.MAX_SAFE_INTEGER) - (a.semanas ?? Number.MAX_SAFE_INTEGER)
+      );
+
+    return {
+      ofertasPorSemana: grupos,
+      esfriando: frios,
+      inicioHistorico: ate.length ? ate[ate.length - 1].weekStart : null,
+    };
+  }, [semanas, activeSemana, prevSemana]);
 
   function parseBulkOpp(line: string): { nome: string; preco: string | null; condicoes: string } {
     const texto = line.trim();
@@ -1263,49 +1345,142 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
         </CardContent>
       </Card>
 
-      {/* ── BLOCO 2: Opps da semana passada ───────────────────────────────── */}
-      {oppsSemanaPassada.length > 0 && (
-        <Card className="mb-4 border-dashed">
-          <CardHeader className="pb-3">
-            <div className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-              <div>
-                <CardTitle className="text-base flex items-center gap-2">
-                  Da semana passada
-                  <Badge variant="secondary">{formatWeek(new Date(prevSemana!.weekStart))}</Badge>
-                </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">Opps que não foram publicadas — você também pode escolher entre estas.</p>
+      {/* ── BLOCO 2: Consultar antes de escolher ──────────────────────────── */}
+      <Card className="mb-4">
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
+            <span className="w-6 h-6 rounded-lg bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <CardTitle className="text-base">Consultar antes de escolher</CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                O que já foi ofertado, para não repetir — e quem não aparece há{" "}
+                {SEMANAS_PARA_ESFRIAR}+ semanas, para não esquecer. Conta qualquer opp que
+                chegou na sexta, tendo ido ao ar ou não.
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+            {/* Painel A — o que já saiu */}
+            <div>
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5 text-gray-400" />
+                  Últimas cotas ofertadas
+                </h3>
+                {ofertasPorSemana.length > SEMANAS_VISIVEIS && (
+                  <button
+                    onClick={() => setVerTodoHistorico((v) => !v)}
+                    className="text-[11px] font-medium text-teal-700 hover:underline shrink-0"
+                  >
+                    {verTodoHistorico ? "ver menos" : `ver todas (${ofertasPorSemana.length})`}
+                  </button>
+                )}
+              </div>
+              <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
+                {(verTodoHistorico ? ofertasPorSemana : ofertasPorSemana.slice(0, SEMANAS_VISIVEIS)).map((g) => (
+                  <div key={g.weekStart.toISOString()} className="px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                      {formatWeek(g.weekStart)}
+                    </p>
+                    <div className="space-y-1">
+                      {g.ofertas.map((o) => (
+                        <div key={o.id} className="flex items-center gap-2">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${o.foiAoAr ? "bg-teal-500" : "bg-gray-300"}`}
+                            title={o.foiAoAr ? "foi ao ar" : "chegou, mas não foi publicada"}
+                          />
+                          <span className="text-[13px] text-gray-800 truncate flex-1 min-w-0">{o.nome}</span>
+                          {o.cota && (
+                            <span className="font-mono text-[10.5px] text-gray-600 bg-gray-100 rounded px-1.5 py-0.5 shrink-0">
+                              {o.cota}
+                            </span>
+                          )}
+                          {o.escolhivel && podeEscolherMais && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[11px] text-teal-700 border-teal-300 shrink-0"
+                              onClick={() => handleChoosePrev(o.escolhivel!)}
+                              disabled={busyId === o.id}
+                            >
+                              Escolher
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {ofertasPorSemana.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-6">Nenhuma opp registrada ainda.</p>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[10.5px] text-gray-400">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500" /> foi ao ar
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> só chegou
+                </span>
+                <span className="text-gray-300">·</span>
+                <span>&ldquo;Escolher&rdquo; aparece nas que sobraram da semana passada</span>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {oppsSemanaPassada.map((item) => {
-                const jaTrazida = nomesTrazidos.has(item.nomeEmpreendimento);
-                return (
-                  <div key={item.id} className={`flex items-center justify-between gap-2 p-3 rounded-lg border ${jaTrazida ? "border-teal-300 bg-teal-50" : "border-gray-200 bg-white"}`}>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-800">{item.nomeEmpreendimento}</p>
-                      <OppMeta item={item} />
+
+            {/* Painel B — quem está esfriando */}
+            <div>
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Snowflake className="w-3.5 h-3.5 text-sky-400" />
+                  Esfriando · {SEMANAS_PARA_ESFRIAR}+ semanas fora
+                </h3>
+                <span className="text-[11px] text-gray-400 shrink-0">
+                  {esfriando.length} de {EMPREENDIMENTOS_REVENDA.length}
+                </span>
+              </div>
+              <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
+                {esfriando.map((e) => {
+                  const tom =
+                    e.semanas === null
+                      ? "bg-sky-50 text-sky-700 border-sky-200"
+                      : e.semanas >= 12
+                      ? "bg-red-50 text-red-700 border-red-200"
+                      : e.semanas >= 8
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-gray-50 text-gray-600 border-gray-200";
+                  return (
+                    <div key={e.nome} className="flex items-center justify-between gap-2 px-3 py-1.5">
+                      <span className="text-[13px] text-gray-800 truncate min-w-0">{e.nome}</span>
+                      <span
+                        className={`text-[10.5px] font-medium rounded-full border px-2 py-0.5 shrink-0 ${tom}`}
+                        title={e.ultimo ? `última vez: ${formatWeek(e.ultimo)}` : undefined}
+                      >
+                        {e.semanas === null ? "sem registro" : `${e.semanas} sem`}
+                      </span>
                     </div>
-                    {jaTrazida ? (
-                      <Badge className="bg-teal-600 text-white flex items-center gap-1 shrink-0">
-                        <Check className="w-3 h-3" /> Escolhida
-                      </Badge>
-                    ) : (
-                      podeEscolherMais && (
-                        <Button size="sm" variant="outline" className="text-teal-700 border-teal-300 shrink-0" onClick={() => handleChoosePrev(item)} disabled={busyId === item.id}>
-                          Escolher
-                        </Button>
-                      )
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+                {esfriando.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-6">
+                    Todos apareceram nas últimas {SEMANAS_PARA_ESFRIAR} semanas.
+                  </p>
+                )}
+              </div>
+              {inicioHistorico && (
+                <p className="text-[10.5px] text-gray-400 mt-1.5">
+                  &ldquo;Sem registro&rdquo; = não aparece desde{" "}
+                  {formatWeek(inicioHistorico).split("–")[0].trim()}, que é onde o histórico
+                  começa — não quer dizer que nunca foi ofertado.
+                </p>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ── BLOCO 3: Escolhidas para publicar ─────────────────────────────── */}
       <Card>
