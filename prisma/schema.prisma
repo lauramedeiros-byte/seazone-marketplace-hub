@@ -407,3 +407,93 @@ model MaterialComercial {
 
   @@map("material_comercial")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Briefings de SPOT (revenda) e os roteiros de mídia paga gerados a partir deles.
+//
+// ⚠️ NÃO confundir com os models antigos de nome parecido:
+//    · `Briefing`      → briefing de CAMPANHA (formulário, proteção por código)
+//    · `Empreendimento`→ só nome+ativo, usado pela prioridade de mídia paga
+//    · `MidiaPaga*`    → checklist de produção (nome + checked), sem conteúdo
+// Por isso tudo aqui leva o prefixo `Spot`.
+//
+// Hierarquia = a metáfora de pastas:
+//    SpotEmpreendimento (37)  →  SpotBriefingRun (uma geração, com data)  →  SpotRoteiro
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SpotEmpreendimento {
+  id             String   @id @default(cuid())
+  spotBuildingId Int?     @unique // id no SZI/Spotsys (Campeche = 17). Null se criado à mão.
+  nome           String // "Campeche Spot"
+  slug           String   @unique // "campeche-spot"
+  cidade         String
+  estado         String // abreviado: "SC", "BA" (decidido em 17/09/2026)
+  ativo          Boolean  @default(true)
+  criadoEm       DateTime @default(now())
+
+  briefings SpotBriefingRun[]
+
+  @@index([nome])
+}
+
+model SpotBriefingRun {
+  id               String             @id @default(cuid())
+  empreendimentoId String
+  empreendimento   SpotEmpreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+
+  geradoEm   DateTime // a data da "pasta" — é o que organiza o histórico
+  geradoPor  String? // nome livre; não exige linha em User (quem gera pode ser de outro time)
+  origem     String   @default("manual") // manual | skill
+  conteudoMd String // o briefing inteiro, markdown, como saiu no terminal
+
+  resumoJson  Json? // ROI, a partir de, ticket médio, nº de cotas, posição na cidade
+  avisosJson  Json? // divergências detectadas naquele dia
+  artefatoUrl String? // link do artefato — pode estar privado na conta de quem gerou
+  docsUrl     String? // link de Google Docs, quando houver
+  observacao  String?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  roteiros SpotRoteiro[]
+  anexos   SpotAnexo[]
+
+  @@index([empreendimentoId, geradoEm])
+}
+
+model SpotRoteiro {
+  id            String          @id @default(cuid())
+  briefingRunId String
+  briefingRun   SpotBriefingRun @relation(fields: [briefingRunId], references: [id], onDelete: Cascade)
+
+  codigo     String // R001, R002...
+  formato    String // video-narrado | video-apresentadora | estatico
+  status     String   @default("teste") // produzido | aprovado | teste
+  duracao    String?
+  monica     Boolean  @default(false)
+  estrutura  String? // a tese da peça
+  oQueMuda   String? // o que difere dos outros roteiros da mesma pasta
+  derivadoDe String? // código do roteiro que originou este
+  conteudoMd String // a tabela de cenas, ou os campos do estático
+  criadoEm   DateTime @default(now())
+
+  anexos SpotAnexo[]
+
+  @@index([briefingRunId])
+}
+
+model SpotAnexo {
+  id            String           @id @default(cuid())
+  briefingRunId String?
+  briefingRun   SpotBriefingRun? @relation(fields: [briefingRunId], references: [id], onDelete: Cascade)
+  roteiroId     String?
+  roteiro       SpotRoteiro?     @relation(fields: [roteiroId], references: [id], onDelete: Cascade)
+
+  tipo     String // imagem | link
+  titulo   String?
+  url      String // link colado (Drive, Docs) ou URL do arquivo enviado
+  criadoEm DateTime @default(now())
+
+  @@index([briefingRunId])
+  @@index([roteiroId])
+}

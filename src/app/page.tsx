@@ -31,8 +31,8 @@ const subCards = [
   },
   {
     href: "/briefings",
-    titulo: "Briefings",
-    descricao: "Gerencie briefs de campanha com proteção por código",
+    titulo: "Briefings de SPOT",
+    descricao: "Uma pasta por empreendimento, com cada briefing gerado e os roteiros que saíram dele",
     icone: FileText,
     cor: "text-amber-600",
   },
