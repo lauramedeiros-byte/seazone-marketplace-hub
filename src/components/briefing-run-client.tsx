@@ -178,10 +178,14 @@ export function BriefingRunClient({
 
               <div>
                 <label htmlFor="sr-anexos" className="text-xs font-medium text-gray-700">
-                  Links de peça, arte ou vídeo <span className="text-gray-400">(um por linha)</span>
+                  Imagens, artes ou vídeos <span className="text-gray-400">(links, um por linha)</span>
                 </label>
                 <Textarea id="sr-anexos" rows={2} value={form.anexos}
+                  placeholder={"https://drive.google.com/..."}
                   onChange={(e) => setForm({ ...form, anexos: e.target.value })} />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Imagem entra como link — suba no Drive e cole o endereço aqui.
+                </p>
               </div>
 
               {erro && <p className="text-xs text-red-600">{erro}</p>}

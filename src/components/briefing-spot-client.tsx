@@ -153,7 +153,7 @@ export function BriefingSpotClient({
 
               <div>
                 <label htmlFor="sb-anexos" className="text-xs font-medium text-gray-700">
-                  Outros links <span className="text-gray-400">(um por linha)</span>
+                  Imagens e outros links <span className="text-gray-400">(um por linha)</span>
                 </label>
                 <Textarea id="sb-anexos" rows={2} value={form.anexos}
                   placeholder={"https://drive.google.com/...\nhttps://..."}
