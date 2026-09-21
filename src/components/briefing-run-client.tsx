@@ -11,31 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Md } from "@/components/md";
 import { BriefingDoc } from "@/components/briefing-doc";
+import { RoteiroCard, ROTULO_FORMATO, type RoteiroCompleto } from "@/components/roteiro-card";
 import { parseBloco, normalizarFormato, normalizarStatus, ehSim } from "@/lib/spot-bloco";
-import { UploadCloud, ExternalLink, TriangleAlert, Clapperboard, ClipboardCheck } from "lucide-react";
+import { UploadCloud, ExternalLink, TriangleAlert, Clapperboard, ClipboardCheck, Archive } from "lucide-react";
 
 type Anexo = { id: string; tipo: string; titulo: string | null; url: string };
-
-export type RoteiroCompleto = {
-  id: string; codigo: string; formato: string; status: string;
-  duracao: string | null; monica: boolean; estrutura: string | null;
-  oQueMuda: string | null; derivadoDe: string | null; conteudoMd: string; anexos: Anexo[];
-};
-
-const ROTULO_FORMATO: Record<string, string> = {
-  "video-narrado": "Vídeo narrado",
-  "video-apresentadora": "Vídeo apresentadora",
-  estatico: "Criativo estático",
-};
-
-/** Sem verde e sem âmbar — é regra do brandbook. Atenção é coral, aprovado é azul. */
-const CLASSE_STATUS: Record<string, string> = {
-  teste: "bg-sz-coral text-white",
-  produzido: "bg-sz-azul text-white",
-  aprovado: "bg-sz-azul-palido text-sz-navy-escuro",
-};
 
 function dataLonga(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
@@ -46,88 +27,7 @@ const FORM_VAZIO = {
   estrutura: "", oQueMuda: "", derivadoDe: "", conteudoMd: "", anexos: "",
 };
 
-function RoteiroCard({ r }: { r: RoteiroCompleto }) {
-  const bloco = useMemo(() => parseBloco(r.conteudoMd), [r.conteudoMd]);
-  const chips = [r.duracao, r.monica ? "com Mônica" : "sem Mônica"].filter(Boolean) as string[];
-
-  /** Anexo e link do cabeçalho podem ser o mesmo endereço — mostra uma vez só. */
-  const links = Object.values(
-    Object.fromEntries(
-      [
-        ...bloco.links,
-        ...r.anexos.map((a) => ({ url: a.url, titulo: a.titulo ?? "Peça" })),
-      ].map((l) => [l.url, l])
-    )
-  );
-
-  return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-bold text-sz-navy">
-            {r.codigo} — {ROTULO_FORMATO[r.formato] ?? r.formato}
-          </h3>
-          <span
-            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-              CLASSE_STATUS[r.status] ?? "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {r.status}
-          </span>
-        </div>
-
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {chips.map((c) => (
-            <span key={c} className="rounded bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">
-              {c}
-            </span>
-          ))}
-          {r.derivadoDe && (
-            <span className="rounded bg-sz-azul-palido px-2 py-0.5 text-[11px] text-sz-navy-escuro">
-              derivado de {r.derivadoDe}
-            </span>
-          )}
-        </div>
-
-        {r.status === "teste" && (
-          <p className="mb-3 rounded-lg border border-sz-coral-palido bg-sz-coral-fundo p-2.5 text-xs leading-relaxed text-sz-navy">
-            <strong>Esta peça não foi produzida.</strong> O texto vale de referência, mas nunca foi ao ar — não há
-            resultado por trás dele e não serve como prova do que converte.
-          </p>
-        )}
-
-        {r.estrutura && (
-          <p className="mb-1 text-xs text-gray-600">
-            <strong className="text-sz-navy">Tese:</strong> {r.estrutura}
-          </p>
-        )}
-        {r.oQueMuda && (
-          <p className="mb-3 text-xs text-gray-600">
-            <strong className="text-sz-navy">O que muda:</strong> {r.oQueMuda}
-          </p>
-        )}
-
-        <Md>{bloco.corpo}</Md>
-
-        {links.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
-            {links.map((a) => (
-              <a
-                key={a.url}
-                href={a.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-sz-azul underline"
-              >
-                <ExternalLink className="h-3.5 w-3.5" /> {a.titulo}
-              </a>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+export type { RoteiroCompleto };
 
 export function BriefingRunClient({
   slug, ehMaisRecente, empreendimento, run, roteirosInit,
@@ -149,6 +49,11 @@ export function BriefingRunClient({
   const [form, setForm] = useState(FORM_VAZIO);
 
   const bloco = useMemo(() => parseBloco(run.conteudoMd), [run.conteudoMd]);
+
+  // Roteiro excluido continua vindo do banco: some da lista principal e fica no bloco
+  // de excluidos, de onde da para restaurar.
+  const ativos = roteirosInit.filter((r) => !r.arquivadoEm);
+  const arquivados = roteirosInit.filter((r) => r.arquivadoEm);
 
   /** O bloco colado preenche os campos sozinho — quem colou só confere e clica. */
   function colar(texto: string) {
@@ -221,8 +126,9 @@ export function BriefingRunClient({
           <h1 className="text-2xl font-bold text-sz-navy">Briefing de {dataLonga(run.geradoEm)}</h1>
           <p className="mt-0.5 text-sm text-gray-500">
             {run.geradoPor ? `Gerado por ${run.geradoPor}` : "Sem autor registrado"}
-            {run.origem === "skill" && " · pela skill"} · {roteirosInit.length}{" "}
-            {roteirosInit.length === 1 ? "roteiro" : "roteiros"}
+            {run.origem === "skill" && " · pela skill"} · {ativos.length}{" "}
+            {ativos.length === 1 ? "roteiro" : "roteiros"}
+            {arquivados.length > 0 && ` · ${arquivados.length} excluído${arquivados.length > 1 ? "s" : ""}`}
           </p>
         </div>
 
@@ -403,7 +309,7 @@ export function BriefingRunClient({
       <Tabs defaultValue="briefing">
         <TabsList>
           <TabsTrigger value="briefing">Briefing</TabsTrigger>
-          <TabsTrigger value="roteiros">Roteiros ({roteirosInit.length})</TabsTrigger>
+          <TabsTrigger value="roteiros">Roteiros ({ativos.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="briefing" className="mt-4">
@@ -415,7 +321,7 @@ export function BriefingRunClient({
         </TabsContent>
 
         <TabsContent value="roteiros" className="mt-4 space-y-3">
-          {roteirosInit.length === 0 ? (
+          {ativos.length === 0 ? (
             <Card className="bg-gray-50">
               <CardContent className="p-8 text-center">
                 <Clapperboard className="mx-auto mb-2 h-8 w-8 text-gray-300" />
@@ -424,7 +330,23 @@ export function BriefingRunClient({
               </CardContent>
             </Card>
           ) : (
-            roteirosInit.map((r) => <RoteiroCard key={r.id} r={r} />)
+            ativos.map((r) => (
+              <RoteiroCard key={r.id} roteiro={r} onMudou={() => router.refresh()} />
+            ))
+          )}
+
+          {arquivados.length > 0 && (
+            <details className="rounded-xl border border-dashed border-gray-300 bg-gray-50/60 p-3">
+              <summary className="cursor-pointer text-xs font-medium text-gray-600">
+                <Archive className="mr-1.5 inline h-3.5 w-3.5" />
+                Excluídos ({arquivados.length}) — continuam no banco e dá para restaurar
+              </summary>
+              <div className="mt-3 space-y-3">
+                {arquivados.map((r) => (
+                  <RoteiroCard key={r.id} roteiro={r} onMudou={() => router.refresh()} />
+                ))}
+              </div>
+            </details>
           )}
         </TabsContent>
       </Tabs>

@@ -475,11 +475,33 @@ model SpotRoteiro {
   oQueMuda   String? // o que difere dos outros roteiros da mesma pasta
   derivadoDe String? // código do roteiro que originou este
   conteudoMd String // a tabela de cenas, ou os campos do estático
-  criadoEm   DateTime @default(now())
 
-  anexos SpotAnexo[]
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @default(now()) @updatedAt
+  // Exclusão que não apaga: o roteiro sai da lista e continua no banco, com quem
+  // arquivou e quando. Roteiro reprovado é informação — some da tela, não da história.
+  arquivadoEm  DateTime?
+  arquivadoPor String?
+
+  anexos      SpotAnexo[]
+  comentarios SpotComentario[]
 
   @@index([briefingRunId])
+  @@index([arquivadoEm])
+}
+
+/// Comentário de revisão em cima de um roteiro — é o que o lápis de edição atende.
+model SpotComentario {
+  id        String      @id @default(cuid())
+  roteiroId String
+  roteiro   SpotRoteiro @relation(fields: [roteiroId], references: [id], onDelete: Cascade)
+
+  autor     String? // nome livre; quem está logado entra sozinho
+  texto     String
+  resolvido Boolean  @default(false) // marcado quando o ajuste já foi feito no roteiro
+  criadoEm  DateTime @default(now())
+
+  @@index([roteiroId, criadoEm])
 }
 
 model SpotAnexo {
