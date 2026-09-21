@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { parseBloco, resumoDoBloco, dataParaIso } from "@/lib/spot-bloco";
 
 type AnexoInput = { tipo?: string; titulo?: string; url?: string };
 
@@ -8,6 +9,10 @@ type AnexoInput = { tipo?: string; titulo?: string; url?: string };
  * Sobe um briefing gerado — cria uma "pasta" nova no empreendimento.
  * Aceita quem está logado no app (form) e também a skill, via cabeçalho
  * x-spot-token quando SPOT_BRIEFING_TOKEN estiver configurado.
+ *
+ * O corpo pode trazer só `conteudoMd`: o cabeçalho do bloco (entre `---`) informa o
+ * empreendimento, a data, o autor, o artefato e os números. O que vier solto no JSON
+ * ganha do cabeçalho — é o formulário corrigindo o que a skill escreveu.
  */
 export async function POST(request: Request) {
   try {
@@ -18,8 +23,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const slug = String(body.slug ?? "").trim();
-    const conteudoMd = String(body.conteudoMd ?? "").trim();
+    const conteudoMd = String(body.conteudoMd ?? body.bloco ?? "").trim();
+    const bloco = parseBloco(conteudoMd);
+    const doBloco = bloco.campos;
+
+    const slug = String(body.slug ?? doBloco.spot?.valor ?? "").trim();
 
     if (!slug || !conteudoMd) {
       return NextResponse.json(
@@ -33,7 +41,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Empreendimento "${slug}" não encontrado.` }, { status: 404 });
     }
 
-    const geradoEm = body.geradoEm ? new Date(body.geradoEm) : new Date();
+    const dataBruta = body.geradoEm || dataParaIso(doBloco.geradoEm?.valor);
+    const geradoEm = dataBruta ? new Date(dataBruta) : new Date();
     if (Number.isNaN(geradoEm.getTime())) {
       return NextResponse.json({ error: "Data de geração inválida." }, { status: 400 });
     }
@@ -46,18 +55,20 @@ export async function POST(request: Request) {
         url: String(a.url).trim(),
       }));
 
+    const origem = (body.origem ?? doBloco.origem?.valor) === "skill" ? "skill" : "manual";
+
     const run = await db.spotBriefingRun.create({
       data: {
         empreendimentoId: emp.id,
         geradoEm,
-        geradoPor: body.geradoPor?.trim() || null,
-        origem: body.origem === "skill" ? "skill" : "manual",
+        geradoPor: body.geradoPor?.trim() || doBloco.geradoPor?.valor || null,
+        origem,
         conteudoMd,
-        resumoJson: body.resumoJson ?? undefined,
+        resumoJson: body.resumoJson ?? resumoDoBloco(bloco) ?? undefined,
         avisosJson: body.avisosJson ?? undefined,
-        artefatoUrl: body.artefatoUrl?.trim() || null,
-        docsUrl: body.docsUrl?.trim() || null,
-        observacao: body.observacao?.trim() || null,
+        artefatoUrl: body.artefatoUrl?.trim() || doBloco.artefatoUrl?.valor || null,
+        docsUrl: body.docsUrl?.trim() || doBloco.docsUrl?.valor || null,
+        observacao: body.observacao?.trim() || doBloco.observacao?.valor || null,
         anexos: anexos.length ? { create: anexos } : undefined,
       },
     });
