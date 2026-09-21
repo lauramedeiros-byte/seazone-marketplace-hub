@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,9 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Md } from "@/components/md";
-import { UploadCloud, ExternalLink, AlertTriangle, Clapperboard } from "lucide-react";
+import { BriefingDoc } from "@/components/briefing-doc";
+import { parseBloco, normalizarFormato, normalizarStatus, ehSim } from "@/lib/spot-bloco";
+import { UploadCloud, ExternalLink, TriangleAlert, Clapperboard, ClipboardCheck } from "lucide-react";
 
 type Anexo = { id: string; tipo: string; titulo: string | null; url: string };
 
@@ -28,8 +30,103 @@ const ROTULO_FORMATO: Record<string, string> = {
   estatico: "Criativo estático",
 };
 
+/** Sem verde e sem âmbar — é regra do brandbook. Atenção é coral, aprovado é azul. */
+const CLASSE_STATUS: Record<string, string> = {
+  teste: "bg-sz-coral text-white",
+  produzido: "bg-sz-azul text-white",
+  aprovado: "bg-sz-azul-palido text-sz-navy-escuro",
+};
+
 function dataLonga(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+const FORM_VAZIO = {
+  formato: "video-narrado", status: "teste", codigo: "", duracao: "", monica: false,
+  estrutura: "", oQueMuda: "", derivadoDe: "", conteudoMd: "", anexos: "",
+};
+
+function RoteiroCard({ r }: { r: RoteiroCompleto }) {
+  const bloco = useMemo(() => parseBloco(r.conteudoMd), [r.conteudoMd]);
+  const chips = [r.duracao, r.monica ? "com Mônica" : "sem Mônica"].filter(Boolean) as string[];
+
+  /** Anexo e link do cabeçalho podem ser o mesmo endereço — mostra uma vez só. */
+  const links = Object.values(
+    Object.fromEntries(
+      [
+        ...bloco.links,
+        ...r.anexos.map((a) => ({ url: a.url, titulo: a.titulo ?? "Peça" })),
+      ].map((l) => [l.url, l])
+    )
+  );
+
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-sz-navy">
+            {r.codigo} — {ROTULO_FORMATO[r.formato] ?? r.formato}
+          </h3>
+          <span
+            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+              CLASSE_STATUS[r.status] ?? "bg-gray-200 text-gray-700"
+            }`}
+          >
+            {r.status}
+          </span>
+        </div>
+
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {chips.map((c) => (
+            <span key={c} className="rounded bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">
+              {c}
+            </span>
+          ))}
+          {r.derivadoDe && (
+            <span className="rounded bg-sz-azul-palido px-2 py-0.5 text-[11px] text-sz-navy-escuro">
+              derivado de {r.derivadoDe}
+            </span>
+          )}
+        </div>
+
+        {r.status === "teste" && (
+          <p className="mb-3 rounded-lg border border-sz-coral-palido bg-sz-coral-fundo p-2.5 text-xs leading-relaxed text-sz-navy">
+            <strong>Esta peça não foi produzida.</strong> O texto vale de referência, mas nunca foi ao ar — não há
+            resultado por trás dele e não serve como prova do que converte.
+          </p>
+        )}
+
+        {r.estrutura && (
+          <p className="mb-1 text-xs text-gray-600">
+            <strong className="text-sz-navy">Tese:</strong> {r.estrutura}
+          </p>
+        )}
+        {r.oQueMuda && (
+          <p className="mb-3 text-xs text-gray-600">
+            <strong className="text-sz-navy">O que muda:</strong> {r.oQueMuda}
+          </p>
+        )}
+
+        <Md>{bloco.corpo}</Md>
+
+        {links.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+            {links.map((a) => (
+              <a
+                key={a.url}
+                href={a.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-sz-azul underline"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> {a.titulo}
+              </a>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export function BriefingRunClient({
@@ -48,10 +145,45 @@ export function BriefingRunClient({
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    formato: "video-narrado", status: "teste", codigo: "", duracao: "", monica: false,
-    estrutura: "", oQueMuda: "", derivadoDe: "", conteudoMd: "", anexos: "",
-  });
+  const [lidos, setLidos] = useState<string[]>([]);
+  const [form, setForm] = useState(FORM_VAZIO);
+
+  const bloco = useMemo(() => parseBloco(run.conteudoMd), [run.conteudoMd]);
+
+  /** O bloco colado preenche os campos sozinho — quem colou só confere e clica. */
+  function colar(texto: string) {
+    const lido = parseBloco(texto);
+    if (!lido.temCabecalho) {
+      setForm((f) => ({ ...f, conteudoMd: texto }));
+      setLidos([]);
+      return;
+    }
+    const c = lido.campos;
+    const formato = normalizarFormato(c.formato?.valor);
+    const status = normalizarStatus(c.status?.valor);
+    const achados: string[] = [];
+    if (formato) achados.push(ROTULO_FORMATO[formato]);
+    if (status) achados.push(`status ${status}`);
+    if (c.codigo?.valor) achados.push(c.codigo.valor);
+    if (c.duracao?.valor) achados.push(c.duracao.valor);
+    if (c.monica?.valor) achados.push(ehSim(c.monica.valor) ? "com Mônica" : "sem Mônica");
+    if (lido.links.length) achados.push(`${lido.links.length} link(s)`);
+
+    setForm((f) => ({
+      ...f,
+      conteudoMd: texto,
+      formato: formato ?? f.formato,
+      status: status ?? f.status,
+      codigo: c.codigo?.valor ?? "",
+      duracao: c.duracao?.valor ?? "",
+      monica: c.monica ? ehSim(c.monica.valor) : false,
+      estrutura: c.estrutura?.valor ?? "",
+      oQueMuda: c.oQueMuda?.valor ?? "",
+      derivadoDe: c.derivadoDe?.valor ?? "",
+      anexos: lido.links.map((l) => l.url).join("\n"),
+    }));
+    setLidos(achados);
+  }
 
   async function subir() {
     setSalvando(true);
@@ -67,8 +199,8 @@ export function BriefingRunClient({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Não foi possível subir.");
       setAberto(false);
-      setForm({ formato: "video-narrado", status: "teste", codigo: "", duracao: "", monica: false,
-        estrutura: "", oQueMuda: "", derivadoDe: "", conteudoMd: "", anexos: "" });
+      setForm(FORM_VAZIO);
+      setLidos([]);
       router.refresh();
     } catch (e) {
       setErro(e instanceof Error ? e.message : String(e));
@@ -78,14 +210,16 @@ export function BriefingRunClient({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
       <BackButton href={`/briefings/${slug}`} label={`Voltar ao ${empreendimento.nome}`} />
 
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-gray-500">{empreendimento.nome} · {empreendimento.cidade} - {empreendimento.estado}</p>
-          <h1 className="text-2xl font-bold text-gray-900">Briefing de {dataLonga(run.geradoEm)}</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
+          <p className="text-xs text-gray-500">
+            {empreendimento.nome} · {empreendimento.cidade} - {empreendimento.estado}
+          </p>
+          <h1 className="text-2xl font-bold text-sz-navy">Briefing de {dataLonga(run.geradoEm)}</h1>
+          <p className="mt-0.5 text-sm text-gray-500">
             {run.geradoPor ? `Gerado por ${run.geradoPor}` : "Sem autor registrado"}
             {run.origem === "skill" && " · pela skill"} · {roteirosInit.length}{" "}
             {roteirosInit.length === 1 ? "roteiro" : "roteiros"}
@@ -94,101 +228,121 @@ export function BriefingRunClient({
 
         <Dialog open={aberto} onOpenChange={setAberto}>
           <DialogTrigger asChild>
-            <Button size="sm"><UploadCloud className="w-4 h-4 mr-1.5" /> Subir conteúdo</Button>
+            <Button size="sm"><UploadCloud className="mr-1.5 h-4 w-4" /> Subir conteúdo</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Subir conteúdo deste briefing</DialogTitle>
               <DialogDescription>
-                Anexa um roteiro à pasta de {dataLonga(run.geradoEm)}. Cole a tabela de cenas ou os campos do estático.
+                Cole o bloco do roteiro que o Claude entregou — o cabeçalho entre <code>---</code> preenche os campos
+                abaixo sozinho. Vale para vídeo narrado, apresentadora e criativo estático.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="sr-formato" className="text-xs font-medium text-gray-700">Formato</label>
-                  <select id="sr-formato" value={form.formato}
-                    onChange={(e) => setForm({ ...form, formato: e.target.value })}
-                    className="w-full h-9 rounded-md border border-gray-200 px-3 text-sm">
-                    <option value="video-narrado">Vídeo narrado</option>
-                    <option value="video-apresentadora">Vídeo apresentadora</option>
-                    <option value="estatico">Criativo estático</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="sr-status" className="text-xs font-medium text-gray-700">Status</label>
-                  <select id="sr-status" value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value })}
-                    className="w-full h-9 rounded-md border border-gray-200 px-3 text-sm">
-                    <option value="teste">Teste — não foi produzido</option>
-                    <option value="aprovado">Aprovado — ainda não produzido</option>
-                    <option value="produzido">Produzido — foi para mídia paga</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label htmlFor="sr-codigo" className="text-xs font-medium text-gray-700">Código</label>
-                  <Input id="sr-codigo" value={form.codigo} placeholder="automático"
-                    onChange={(e) => setForm({ ...form, codigo: e.target.value })} />
-                </div>
-                <div>
-                  <label htmlFor="sr-duracao" className="text-xs font-medium text-gray-700">Duração</label>
-                  <Input id="sr-duracao" value={form.duracao} placeholder="28 a 30s"
-                    onChange={(e) => setForm({ ...form, duracao: e.target.value })} />
-                </div>
-                <div className="flex items-end pb-2">
-                  <label htmlFor="sr-monica" className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                    <input id="sr-monica" type="checkbox" checked={form.monica}
-                      onChange={(e) => setForm({ ...form, monica: e.target.checked })} />
-                    Com Mônica
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="sr-estrutura" className="text-xs font-medium text-gray-700">Tese da peça</label>
-                <Input id="sr-estrutura" value={form.estrutura} placeholder="o que essa peça defende"
-                  onChange={(e) => setForm({ ...form, estrutura: e.target.value })} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="sr-muda" className="text-xs font-medium text-gray-700">O que muda</label>
-                  <Input id="sr-muda" value={form.oQueMuda} placeholder="o que difere dos outros"
-                    onChange={(e) => setForm({ ...form, oQueMuda: e.target.value })} />
-                </div>
-                <div>
-                  <label htmlFor="sr-derivado" className="text-xs font-medium text-gray-700">Derivado de</label>
-                  <Input id="sr-derivado" value={form.derivadoDe} placeholder="R001"
-                    onChange={(e) => setForm({ ...form, derivadoDe: e.target.value })} />
-                </div>
-              </div>
-
               <div>
                 <label htmlFor="sr-conteudo" className="text-xs font-medium text-gray-700">
-                  Conteúdo do roteiro <span className="text-red-500">*</span>
+                  Bloco do roteiro <span className="text-sz-coral">*</span>
                 </label>
-                <Textarea id="sr-conteudo" rows={10} value={form.conteudoMd}
-                  placeholder="Cole a tabela de cenas (markdown) ou os campos do estático."
-                  onChange={(e) => setForm({ ...form, conteudoMd: e.target.value })} />
+                <Textarea
+                  id="sr-conteudo"
+                  rows={10}
+                  value={form.conteudoMd}
+                  placeholder={"---\ntipo: roteiro\nformato: vídeo narrado\nstatus: teste\n---\n\n| Cena | Lettering | Narração |"}
+                  onChange={(e) => colar(e.target.value)}
+                  className="font-mono text-[12px]"
+                />
+                {lidos.length > 0 && (
+                  <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-sz-navy">
+                    <ClipboardCheck className="h-3.5 w-3.5 text-sz-azul" />
+                    Li do bloco: {lidos.join(" · ")}
+                  </p>
+                )}
               </div>
 
-              <div>
-                <label htmlFor="sr-anexos" className="text-xs font-medium text-gray-700">
-                  Imagens, artes ou vídeos <span className="text-gray-400">(links, um por linha)</span>
-                </label>
-                <Textarea id="sr-anexos" rows={2} value={form.anexos}
-                  placeholder={"https://drive.google.com/..."}
-                  onChange={(e) => setForm({ ...form, anexos: e.target.value })} />
-                <p className="text-[11px] text-gray-400 mt-1">
-                  Imagem entra como link — suba no Drive e cole o endereço aqui.
-                </p>
-              </div>
+              <details className="rounded-lg border border-gray-200 p-3">
+                <summary className="cursor-pointer text-xs font-medium text-gray-700">
+                  Conferir ou corrigir os campos
+                </summary>
 
-              {erro && <p className="text-xs text-red-600">{erro}</p>}
+                <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label htmlFor="sr-formato" className="text-xs font-medium text-gray-700">Formato</label>
+                      <select id="sr-formato" value={form.formato}
+                        onChange={(e) => setForm({ ...form, formato: e.target.value })}
+                        className="h-9 w-full rounded-md border border-gray-200 px-3 text-sm">
+                        <option value="video-narrado">Vídeo narrado</option>
+                        <option value="video-apresentadora">Vídeo apresentadora</option>
+                        <option value="estatico">Criativo estático</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="sr-status" className="text-xs font-medium text-gray-700">Status</label>
+                      <select id="sr-status" value={form.status}
+                        onChange={(e) => setForm({ ...form, status: e.target.value })}
+                        className="h-9 w-full rounded-md border border-gray-200 px-3 text-sm">
+                        <option value="teste">Teste — não foi produzido</option>
+                        <option value="aprovado">Aprovado — ainda não produzido</option>
+                        <option value="produzido">Produzido — foi para mídia paga</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label htmlFor="sr-codigo" className="text-xs font-medium text-gray-700">Código</label>
+                      <Input id="sr-codigo" value={form.codigo} placeholder="automático"
+                        onChange={(e) => setForm({ ...form, codigo: e.target.value })} />
+                    </div>
+                    <div>
+                      <label htmlFor="sr-duracao" className="text-xs font-medium text-gray-700">Duração</label>
+                      <Input id="sr-duracao" value={form.duracao} placeholder="28 a 30s"
+                        onChange={(e) => setForm({ ...form, duracao: e.target.value })} />
+                    </div>
+                    <div className="flex items-end pb-2">
+                      <label htmlFor="sr-monica" className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                        <input id="sr-monica" type="checkbox" checked={form.monica}
+                          onChange={(e) => setForm({ ...form, monica: e.target.checked })} />
+                        Com Mônica
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="sr-estrutura" className="text-xs font-medium text-gray-700">Tese da peça</label>
+                    <Input id="sr-estrutura" value={form.estrutura} placeholder="o que essa peça defende"
+                      onChange={(e) => setForm({ ...form, estrutura: e.target.value })} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label htmlFor="sr-muda" className="text-xs font-medium text-gray-700">O que muda</label>
+                      <Input id="sr-muda" value={form.oQueMuda} placeholder="o que difere dos outros"
+                        onChange={(e) => setForm({ ...form, oQueMuda: e.target.value })} />
+                    </div>
+                    <div>
+                      <label htmlFor="sr-derivado" className="text-xs font-medium text-gray-700">Derivado de</label>
+                      <Input id="sr-derivado" value={form.derivadoDe} placeholder="R001"
+                        onChange={(e) => setForm({ ...form, derivadoDe: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="sr-anexos" className="text-xs font-medium text-gray-700">
+                      Imagens, artes ou vídeos <span className="text-gray-400">(links, um por linha)</span>
+                    </label>
+                    <Textarea id="sr-anexos" rows={2} value={form.anexos}
+                      placeholder={"https://drive.google.com/..."}
+                      onChange={(e) => setForm({ ...form, anexos: e.target.value })} />
+                    <p className="mt-1 text-[11px] text-gray-400">
+                      Imagem entra como link — suba no Drive e cole o endereço aqui.
+                    </p>
+                  </div>
+                </div>
+              </details>
+
+              {erro && <p className="text-xs text-sz-coral">{erro}</p>}
             </div>
 
             <div className="flex justify-end gap-2 pt-3">
@@ -201,13 +355,13 @@ export function BriefingRunClient({
       </div>
 
       {!ehMaisRecente && (
-        <Card className="mb-4 border-amber-300 bg-amber-50/60">
-          <CardContent className="p-3.5 flex gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-900 leading-relaxed">
-              <strong>Este é um briefing antigo.</strong> Os números são o retrato de{" "}
-              {dataLonga(run.geradoEm)} — preço, cotas disponíveis e fase de obra já mudaram desde então. Serve para
-              entender com que dados os roteiros abaixo foram escritos, não para enviar proposta.
+        <Card className="mb-4 border-sz-coral-palido bg-sz-coral-fundo">
+          <CardContent className="flex gap-2.5 p-3.5">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-sz-coral" />
+            <p className="text-xs leading-relaxed text-sz-navy">
+              <strong>Este é um briefing antigo.</strong> Os números são o retrato de {dataLonga(run.geradoEm)} — preço,
+              cotas disponíveis e fase de obra já mudaram desde então. Serve para entender com que dados os roteiros
+              abaixo foram escritos, não para enviar proposta.
             </p>
           </CardContent>
         </Card>
@@ -215,25 +369,25 @@ export function BriefingRunClient({
 
       {(run.artefatoUrl || run.docsUrl || run.anexos.length > 0 || run.observacao) && (
         <Card className="mb-4">
-          <CardContent className="p-3.5 space-y-2">
-            {run.observacao && <p className="text-xs text-gray-600 italic">{run.observacao}</p>}
+          <CardContent className="space-y-2 p-3.5">
+            {run.observacao && <p className="text-xs italic text-gray-600">{run.observacao}</p>}
             <div className="flex flex-wrap gap-2">
               {run.artefatoUrl && (
                 <a href={run.artefatoUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-blue-600 underline flex items-center gap-1">
-                  <ExternalLink className="w-3.5 h-3.5" /> Artefato
+                  className="flex items-center gap-1 text-xs text-sz-azul underline">
+                  <ExternalLink className="h-3.5 w-3.5" /> Artefato
                 </a>
               )}
               {run.docsUrl && (
                 <a href={run.docsUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-blue-600 underline flex items-center gap-1">
-                  <ExternalLink className="w-3.5 h-3.5" /> Google Docs
+                  className="flex items-center gap-1 text-xs text-sz-azul underline">
+                  <ExternalLink className="h-3.5 w-3.5" /> Google Docs
                 </a>
               )}
               {run.anexos.map((a) => (
                 <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-blue-600 underline flex items-center gap-1">
-                  <ExternalLink className="w-3.5 h-3.5" /> {a.titulo ?? "Link"}
+                  className="flex items-center gap-1 text-xs text-sz-azul underline">
+                  <ExternalLink className="h-3.5 w-3.5" /> {a.titulo ?? "Link"}
                 </a>
               ))}
             </div>
@@ -253,75 +407,24 @@ export function BriefingRunClient({
         </TabsList>
 
         <TabsContent value="briefing" className="mt-4">
-          <Card>
-            <CardContent className="p-5">
-              <Md>{run.conteudoMd}</Md>
-            </CardContent>
-          </Card>
+          <BriefingDoc
+            bloco={bloco}
+            empreendimento={empreendimento}
+            dataGeracao={dataLonga(run.geradoEm)}
+          />
         </TabsContent>
 
         <TabsContent value="roteiros" className="mt-4 space-y-3">
           {roteirosInit.length === 0 ? (
             <Card className="bg-gray-50">
               <CardContent className="p-8 text-center">
-                <Clapperboard className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 font-medium">Nenhum roteiro nesta pasta</p>
-                <p className="text-xs text-gray-500 mt-1">Use &quot;Subir conteúdo&quot; para anexar.</p>
+                <Clapperboard className="mx-auto mb-2 h-8 w-8 text-gray-300" />
+                <p className="text-sm font-medium text-gray-600">Nenhum roteiro nesta pasta</p>
+                <p className="mt-1 text-xs text-gray-500">Use &quot;Subir conteúdo&quot; para anexar.</p>
               </CardContent>
             </Card>
           ) : (
-            roteirosInit.map((r) => (
-              <Card key={r.id}>
-                <CardContent className="p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                    <h3 className="font-bold text-sm text-gray-900">
-                      {r.codigo} — {ROTULO_FORMATO[r.formato] ?? r.formato}
-                    </h3>
-                    <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ${
-                      r.status === "teste" ? "bg-amber-500 text-white"
-                        : r.status === "produzido" ? "bg-emerald-600 text-white"
-                        : "bg-gray-200 text-gray-700"}`}>
-                      {r.status}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {r.duracao && <span className="text-[11px] px-2 py-0.5 rounded bg-gray-100 text-gray-600">{r.duracao}</span>}
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                      {r.monica ? "com Mônica" : "sem Mônica"}
-                    </span>
-                    {r.derivadoDe && (
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-blue-50 text-blue-700">
-                        derivado de {r.derivadoDe}
-                      </span>
-                    )}
-                  </div>
-
-                  {r.status === "teste" && (
-                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-3 leading-relaxed">
-                      <strong>Esta peça não foi produzida.</strong> O texto vale de referência, mas nunca foi ao ar —
-                      não há resultado por trás dele e não serve como prova do que converte.
-                    </p>
-                  )}
-
-                  {r.estrutura && <p className="text-xs text-gray-600 mb-1"><strong>Tese:</strong> {r.estrutura}</p>}
-                  {r.oQueMuda && <p className="text-xs text-gray-600 mb-3"><strong>O que muda:</strong> {r.oQueMuda}</p>}
-
-                  <Md>{r.conteudoMd}</Md>
-
-                  {r.anexos.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
-                      {r.anexos.map((a) => (
-                        <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-blue-600 underline flex items-center gap-1">
-                          <ExternalLink className="w-3.5 h-3.5" /> {a.titulo ?? "Peça"}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
+            roteirosInit.map((r) => <RoteiroCard key={r.id} r={r} />)
           )}
         </TabsContent>
       </Tabs>

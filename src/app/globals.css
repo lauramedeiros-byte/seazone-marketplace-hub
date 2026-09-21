@@ -18,3 +18,19 @@ html {
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tokens do brandbook da Seazone — mesma paleta do artefato do briefing.
+   Fonte: ~/.claude/spot-briefing/referencia/brandbook-seazone.css
+   Regra que vem junto: sem verde, sem âmbar, sem gradiente. Atenção é coral. */
+@theme {
+  --color-sz-azul: #0055ff;
+  --color-sz-azul-escuro: #0048d7;
+  --color-sz-azul-claro: #6593ff;
+  --color-sz-azul-palido: #e8effe;
+  --color-sz-navy: #00143d;
+  --color-sz-navy-escuro: #00247a;
+  --color-sz-coral: #fc6058;
+  --color-sz-coral-claro: #ff8882;
+  --color-sz-coral-palido: #ffcecd;
+  --color-sz-coral-fundo: #fff6f5;
+}

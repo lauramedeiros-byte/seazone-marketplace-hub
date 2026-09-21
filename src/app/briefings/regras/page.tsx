@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BackButton } from "@/components/back-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Ban, ArrowRightLeft, ShieldCheck, AlertTriangle, MessageSquareText } from "lucide-react";
+import { Ban, ArrowRightLeft, ShieldCheck, TriangleAlert, MessageSquareText, Link2 } from "lucide-react";
 
 const palavrasTravadas = ["unidade", "imóvel", "apartamento", "studio", "(e plurais)"];
 const substituirPor = ["a cota", "o investimento", "a oportunidade", "o empreendimento", "o SPOT", "o ativo"];
@@ -21,10 +21,10 @@ export default function RegrasBriefingPage() {
       <BackButton />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Regras de escrita</h1>
+        <h1 className="text-2xl font-bold text-sz-navy mb-1">Regras de escrita</h1>
         <p className="text-gray-500">
           Valem para todo briefing e roteiro de Marketplace e SZI. Cole na IA antes da revisão.{" "}
-          <Link href="/briefings/como-gerar" className="text-blue-600 underline">
+          <Link href="/briefings/como-gerar" className="text-sz-azul underline">
             Ver como gerar um briefing
           </Link>
           .
@@ -33,32 +33,32 @@ export default function RegrasBriefingPage() {
 
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card className="border-red-200">
+          <Card className="border-sz-coral-palido">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Ban className="w-4 h-4 text-red-600" /> Palavras travadas
+                <Ban className="w-4 h-4 text-sz-coral" /> Palavras travadas
               </CardTitle>
               <CardDescription className="text-xs">Nunca usar em lettering, locução ou texto de peça.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-1.5">
               {palavrasTravadas.map((p) => (
-                <span key={p} className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 text-[11px]">
+                <span key={p} className="px-2 py-0.5 rounded-full bg-sz-coral-fundo text-sz-coral border border-sz-coral-palido text-[11px]">
                   {p}
                 </span>
               ))}
             </CardContent>
           </Card>
 
-          <Card className="border-emerald-200">
+          <Card className="border-sz-azul/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <ArrowRightLeft className="w-4 h-4 text-emerald-600" /> Substituir por
+                <ArrowRightLeft className="w-4 h-4 text-sz-azul" /> Substituir por
               </CardTitle>
               <CardDescription className="text-xs">O vocabulário que a casa usa no lugar.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-1.5">
               {substituirPor.map((p) => (
-                <span key={p} className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[11px]">
+                <span key={p} className="px-2 py-0.5 rounded-full bg-sz-azul-palido text-sz-navy-escuro border border-sz-azul/20 text-[11px]">
                   {p}
                 </span>
               ))}
@@ -69,7 +69,7 @@ export default function RegrasBriefingPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <MessageSquareText className="w-4 h-4 text-blue-600" /> Tom e termos sensíveis
+              <MessageSquareText className="w-4 h-4 text-sz-azul" /> Tom e termos sensíveis
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-gray-600 space-y-2 leading-relaxed">
@@ -92,10 +92,46 @@ export default function RegrasBriefingPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-violet-200">
+        <Card className="border-sz-azul/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-violet-600" /> Obrigatório em todas as peças
+              <Link2 className="w-4 h-4 text-sz-azul" /> Número de mercado vai com fonte clicável
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Vale para o briefing e para tudo que sai dele. Quem lê tem que conseguir clicar e conferir.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-xs text-gray-600 space-y-2 leading-relaxed">
+            <p>
+              <strong className="text-gray-800">O link vai duas vezes:</strong> no meio da frase que faz a afirmação e
+              na linha <code className="px-1 py-0.5 rounded bg-gray-100 font-mono">fonte:</code> do cabeçalho do bloco,
+              que é o que vira a lista &quot;Fontes&quot; no fim da página.{" "}
+              <Link href="/briefings/como-gerar#formato" className="text-sz-azul underline">
+                Ver o formato
+              </Link>
+              .
+            </p>
+            <p>
+              <strong className="text-gray-800">Dado de 2022 para trás está vencido.</strong> Se só existir dado velho,
+              escreva menos — um parágrafo curto com fonte boa vale mais que três com número sem data.
+            </p>
+            <p>
+              <strong className="text-gray-800">Não troque o que a métrica mede.</strong> Ranking do Booking.com é de{" "}
+              <em>buscas</em>, não de reservas. Receita do mercado de temporada e impacto econômico total são coisas
+              diferentes: ficam em frases separadas, não se somam e não se substituem.
+            </p>
+            <p className="text-gray-500">
+              Fontes que valem: órgão público, imprensa grande (G1, CNN, Folha, Forbes, NSC), dados do próprio Airbnb e
+              Booking, estudo de instituição (FGV e afins) e o blog da Seazone. Blog de imobiliária pequena e
+              agregador sem autoria, não.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-sz-azul/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-sz-navy-escuro" /> Obrigatório em todas as peças
             </CardTitle>
             <CardDescription className="text-xs">Salvo exceções.</CardDescription>
           </CardHeader>
@@ -103,7 +139,7 @@ export default function RegrasBriefingPage() {
             <ul className="space-y-1.5">
               {obrigatorios.map((item) => (
                 <li key={item} className="flex items-center gap-2 text-xs text-gray-700">
-                  <ShieldCheck className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-sz-azul shrink-0" />
                   {item}
                 </li>
               ))}
@@ -111,7 +147,7 @@ export default function RegrasBriefingPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-blue-200 bg-blue-50/40">
+        <Card className="border-sz-azul/20 bg-sz-azul-palido/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Disclaimer de rentabilidade — automático</CardTitle>
             <CardDescription className="text-xs">
@@ -120,16 +156,16 @@ export default function RegrasBriefingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-[11px] text-gray-600 leading-relaxed border border-dashed border-blue-200 rounded-lg p-3 bg-white">
+            <p className="text-[11px] text-gray-600 leading-relaxed border border-dashed border-sz-azul/30 rounded-lg p-3 bg-white">
               {DISCLAIMER_RENTABILIDADE}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-amber-300 bg-amber-50/50">
+        <Card className="border-sz-coral-palido bg-sz-coral-fundo">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600" /> Disclaimer de pagamento — regra corrigida
+              <TriangleAlert className="w-4 h-4 text-sz-coral" /> Disclaimer de pagamento — regra corrigida
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-gray-700 space-y-2 leading-relaxed">
