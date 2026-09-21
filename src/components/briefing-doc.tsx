@@ -178,7 +178,7 @@ export function BriefingDoc({
 
       {/* Navegação */}
       {secoes.length > 2 && (
-        <nav className="sticky top-0 z-10 -mx-1 flex gap-1.5 overflow-x-auto bg-white/95 px-1 py-2 backdrop-blur">
+        <nav className="sticky top-0 z-10 -mx-1 flex gap-1.5 overflow-x-auto bg-white/95 px-1 py-2 backdrop-blur lg:flex-wrap lg:overflow-visible">
           {secoes.map((s) => (
             <a
               key={s.id}

@@ -54,10 +54,13 @@ const COMPONENTES = {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sz-azul underline decoration-sz-azul/30 underline-offset-2 hover:decoration-sz-azul inline-flex items-baseline gap-0.5"
+        /* `inline`, não `inline-flex`: link longo no meio do parágrafo precisa quebrar
+           linha junto com o texto. O `[&_strong]` é porque o negrito dentro do link
+           herdava a cor do texto e o link saía metade azul, metade preto. */
+        className="text-sz-azul underline decoration-sz-azul/30 underline-offset-2 hover:decoration-sz-azul [&_strong]:text-sz-azul"
       >
         {children}
-        <ExternalLink className="w-3 h-3 shrink-0 self-center opacity-60" />
+        <ExternalLink className="ml-0.5 inline h-3 w-3 align-baseline opacity-60" />
       </a>
     );
   },
@@ -98,8 +101,13 @@ export function MdInline({ children }: { children: string }) {
 function Ficha({ linhas }: { linhas: [string, string][] }) {
   return (
     <dl className="my-3 divide-y divide-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+      {/* No celular o rótulo vai em cima do valor: lado a lado sobra pouca largura para o
+          valor, e tudo quebra em duas ou três linhas. */}
       {linhas.map(([rotulo, valor], i) => (
-        <div key={`${rotulo}-${i}`} className="grid grid-cols-[minmax(7rem,11rem)_1fr] gap-3 px-3 py-2 odd:bg-gray-50/50">
+        <div
+          key={`${rotulo}-${i}`}
+          className="grid grid-cols-1 gap-0.5 px-3 py-2 odd:bg-gray-50/50 sm:grid-cols-[minmax(7rem,11rem)_1fr] sm:gap-3"
+        >
           <dt className="text-[12.5px] font-medium text-gray-500 leading-relaxed">
             <MdInline>{rotulo}</MdInline>
           </dt>
