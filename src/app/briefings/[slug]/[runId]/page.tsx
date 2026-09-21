@@ -15,7 +15,10 @@ export default async function BriefingRunPage({
     where: { id: runId },
     include: {
       empreendimento: true,
-      roteiros: { orderBy: { codigo: "asc" }, include: { anexos: true } },
+      roteiros: {
+        orderBy: { codigo: "asc" },
+        include: { anexos: true, comentarios: { orderBy: { criadoEm: "asc" } } },
+      },
       anexos: true,
     },
   });
@@ -55,7 +58,18 @@ export default async function BriefingRunPage({
         oQueMuda: r.oQueMuda,
         derivadoDe: r.derivadoDe,
         conteudoMd: r.conteudoMd,
+        criadoEm: r.criadoEm.toISOString(),
+        atualizadoEm: r.atualizadoEm.toISOString(),
+        arquivadoEm: r.arquivadoEm ? r.arquivadoEm.toISOString() : null,
+        arquivadoPor: r.arquivadoPor,
         anexos: r.anexos.map((a) => ({ id: a.id, tipo: a.tipo, titulo: a.titulo, url: a.url })),
+        comentarios: r.comentarios.map((c) => ({
+          id: c.id,
+          autor: c.autor,
+          texto: c.texto,
+          resolvido: c.resolvido,
+          criadoEm: c.criadoEm.toISOString(),
+        })),
       }))}
     />
   );
