@@ -311,6 +311,18 @@ export default function ComoGerarPage() {
             </ul>
           </div>
 
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <p className="font-semibold text-sz-navy">Copiou torto? O hub endireita</p>
+            <p className="mt-1 leading-relaxed">
+              Copiar do terminal costuma estragar o bloco de três jeitos: a primeira linha{" "}
+              <code>---</code> fica para trás, as outras linhas ganham um recuo, e as linhas compridas quebram no
+              meio — jogando a URL de uma <code>fonte:</code> para a linha de baixo. O hub conserta os três na hora
+              de ler, inclusive link de markdown partido pela quebra. Se mesmo assim não aparecer o{" "}
+              <strong>&quot;Li do bloco&quot;</strong>, é sinal de que o cabeçalho não veio junto — role a colagem
+              até o começo e confira.
+            </p>
+          </div>
+
           <div className="rounded-lg border border-sz-coral-palido bg-sz-coral-fundo p-3">
             <p className="flex items-center gap-1.5 font-semibold text-sz-navy">
               <Link2 className="h-3.5 w-3.5 text-sz-coral" /> Fonte é obrigatória, e clicável

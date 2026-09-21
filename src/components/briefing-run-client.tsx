@@ -19,7 +19,9 @@ import { UploadCloud, ExternalLink, TriangleAlert, Clapperboard, ClipboardCheck,
 type Anexo = { id: string; tipo: string; titulo: string | null; url: string };
 
 function dataLonga(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  // geradoEm e data pura, guardada a meia-noite UTC: formatar no fuso local mostrava
+  // o dia anterior (21/09 aparecia como 20/09).
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
 const FORM_VAZIO = {

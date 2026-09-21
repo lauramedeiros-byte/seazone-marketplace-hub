@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { parseBloco, normalizarFormato, normalizarStatus, ehSim } from "@/lib/spot-bloco";
+import { parseBloco, normalizarFormato, normalizarStatus, ehSim, normalizarColagem } from "@/lib/spot-bloco";
 
 const FORMATOS = ["video-narrado", "video-apresentadora", "estatico"];
 const STATUS = ["produzido", "aprovado", "teste"];
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const briefingRunId = String(body.briefingRunId ?? "").trim();
-    const conteudoMd = String(body.conteudoMd ?? body.bloco ?? "").trim();
+    const conteudoMd = normalizarColagem(String(body.conteudoMd ?? body.bloco ?? ""));
     const bloco = parseBloco(conteudoMd);
     const doBloco = bloco.campos;
 

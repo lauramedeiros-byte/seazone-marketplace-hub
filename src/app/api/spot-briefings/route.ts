@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { parseBloco, resumoDoBloco, dataParaIso } from "@/lib/spot-bloco";
+import { parseBloco, resumoDoBloco, dataParaIso, normalizarColagem } from "@/lib/spot-bloco";
 
 type AnexoInput = { tipo?: string; titulo?: string; url?: string };
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const conteudoMd = String(body.conteudoMd ?? body.bloco ?? "").trim();
+    const conteudoMd = normalizarColagem(String(body.conteudoMd ?? body.bloco ?? ""));
     const bloco = parseBloco(conteudoMd);
     const doBloco = bloco.campos;
 
