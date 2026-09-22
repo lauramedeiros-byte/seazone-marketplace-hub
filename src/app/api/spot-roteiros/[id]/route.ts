@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { parseBloco, normalizarFormato, normalizarStatus, ehSim } from "@/lib/spot-bloco";
+import { parseBloco, normalizarFormato, normalizarStatus, ehSim, normalizarColagem } from "@/lib/spot-bloco";
 
 const FORMATOS = ["video-narrado", "video-apresentadora", "estatico"];
 const STATUS = ["produzido", "aprovado", "teste"];
@@ -46,7 +46,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const conteudoMd =
-      body.conteudoMd !== undefined ? String(body.conteudoMd).trim() : atual.conteudoMd;
+      body.conteudoMd !== undefined ? normalizarColagem(String(body.conteudoMd)) : atual.conteudoMd;
     if (!conteudoMd) {
       return NextResponse.json({ error: "O conteúdo do roteiro não pode ficar vazio." }, { status: 400 });
     }

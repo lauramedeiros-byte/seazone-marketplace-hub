@@ -101,7 +101,87 @@ function partirLink(valor: string): LinkNomeado | null {
   return { titulo, url };
 }
 
-export function parseBloco(texto: string): BlocoSpot {
+/** Chaves que só aparecem no começo de um bloco — servem de âncora quando o `---` some. */
+const ANCORAS = /^(tipo|spot|empreendimento|slug)\s*:/i;
+const CERCA = /^\s*(```|~~~)/;
+
+/**
+ * Conserta o que o copiar-e-colar estraga antes de interpretar.
+ *
+ * Copiado do terminal, o bloco chega machucado de três jeitos, todos vistos de verdade
+ * na primeira subida do Batel (21/09/2026):
+ *
+ * 1. a linha `---` de abertura fica para trás e o texto começa direto em `tipo:`;
+ * 2. todas as linhas menos a primeira ganham a indentação do bloco de código;
+ * 3. linha comprida quebra no meio, e a URL de uma `fonte:` vai parar na linha de baixo.
+ *
+ * Exigir o formato perfeito seria empurrar o conserto para quem colou. Então o conserto
+ * mora aqui: tira cerca de código, tira a indentação comum, devolve o `---` que sumiu e
+ * junta a linha quebrada de volta no campo dela.
+ */
+export function normalizarColagem(texto: string): string {
+  if (!texto || !texto.trim()) return texto ?? "";
+  let linhas = texto.replace(/\r\n/g, "\n").split("\n");
+
+  // 1. cerca de código que veio junto
+  let primeira = 0;
+  while (primeira < linhas.length && !linhas[primeira].trim()) primeira++;
+  if (CERCA.test(linhas[primeira] ?? "")) {
+    linhas.splice(primeira, 1);
+    let ultima = linhas.length - 1;
+    while (ultima >= 0 && !linhas[ultima].trim()) ultima--;
+    if (ultima >= 0 && CERCA.test(linhas[ultima])) linhas.splice(ultima, 1);
+    while (primeira < linhas.length && !linhas[primeira].trim()) primeira++;
+  }
+
+  // 2. indentação comum. A primeira linha fica de fora da conta: é justamente ela que
+  //    costuma vir sem o recuo, e sozinha zeraria o mínimo.
+  const comConteudo = linhas.filter((l, i) => i !== primeira && l.trim());
+  const recuos = comConteudo.map((l) => l.match(/^[ \t]*/)?.[0].length ?? 0);
+  const minimo = recuos.length ? Math.min(...recuos) : 0;
+  if (minimo > 0) {
+    linhas = linhas.map((l, i) => (i === primeira ? l.trimStart() : l.slice(minimo)));
+  }
+
+  // 3. o `---` de abertura que ficou para trás
+  const abre = linhas[primeira]?.trim();
+  if (abre !== "---" && ANCORAS.test(abre ?? "")) {
+    const fecha = linhas.findIndex((l, i) => i > primeira && l.trim() === "---");
+    if (fecha !== -1) linhas.splice(primeira, 0, "---");
+  }
+
+  // 4. linha quebrada no meio: dentro do cabeçalho, o que não é campo conhecido é
+  //    continuação do campo anterior
+  if (linhas[primeira]?.trim() === "---") {
+    const fecha = linhas.findIndex((l, i) => i > primeira && l.trim() === "---");
+    if (fecha !== -1) {
+      const juntas: string[] = [];
+      for (const linha of linhas.slice(primeira + 1, fecha)) {
+        const corte = linha.indexOf(":");
+        const ehCampo = corte !== -1 && normalizarChave(linha.slice(0, corte)) !== null;
+        if (!ehCampo && linha.trim() && juntas.length) {
+          juntas[juntas.length - 1] += ` ${linha.trim()}`;
+        } else {
+          juntas.push(linha);
+        }
+      }
+      linhas = [...linhas.slice(0, primeira + 1), ...juntas, ...linhas.slice(fecha)];
+    }
+  }
+
+  // 5. link de markdown partido pela quebra de linha. O endereço não pode ter espaço
+  //    nem quebra dentro dos parênteses — quando a linha quebra ali, o link vira texto
+  //    cru na tela ("...90%](https://...)"). Não mexe em link com título entre aspas.
+  return linhas
+    .join("\n")
+    .replace(/\]\(([^)"']*)\)/g, (todo, endereco: string) =>
+      /\s/.test(endereco) ? `](${endereco.replace(/\s+/g, "")})` : todo
+    )
+    .trim();
+}
+
+export function parseBloco(bruto: string): BlocoSpot {
+  const texto = normalizarColagem(bruto);
   const semCabecalho: BlocoSpot = {
     temCabecalho: false,
     tipo: null,

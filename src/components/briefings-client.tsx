@@ -29,7 +29,8 @@ function semAcento(s: string) {
 
 function dataCurta(iso: string | null) {
   if (!iso) return null;
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  // data pura (meia-noite UTC): sem timeZone, aparecia um dia a menos
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
 }
 
 export function BriefingsClient({ empreendimentosInit }: { empreendimentosInit: EmpreendimentoItem[] }) {

@@ -44,7 +44,8 @@ const CLASSE_STATUS: Record<string, string> = {
 };
 
 function dataLonga(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  // ver a nota em briefing-run-client: data pura, formatada em UTC
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
 export function BriefingSpotClient({
