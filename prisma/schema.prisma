@@ -408,6 +408,21 @@ model MaterialComercial {
   @@map("material_comercial")
 }
 
+// Diretório de coisas pontuais: o que não tem onde encaixar nos Artefatos de Consulta,
+// guardado em pastas por ano.
+model DiretorioPontual {
+  id           String   @id @default(cuid())
+  ano          Int
+  titulo       String
+  url          String?
+  nota         String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([ano])
+  @@map("diretorio_pontual")
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Briefings de SPOT (revenda) e os roteiros de mídia paga gerados a partir deles.
 //
