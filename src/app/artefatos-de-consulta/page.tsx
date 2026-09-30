@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, AlertTriangle, Users, TrendingUp, DollarSign, Search, Star, Layers, Send, MessageSquare, Activity, Zap, CalendarDays, Presentation, Sparkles, ArrowRight } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, Users, TrendingUp, Search, Layers, Send, MessageSquare, Activity, CalendarDays, Presentation, Sparkles, ArrowRight, Link2, BarChart3, Archive } from "lucide-react";
 
 type Link = {
   url: string;
@@ -24,15 +24,24 @@ type Link = {
 };
 
 const links: Link[] = [
-  // Destaque (topo)
+  // Atalhos (topo, ícones discretos)
   {
-    grupo: "destaque",
+    grupo: "atalho",
     url: "https://marketing-hub-ruddy.vercel.app/social-midia/calendario-seazone",
     titulo: "Calendário de postagens de social",
     descricao:
       "Calendário de postagens de social media da Seazone — planejamento e agenda de publicações.",
     icone: CalendarDays,
-    cor: "bg-fuchsia-50 text-fuchsia-600 border-fuchsia-100",
+    cor: "text-fuchsia-500",
+  },
+  {
+    grupo: "atalho",
+    url: "https://seazone-social-hub.vercel.app/utm",
+    titulo: "Gerador de UTM",
+    descricao:
+      "Cria os parâmetros UTM que tornam um link nosso rastreável.",
+    icone: Link2,
+    cor: "text-sky-500",
   },
 
   // Use para montar conteúdos de Marketplace
@@ -107,6 +116,15 @@ const links: Link[] = [
   // Growth & Criativos
   {
     grupo: "growth",
+    url: "https://artefatos-growth-seazone.vercel.app/resultados",
+    titulo: "Resultados de Campanhas e Criativos",
+    descricao:
+      "Resultado das campanhas e dos criativos, ativos ou não.",
+    icone: BarChart3,
+    cor: "bg-blue-50 text-blue-600 border-blue-100",
+  },
+  {
+    grupo: "growth",
     url: "https://artefatos-growth-seazone.vercel.app/criativos",
     titulo: "Criativos por Campanha",
     descricao: "Quantidade de criativos ativos por campanha",
@@ -133,39 +151,12 @@ const links: Link[] = [
   // Disparos (base interna)
   {
     grupo: "disparos",
-    url: "https://sai.seazone.dev/marketing/management/campaigns",
-    titulo: "SAI — Campanhas de Disparo",
+    url: "https://plataforma.sia.zone/login",
+    titulo: "SIA — Conversas dos disparos",
     descricao:
-      "Criação de campanha na SAI (IA de disparo da Seazone).",
-    icone: Zap,
-    cor: "bg-teal-50 text-teal-600 border-teal-100",
-  },
-  {
-    grupo: "disparos",
-    url: "https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=3062589203783816&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1483659999661571",
-    titulo: "Meta — Templates de WhatsApp",
-    descricao:
-      "Cadastro de templates de mensagem na Meta para disparar WhatsApp.",
+      "Para ver as conversas que recebemos dos disparos.",
     icone: MessageSquare,
     cor: "bg-teal-50 text-teal-600 border-teal-100",
-  },
-  {
-    grupo: "disparos",
-    url: "https://app.morada.ai/dashboard",
-    titulo: "Morada.ai — Saúde do Número",
-    descricao:
-      "Verificação da saúde do número de telefone antes de fazer o disparo.",
-    icone: Activity,
-    cor: "bg-teal-50 text-teal-600 border-teal-100",
-  },
-  {
-    grupo: "disparos",
-    url: "https://saleszone-prod.seazone.dev/mia/erros",
-    titulo: "SalesZone — Erros MIA",
-    descricao:
-      "Quantidade de erros nos envios da MIA (WhatsApp) por frente de campanha.",
-    icone: AlertTriangle,
-    cor: "bg-red-50 text-red-600 border-red-100",
   },
 
   // Acompanhamento de resultados
@@ -187,36 +178,9 @@ const links: Link[] = [
     icone: Users,
     cor: "bg-cyan-50 text-cyan-600 border-cyan-100",
   },
-
-  // Uso eventual (final, cards menores)
-  {
-    grupo: "eventual",
-    url: "https://alerta-preco-mktplace.netlify.app/",
-    titulo: "Farol de Criativos",
-    descricao:
-      "Farol de criativos ativos em mídia paga; sinaliza criativos obsoletos (exemplo: valor \"a partir de\" desatualizado).",
-    icone: AlertTriangle,
-    cor: "bg-amber-50 text-amber-600 border-amber-100",
-  },
-  {
-    grupo: "eventual",
-    url: "https://docs.google.com/spreadsheets/d/1u_CtCo3J85SHqh80gy7x2kye-7wiW0QLUjC9hmrilmc/edit?gid=0#gid=0",
-    titulo: "Google Sheets — \"A Partir De\"",
-    descricao:
-      "Acompanhamento dos valores \"a partir de\" de cada empreendimento.",
-    icone: DollarSign,
-    cor: "bg-green-50 text-green-600 border-green-100",
-  },
-  {
-    grupo: "eventual",
-    url: "https://docs.google.com/spreadsheets/d/1M-e-h-UeA3X-PxlDbXlOxn_l8zbJndL9k4_F0Ces-KM/edit?gid=0#gid=0",
-    titulo: "Google Sheets — Pontos Fortes",
-    descricao:
-      "Pontos fortes de marketplace.",
-    icone: Star,
-    cor: "bg-yellow-50 text-yellow-600 border-yellow-100",
-  },
 ];
+
+const DIRETORIO_PONTUAL = "/artefatos-de-consulta/diretorio-pontual";
 
 const GRUPOS: Record<
   string,
@@ -315,14 +279,13 @@ export default function ArtefatosPage() {
   }, [busca]);
 
   const secoes = useMemo(() => {
-    const destaque = filtrados.filter((l) => l.grupo === "destaque");
-    const eventual = filtrados.filter((l) => l.grupo === "eventual");
+    const atalhos = filtrados.filter((l) => l.grupo === "atalho");
     const grupos = ORDEM_GRUPOS.map((chave) => ({
       chave,
       cfg: GRUPOS[chave],
       itens: filtrados.filter((l) => l.grupo === chave),
     })).filter((g) => g.itens.length > 0);
-    return { destaque, grupos, eventual };
+    return { atalhos, grupos };
   }, [filtrados]);
 
   return (
@@ -356,12 +319,25 @@ export default function ArtefatosPage() {
         </div>
       ) : (
         <>
-          {/* Cards soltos (topo) */}
-          {secoes.destaque.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              {secoes.destaque.map((link) => (
-                <CardLink key={link.url} link={link} borda="border-l-transparent" />
-              ))}
+          {/* Atalhos discretos (topo) */}
+          {secoes.atalhos.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              {secoes.atalhos.map((link) => {
+                const Icon = link.icone;
+                return (
+                  <a
+                    key={link.url}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link.descricao}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600 hover:border-gray-300 hover:text-gray-900 hover:shadow-sm transition-all"
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${link.cor}`} />
+                    {link.titulo}
+                  </a>
+                );
+              })}
             </div>
           )}
 
@@ -386,38 +362,6 @@ export default function ArtefatosPage() {
             );
           })}
 
-          {/* Uso eventual — cards menores no final */}
-          {secoes.eventual.length > 0 && (
-            <div className="mt-8 pt-5 border-t border-gray-100">
-              <h2 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-3">
-                Outros — uso eventual
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {secoes.eventual.map((link) => {
-                  const Icon = link.icone;
-                  return (
-                    <a
-                      key={link.url}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block group"
-                    >
-                      <div className="flex items-center gap-2.5 rounded-lg border border-gray-100 bg-white/70 px-3 py-2.5 hover:bg-white hover:shadow-sm transition-all h-full">
-                        <div className={`p-1.5 rounded-md shrink-0 ${link.cor}`}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs font-medium text-gray-600 leading-tight flex-1 min-w-0">
-                          {link.titulo}
-                        </span>
-                        <ExternalLink className="w-3 h-3 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </>
       )}
 
@@ -426,6 +370,24 @@ export default function ArtefatosPage() {
           Mostrando {filtrados.length} de {links.length} artefatos
         </p>
       )}
+
+      {/* Diretório de coisas pontuais — sempre no final, fora da busca */}
+      <a href={DIRETORIO_PONTUAL} className="block group mt-8 pt-5 border-t border-gray-100">
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3 hover:bg-white hover:shadow-sm transition-all">
+          <div className="p-2 rounded-lg shrink-0 bg-slate-100 text-slate-600">
+            <Archive className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-gray-800">
+              Diretório de coisas pontuais
+            </div>
+            <p className="text-xs text-gray-500">
+              O que não tem onde encaixar, mas precisa ficar guardado — pastas por ano.
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-colors shrink-0" />
+        </div>
+      </a>
     </div>
   );
 }
