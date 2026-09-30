@@ -3,7 +3,7 @@ import { queryNekt } from "@/lib/nekt";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // Sync dos losts do funil Marketplace (p37) Nekt -> Postgres (grão = deal).
 // Rodado pelo Vercel Cron 1x/dia. Full-refresh na tabela marketplace_lost.
@@ -50,13 +50,27 @@ async function run(request: Request) {
       return NextResponse.json({ ok: false, error: "Nekt retornou 0 linhas — mantendo dados anteriores" }, { status: 502 });
     }
 
-    // full-refresh em lote (chunks < 65535 params: 6 colunas -> ~4000 linhas/chunk)
-    const CHUNK = 4000;
-    const ops = [db.marketplaceLost.deleteMany()];
-    for (let i = 0; i < data.length; i += CHUNK) {
-      ops.push(db.marketplaceLost.createMany({ data: data.slice(i, i + CHUNK) }));
-    }
-    await db.$transaction(ops);
+    // Full-refresh num INSERT só, com as colunas como arrays (unnest): 6 parâmetros no total,
+    // em vez de ~20 createMany de 4000 linhas. Com ~77k losts (set/2026) os createMany levavam
+    // ~30s e estouravam o timeout padrão de 5s da transação do Prisma — o sync ficou parado
+    // de 29/08 a 30/09 sem ninguém ver. Timeout folgado para a Nekt/rede não derrubarem.
+    const dia = (d: Date) => d.toISOString().slice(0, 10) + " 00:00:00";
+    await db.$transaction(
+      [
+        db.marketplaceLost.deleteMany(),
+        db.$executeRaw`
+          INSERT INTO marketplace_lost (lost_date, motivo, empreendimento, etapa, etapa_ordem, canal)
+          SELECT * FROM unnest(
+            ${data.map((d) => dia(d.lostDate))}::timestamp[],
+            ${data.map((d) => d.motivo)}::text[],
+            ${data.map((d) => d.empreendimento)}::text[],
+            ${data.map((d) => d.etapa)}::text[],
+            ${data.map((d) => d.etapaOrdem)}::int[],
+            ${data.map((d) => d.canal)}::text[]
+          )`,
+      ],
+      { timeout: 120_000, maxWait: 10_000 }
+    );
 
     return NextResponse.json({ ok: true, losts: data.length, at: new Date().toISOString() });
   } catch (error) {
