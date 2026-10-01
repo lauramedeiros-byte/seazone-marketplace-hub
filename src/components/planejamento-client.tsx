@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +56,18 @@ interface Frente {
 interface Props {
   frentesInit: Frente[];
   acoesInit: Array<Omit<Acao, "links" | "rdCampanhas"> & { links: unknown; rdCampanha: string | null }>;
+  frenteSlugInit?: string | null;
 }
+
+// Link compartilhável por frente: /planejamento-organico?frente=<slug do nome>
+// ("Comunidade WPP" → "comunidade-wpp"). Renomear a frente muda o link.
+const slugFrente = (nome: string) =>
+  nome
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 // [RD] campanhas são guardadas no banco como um texto único (coluna rdCampanha),
 // com uma campanha por linha. Aqui convertemos entre texto <-> lista.
@@ -105,7 +116,7 @@ function firstWeekdayMonday(mes: string) {
   return (wd + 6) % 7; // 0=Seg
 }
 
-export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
+export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: Props) {
   const [frentes, setFrentes] = useState<Frente[]>(frentesInit);
   const [acoes, setAcoes] = useState<Acao[]>(
     acoesInit.map(({ rdCampanha, links, ...rest }) => ({
@@ -117,7 +128,10 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
 
   const now = new Date();
   const [mesAtivo, setMesAtivo] = useState(`${now.getFullYear()}-${pad2(now.getMonth() + 1)}`);
-  const [frenteAtivaId, setFrenteAtivaId] = useState<string | null>(frentesInit[0]?.id ?? null);
+  const [frenteAtivaId, setFrenteAtivaId] = useState<string | null>(
+    (frenteSlugInit && frentesInit.find((f) => slugFrente(f.nome) === frenteSlugInit)?.id) ?? frentesInit[0]?.id ?? null
+  );
+  const [linkCopiadoId, setLinkCopiadoId] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [view, setView] = useState<"calendario" | "lista">("calendario");
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -139,6 +153,27 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
 
   const frenteAtiva = frentes.find((f) => f.id === frenteAtivaId) ?? frentes[0] ?? null;
   const c = cor(frenteAtiva?.cor ?? "teal");
+
+  // A barra de endereço acompanha a aba (troca, criação, renomeação ou exclusão de frente),
+  // então copiar a URL do navegador já dá o link da frente.
+  const frenteSlug = frenteAtiva ? slugFrente(frenteAtiva.nome) : null;
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (frenteSlug) url.searchParams.set("frente", frenteSlug);
+    else url.searchParams.delete("frente");
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }, [frenteSlug]);
+
+  const copiarLinkFrente = async (f: Frente) => {
+    const url = `${window.location.origin}${window.location.pathname}?frente=${slugFrente(f.nome)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopiadoId(f.id);
+      setTimeout(() => setLinkCopiadoId(null), 2000);
+    } catch {
+      window.prompt("Copie o link da frente:", url);
+    }
+  };
 
   const acoesDoMes = useMemo(
     () => acoes.filter((a) => a.mes === mesAtivo && a.frenteId === frenteAtiva?.id),
@@ -500,6 +535,9 @@ export function PlanejamentoClient({ frentesInit, acoesInit }: Props) {
               <span className="text-[11px] text-gray-400 font-semibold">{total}</span>
               {ativa && (
                 <>
+                  <button onClick={(e) => { e.stopPropagation(); copiarLinkFrente(f); }} className={linkCopiadoId === f.id ? "text-green-600" : "text-gray-400 hover:text-gray-700"} title="Copiar link desta frente">
+                    {linkCopiadoId === f.id ? <Check className="w-3.5 h-3.5" /> : <LinkIcon className="w-3.5 h-3.5" />}
+                  </button>
                   <button onClick={(e) => { e.stopPropagation(); renameFrente(f); }} className="text-gray-400 hover:text-gray-700" title="Renomear"><Pencil className="w-3.5 h-3.5" /></button>
                   <button onClick={(e) => { e.stopPropagation(); deleteFrente(f); }} className="text-gray-400 hover:text-red-600" title="Excluir frente"><Trash2 className="w-3.5 h-3.5" /></button>
                 </>
