@@ -116,7 +116,7 @@ const links: Link[] = [
   // Growth & Criativos
   {
     grupo: "growth",
-    url: "https://artefatos-growth-seazone.vercel.app/resultados",
+    url: "https://growthzone.seazone.dev/resultados",
     titulo: "Resultados de Campanhas e Criativos",
     descricao:
       "Resultado das campanhas e dos criativos, ativos ou não.",
@@ -125,15 +125,15 @@ const links: Link[] = [
   },
   {
     grupo: "growth",
-    url: "https://artefatos-growth-seazone.vercel.app/criativos",
+    url: "https://growthzone.seazone.dev/criativos",
     titulo: "Criativos por Campanha",
-    descricao: "Quantidade de criativos ativos por campanha",
+    descricao: "Quantidade de criativos ativos por campanha e saúde dos criativos: se a campanha precisa de mais ou de menos.",
     icone: Megaphone,
     cor: "bg-blue-50 text-blue-600 border-blue-100",
   },
   {
     grupo: "growth",
-    url: "https://artefatos-growth-seazone.vercel.app/creative-hub",
+    url: "https://growthzone.seazone.dev/creative-hub",
     titulo: "Creative Hub",
     descricao: "Estoque de criativos",
     icone: Layers,
@@ -141,9 +141,9 @@ const links: Link[] = [
   },
   {
     grupo: "growth",
-    url: "https://artefatos-growth-seazone.vercel.app/creative-library",
+    url: "https://growthzone.seazone.dev/creative-library",
     titulo: "Creative Library",
-    descricao: "Busca criativo pelo ID do Pipedrive para visualizar o conteúdo do vídeo ou imagem.",
+    descricao: "Biblioteca de criativos: busca pelo ID do criativo para visualizar o conteúdo do vídeo ou imagem.",
     icone: Search,
     cor: "bg-blue-50 text-blue-600 border-blue-100",
   },
