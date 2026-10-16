@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/create-empreendimento(.*)",
   "/api/toggle-verificado(.*)",
   "/api/opps(.*)",
+  "/api/agente-disparos(.*)", // agente local; protegido por x-agente-token
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

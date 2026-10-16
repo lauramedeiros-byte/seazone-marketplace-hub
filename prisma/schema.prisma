@@ -534,3 +534,39 @@ model SpotAnexo {
   @@index([briefingRunId])
   @@index([roteiroId])
 }
+
+// ── Agente de propostas de disparo (Disparos Marketplace) ──────────────────
+// O agente local (14h) cria propostas para o dia seguinte; a Laura aprova
+// (vira PlanejamentoAcao) ou reprova com comentário (vira AprendizadoDisparo
+// e o agente propõe outra no lugar).
+model PropostaDisparo {
+  id              String    @id @default(cuid())
+  mes             String    // "YYYY-MM" do dia do disparo
+  dia             Int
+  ordem           Int       @default(0)
+  titulo          String
+  base            String?   // descrição da base + critério (vai para o campo "base" da ação)
+  contatos        Int?
+  empreendimentos String?
+  whatsapp        String    // copy completa com os botões
+  racional        String?   // por que esta proposta (dados que sustentam)
+  status          String    @default("pendente") // pendente | aprovada | reprovada | substituida
+  comentario      String?   // motivo da reprovação / ajuste pedido
+  substituiId     String?   // proposta reprovada que esta substitui
+  acaoExistenteId String?   // ação que a Laura já tinha planejado (proposta só traz a copy)
+  acaoId          String?   // ação do planejamento criada/atualizada ao aprovar
+  decididoEm      DateTime?
+  criadoEm        DateTime  @default(now())
+  atualizadoEm    DateTime  @updatedAt
+
+  @@index([mes, dia])
+  @@index([status])
+}
+
+model AprendizadoDisparo {
+  id               String   @id @default(cuid())
+  texto            String
+  origemPropostaId String?
+  ativo            Boolean  @default(true)
+  criadoEm         DateTime @default(now())
+}

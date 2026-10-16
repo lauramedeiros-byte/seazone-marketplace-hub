@@ -500,9 +500,17 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <BackButton />
 
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Planejamento Orgânico</h1>
-        <p className="text-gray-500 text-sm">Organize as ações do mês por frente — disparos, comunidade, social e novas ideias.</p>
+      <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Planejamento Orgânico</h1>
+          <p className="text-gray-500 text-sm">Organize as ações do mês por frente — disparos, comunidade, social e novas ideias.</p>
+        </div>
+        <a
+          href="/planejamento-organico/propostas"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100"
+        >
+          <ListChecks className="w-4 h-4" /> Propostas do agente
+        </a>
       </div>
 
       {/* Topo: mês + visão */}
