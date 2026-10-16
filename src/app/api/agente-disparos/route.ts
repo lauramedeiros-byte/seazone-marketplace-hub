@@ -10,7 +10,8 @@ function autorizado(request: Request) {
 }
 
 // GET ?mes=YYYY-MM&dia=D  → planejamento do dia (frente Disparos Marketplace),
-// propostas do dia, reprovadas ainda sem substituta e aprendizados ativos.
+// propostas do dia, reprovadas ainda sem substituta, aprendizados ativos e o pedido de
+// repasse em aberto (botão "Gerar aprendizado"), se houver.
 export async function GET(request: Request) {
   if (!autorizado(request)) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const url = new URL(request.url);
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
   const frente = await db.planejamentoFrente.findFirst({
     where: { nome: { equals: "Disparos Marketplace", mode: "insensitive" } },
   });
-  const [acoes, propostas, reprovadas, aprendizados] = await Promise.all([
+  const [acoes, propostas, reprovadas, aprendizados, pedido] = await Promise.all([
     frente && mes && dia
       ? db.planejamentoAcao.findMany({ where: { frenteId: frente.id, mes, dia }, orderBy: { ordem: "asc" } })
       : Promise.resolve([]),
@@ -29,8 +30,31 @@ export async function GET(request: Request) {
       : Promise.resolve([]),
     db.propostaDisparo.findMany({ where: { status: "reprovada" }, orderBy: { decididoEm: "asc" } }),
     db.aprendizadoDisparo.findMany({ where: { ativo: true }, orderBy: { criadoEm: "asc" } }),
+    db.pedidoRepasseDisparo.findFirst({
+      where: { status: { in: ["pendente", "andamento"] } },
+      orderBy: { criadoEm: "asc" },
+    }),
   ]);
-  return NextResponse.json({ acoes, propostas, reprovadas, aprendizados });
+  return NextResponse.json({ acoes, propostas, reprovadas, aprendizados, pedido });
+}
+
+// PATCH { pedidoId, status: "andamento" | "feito" | "erro", mensagem? } → a vigia local
+// marca o pedido do botão "Gerar aprendizado" (a página mostra o andamento).
+export async function PATCH(request: Request) {
+  if (!autorizado(request)) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { pedidoId, status, mensagem } = await request.json();
+  if (!pedidoId || !["andamento", "feito", "erro"].includes(status))
+    return NextResponse.json({ error: "Envie { pedidoId, status: andamento|feito|erro }" }, { status: 400 });
+  const pedido = await db.pedidoRepasseDisparo.update({
+    where: { id: pedidoId },
+    data: {
+      status,
+      mensagem: mensagem ? String(mensagem).slice(0, 2000) : null,
+      ...(status === "andamento" ? { iniciadoEm: new Date() } : { concluidoEm: new Date() }),
+    },
+  });
+  revalidatePath("/planejamento-organico/propostas");
+  return NextResponse.json({ success: true, pedido });
 }
 
 // POST { propostas: [...] }  → cria propostas. Uma proposta com substituiId marca a
@@ -43,9 +67,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Envie { propostas: [...] }" }, { status: 400 });
 
     const criadas = [];
+    const ignoradas: string[] = [];
     for (const p of propostas) {
       if (!p.mes || !p.dia || !p.titulo || !p.whatsapp)
         return NextResponse.json({ error: "Cada proposta precisa de mes, dia, titulo e whatsapp" }, { status: 400 });
+      // Substituta de uma reprovada que já foi refeita (duas execuções ao mesmo tempo) ou que a
+      // Laura voltou para pendente: não cria outra, senão o dia fica duplicado.
+      if (p.substituiId) {
+        const alvo = await db.propostaDisparo.findUnique({ where: { id: p.substituiId } });
+        if (!alvo || alvo.status !== "reprovada") {
+          ignoradas.push(p.substituiId);
+          continue;
+        }
+      }
       const ordem = await db.propostaDisparo.count({ where: { mes: p.mes, dia: Number(p.dia) } });
       const c = await db.propostaDisparo.create({
         data: {
@@ -67,7 +101,7 @@ export async function POST(request: Request) {
       criadas.push(c);
     }
     revalidatePath("/planejamento-organico/propostas");
-    return NextResponse.json({ success: true, criadas: criadas.map((c) => c.id) });
+    return NextResponse.json({ success: true, criadas: criadas.map((c) => c.id), ignoradas });
   } catch (error) {
     console.error("Erro na API agente-disparos:", error);
     return NextResponse.json(

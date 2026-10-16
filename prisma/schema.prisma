@@ -570,3 +570,16 @@ model AprendizadoDisparo {
   ativo            Boolean  @default(true)
   criadoEm         DateTime @default(now())
 }
+
+// Botão "Gerar aprendizado" da página de propostas: a Laura pede o repasse na hora.
+// A vigia local (tarefa do Windows) lê o pedido, roda o agente e marca como feito.
+model PedidoRepasseDisparo {
+  id          String    @id @default(cuid())
+  status      String    @default("pendente") // pendente | andamento | feito | erro
+  mensagem    String?   // resumo devolvido pela vigia (ou o erro)
+  criadoEm    DateTime  @default(now())
+  iniciadoEm  DateTime?
+  concluidoEm DateTime?
+
+  @@index([status])
+}

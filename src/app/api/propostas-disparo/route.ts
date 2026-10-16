@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { aprovarProposta, reprovarProposta } from "@/lib/propostas-disparo";
+import { aprovarProposta, dadosPaginaPropostas, pedirRepasse, reprovarProposta } from "@/lib/propostas-disparo";
 
-// Ações da Laura na página /planejamento-organico/propostas (rota protegida pelo Clerk).
+// Página /planejamento-organico/propostas (rota protegida pelo Clerk).
+// GET → mesmos dados do render; a página consulta enquanto o agente trabalha num pedido.
+export async function GET() {
+  return NextResponse.json(JSON.parse(JSON.stringify(await dadosPaginaPropostas())));
+}
+
+// Ações da Laura na página.
 export async function POST(request: Request) {
   try {
     const { action, ...data } = await request.json();
@@ -24,6 +30,21 @@ export async function POST(request: Request) {
         const proposta = await db.propostaDisparo.update({
           where: { id: data.id },
           data: { status: "pendente", decididoEm: null },
+        });
+        revalidatePath("/planejamento-organico/propostas");
+        return NextResponse.json({ success: true, proposta });
+      }
+      case "gerar-aprendizado": {
+        // Sinal para a vigia local rodar o repasse agora (em vez de esperar os 30 min).
+        const pedido = await pedirRepasse();
+        revalidatePath("/planejamento-organico/propostas");
+        return NextResponse.json({ success: true, pedido });
+      }
+      case "descartar": {
+        // Proposta que não serve mais (ex.: a ação dela foi apagada). Sai da fila sem virar aprendizado.
+        const proposta = await db.propostaDisparo.update({
+          where: { id: data.id },
+          data: { status: "descartada", decididoEm: new Date() },
         });
         revalidatePath("/planejamento-organico/propostas");
         return NextResponse.json({ success: true, proposta });
