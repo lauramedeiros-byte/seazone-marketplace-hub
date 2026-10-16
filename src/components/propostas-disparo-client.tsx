@@ -176,7 +176,8 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
         <p className="text-sm text-gray-600">
           O agente propõe todo dia às 14h os disparos do dia seguinte. <b>Aprovar</b> coloca a ação
           direto no planejamento e move a proposta para a aba Aprovadas. <b>Reprovar</b> pede um comentário,
-          que vira aprendizado; depois clique em <b>Gerar aprendizado</b> e o agente refaz na hora.
+          que vira aprendizado; com <b>Reprovar e refazer agora</b> o agente já refaz em seguida (para
+          comentar várias antes, use &quot;Só reprovar&quot; e depois o botão <b>Gerar aprendizado</b> no topo).
         </p>
       </div>
 
@@ -290,13 +291,24 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
                                 value={comentarios[p.id] ?? ""}
                                 onChange={(e) => setComentarios((c) => ({ ...c, [p.id]: e.target.value }))}
                               />
-                              <div className="flex gap-2">
+                              <div className="flex flex-wrap gap-2">
                                 <Button
                                   disabled={salvando === p.id || !(comentarios[p.id] ?? "").trim()}
-                                  onClick={() => agir(p.id, { action: "reprovar", comentario: comentarios[p.id] })}
+                                  onClick={async () => {
+                                    await agir(p.id, { action: "reprovar", comentario: comentarios[p.id] });
+                                    await gerarAprendizado();
+                                  }}
                                   className="bg-red-600 hover:bg-red-700 text-white"
                                 >
-                                  Reprovar e salvar comentário
+                                  <Sparkles className="w-4 h-4 mr-1" /> Reprovar e refazer agora
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  disabled={salvando === p.id || !(comentarios[p.id] ?? "").trim()}
+                                  onClick={() => agir(p.id, { action: "reprovar", comentario: comentarios[p.id] })}
+                                  title="Para reprovar várias e mandar refazer todas juntas no fim"
+                                >
+                                  Só reprovar (vou comentar outras)
                                 </Button>
                                 <Button variant="outline" onClick={() => setReprovando(null)}>Cancelar</Button>
                               </div>
@@ -394,6 +406,7 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
 function PainelPedido({
   pedido, reprovadas, ocupado, onGerar,
 }: { pedido: Pedido | null; reprovadas: number; ocupado: boolean; onGerar: () => void }) {
+  const [agora] = useState(() => Date.now()); // hora de abertura da página (render puro)
   const aberto = pedido?.status === "pendente" || pedido?.status === "andamento";
   if (aberto) {
     return (
@@ -417,7 +430,7 @@ function PainelPedido({
   }
   return (
     <>
-      {pedido && pedido.concluidoEm && Date.now() - new Date(pedido.concluidoEm).getTime() < 6 * 3600000 && (
+      {pedido && pedido.concluidoEm && agora - new Date(pedido.concluidoEm).getTime() < 6 * 3600000 && (
         <div
           className={`mb-4 rounded-lg border p-3 text-sm ${
             pedido.status === "erro" ? "bg-red-50 border-red-200 text-red-800" : "bg-green-50 border-green-200 text-green-800"
