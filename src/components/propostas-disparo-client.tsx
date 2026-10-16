@@ -233,7 +233,7 @@ export function PropostasClient({
                         <div className="space-y-2">
                           <Textarea
                             autoFocus
-                            placeholder="O que não ficou legal? Ex.: não citar 3 cotas para hóspede · tom muito formal · esse SPOT já foi ontem para essa base"
+                            placeholder="O que não ficou legal? Ex.: troque o SPOT, Urubici não converte em lost com opp · para hóspede de SP ofereça SPOT pronto · tom muito formal · não citar 3 cotas"
                             value={comentarios[p.id] ?? ""}
                             onChange={(e) => setComentarios((c) => ({ ...c, [p.id]: e.target.value }))}
                           />
@@ -273,7 +273,8 @@ export function PropostasClient({
           <Lightbulb className="inline w-5 h-5 mr-1 text-amber-500" /> Aprendizados do agente
         </h2>
         <p className="text-sm text-gray-600 mb-3">
-          O agente lê esta lista antes de criar qualquer proposta. Desmarque o que não vale mais.
+          O agente lê esta lista antes de criar qualquer proposta e segue cada regra em todas as
+          escolhas: base, recorte, SPOT/cota, tamanho do lote, CTA e texto. Desmarque o que não vale mais.
         </p>
         <div className="flex gap-2 mb-4">
           <Textarea
