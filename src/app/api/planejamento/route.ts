@@ -14,6 +14,7 @@ const ACAO_FIELDS = [
   "dia",
   "mes",
   "feito",
+  "alerta",
 ] as const;
 
 export async function POST(request: Request) {
