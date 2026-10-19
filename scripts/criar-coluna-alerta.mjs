@@ -1,5 +1,5 @@
 // Cria a coluna "alerta" na tabela do planejamento (banco do hub). Rodar uma vez, antes do merge do PR #38:
-//   cd C:SERSMPUSEAZONE-MARKETPLACE-HUB; NODE --ENV-FILE=.ENV.LOCAL SCRIPTS/CRIAR-COLUNA-ALERTA.MJS
+//   cd C:/Users/compu/seazone-marketplace-hub; node --env-file=.env.local scripts/criar-coluna-alerta.mjs
 // Só acrescenta uma coluna vazia: não apaga nem altera nada. Pode rodar de novo sem problema.
 import pg from "pg";
 const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
