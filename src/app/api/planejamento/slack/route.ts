@@ -21,8 +21,8 @@ export function tituloThread(titulo: string, mes: string, dia: number) {
   return `[${PREFIXO} - ${nome} - ${dataBR(mes, dia)}]`;
 }
 
-/** Corpo da thread: a mensagem montada no planejamento (WhatsApp e/ou e-mail). */
-export function corpoThread(acao: { whatsapp: string | null; email: string | null }) {
+/** Mensagem do disparo (WhatsApp e/ou e-mail). */
+function mensagemDisparo(acao: { whatsapp: string | null; email: string | null }) {
   const partes: string[] = [];
   const wpp = acao.whatsapp?.trim();
   const mail = acao.email?.trim();
@@ -34,6 +34,14 @@ export function corpoThread(acao: { whatsapp: string | null; email: string | nul
   if (wpp) partes.push(`*WhatsApp*\n${wpp}`);
   if (mail) partes.push(`*E-mail*\n${mail}`);
   return partes.join("\n\n———\n\n");
+}
+
+/** Corpo da thread: a mensagem do disparo + as anotações da ação, se houver. */
+export function corpoThread(acao: { whatsapp: string | null; email: string | null; anotacoes: string | null }) {
+  const msg = mensagemDisparo(acao);
+  const notas = acao.anotacoes?.trim();
+  if (!msg || !notas) return msg;
+  return `${msg}\n\n———\n\n*Anotações*\n${notas}`;
 }
 
 export async function POST(request: Request) {
