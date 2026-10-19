@@ -46,6 +46,7 @@ interface Acao {
   ordem: number;
   slackTs: string | null;
   slackEnviadoEm: string | Date | null;
+  alerta: string | null; // problema que o agente das 17h30 achou ao conferir o RD campanha
 }
 interface Frente {
   id: string;
@@ -147,6 +148,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
   };
   const chipState = (a: Acao): "feito" | "alerta" | "pendente" => {
     if (a.feito) return "feito";
+    if (a.alerta) return "alerta";
     if (acaoDateNum(a.mes, a.dia) < hojeNum) return "alerta";
     return "pendente";
   };
@@ -368,7 +370,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
       {/* Cabeçalho da ação (divisão clara) */}
       <div className={`flex items-center gap-2 px-3 py-2 border-b ${a.feito ? "bg-gray-100 border-gray-200" : atrasada ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-200"}`}>
         <button
-          onClick={() => persistAcao(a.id, { feito: !a.feito })}
+          onClick={() => persistAcao(a.id, a.feito ? { feito: false } : { feito: true, alerta: null })}
           title={a.feito ? "Marcar como não feito" : "Marcar como feito"}
           className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
             a.feito ? "bg-green-600 border-green-600 text-white" : "border-gray-300 bg-white hover:border-green-400"
@@ -380,6 +382,10 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
         {a.feito ? (
           <span className="text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 flex items-center gap-1">
             <Check className="w-3 h-3" /> feito
+          </span>
+        ) : a.alerta ? (
+          <span className="text-[11px] font-medium text-red-700 bg-red-100 border border-red-200 rounded-full px-2 py-0.5 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" /> problema na conferência
           </span>
         ) : atrasada ? (
           <span className="text-[11px] font-medium text-red-700 bg-red-100 border border-red-200 rounded-full px-2 py-0.5 flex items-center gap-1">
@@ -416,6 +422,17 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
           </Button>
         </div>
       </div>
+
+      {/* Problema achado pelo agente das 17h30 ao conferir o RD campanha no Slack */}
+      {a.alerta && !a.feito && (
+        <div className="flex items-start gap-2 px-3 py-2 bg-red-50 border-b border-red-200 text-sm text-red-800">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <p className="flex-1 whitespace-pre-line">{a.alerta}</p>
+          <Button variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={() => persistAcao(a.id, { alerta: null })} title="Tirar o alerta (a ação continua a fazer)">
+            <Check className="w-3.5 h-3.5" /> Resolvido
+          </Button>
+        </div>
+      )}
 
       {/* Corpo */}
       <div className="p-4">
@@ -662,7 +679,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
                                   const w = typeof window !== "undefined" ? window.innerWidth : 1000;
                                   setTip({
                                     text: a.titulo || "(sem título)",
-                                    sub: a.empreendimentos || a.base || undefined,
+                                    sub: (a.alerta && !a.feito ? `⚠ ${a.alerta}` : a.empreendimentos || a.base) || undefined,
                                     top: r.bottom + 6,
                                     left: Math.max(8, Math.min(r.left, w - 296)),
                                   });
