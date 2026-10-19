@@ -251,6 +251,8 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
 
     setEnviandoId(a.id);
     try {
+      // salva antes: o envio lê a ação do banco (inclusive as anotações)
+      await salvarAcao(a);
       const res = await fetch("/api/planejamento/slack", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
