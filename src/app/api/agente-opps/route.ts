@@ -10,15 +10,16 @@ function autorizado(request: Request) {
   return !!esperado && request.headers.get("x-agente-token") === esperado;
 }
 
-// OppSemana.weekStart é gravado como meia-noite de Brasília (03:00 UTC) da segunda.
+// OppSemana.weekStart é "timestamp without time zone" com a segunda à meia-noite
+// (2026-10-19 00:00); o Prisma lê como 00:00 UTC. Usar outra hora cria semana duplicada.
 function segunda(iso: string): Date {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) throw new Error(`Data inválida: ${iso}`);
-  const d = new Date(`${iso}T03:00:00Z`);
+  const d = new Date(`${iso}T00:00:00Z`);
   if (d.getUTCDay() !== 1) throw new Error(`${iso} não é segunda-feira`);
   return d;
 }
 
-const iso = (d: Date) => new Date(d.getTime() - 3 * 3600000).toISOString().slice(0, 10);
+const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 // GET ?semana=YYYY-MM-DD (segunda da semana de PUBLICAÇÃO)
 // → histórico de opps (16 semanas, para o "4+ semanas fora"), o que já existe na semana alvo,
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
     const historico = semanas.map((s) => ({
       semana: iso(s.weekStart),
       // até 28/09/2026 o registro usava a semana da escolha (publicação = semana seguinte)
-      publicacao: s.weekStart.getTime() >= Date.UTC(2026, 9, 5, 3) ? iso(s.weekStart) : iso(new Date(s.weekStart.getTime() + 7 * 86400000)),
+      publicacao: s.weekStart.getTime() >= Date.UTC(2026, 9, 5) ? iso(s.weekStart) : iso(new Date(s.weekStart.getTime() + 7 * 86400000)),
       itens: s.items.map((i) => ({
         id: i.id,
         nome: i.nomeEmpreendimento,
