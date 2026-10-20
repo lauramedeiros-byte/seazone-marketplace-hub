@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/sync-disparos", "schedule": "0 6 * * *" },
-    { "path": "/api/cron/sync-losts", "schedule": "30 6 * * *" }
+    { "path": "/api/cron/sync-losts", "schedule": "30 6 * * *" },
+    { "path": "/api/cron/sync-opps-desempenho", "schedule": "0 10 * * *" }
   ]
 }
