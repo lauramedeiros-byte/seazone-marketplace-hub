@@ -129,7 +129,7 @@ export async function reprovarProposta(id: string, comentario: string) {
     data: { status: "reprovada", comentario: texto, decididoEm: new Date() },
   });
   await db.aprendizadoDisparo.create({
-    data: { texto: `${p.titulo} → ${texto}`, origemPropostaId: id },
+    data: { texto: `${p.titulo} → ${texto}`, origemPropostaId: id, origem: p.origem },
   });
   return p;
 }

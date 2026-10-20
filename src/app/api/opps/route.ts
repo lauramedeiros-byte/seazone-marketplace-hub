@@ -23,6 +23,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, item });
       }
 
+      // Botão "Trocar cota" da aba Semana: a cota morreu antes de publicar. O agente das
+      // opps lê o pedido (GET /api/agente-opps → trocas), escolhe outra e limpa o campo.
+      case "pedir-troca": {
+        const { id, motivo } = data;
+        const item = await db.oppItem.update({
+          where: { id },
+          data: { pedidoTroca: String(motivo || "cota indisponível").slice(0, 300) },
+        });
+        revalidatePath("/opps-da-semana");
+        return NextResponse.json({ success: true, item });
+      }
+
+      case "cancelar-troca": {
+        const item = await db.oppItem.update({ where: { id: data.id }, data: { pedidoTroca: null } });
+        revalidatePath("/opps-da-semana");
+        return NextResponse.json({ success: true, item });
+      }
+
       case "toggle-destaque": {
         const { id } = data;
         const item = await db.oppItem.findUnique({ where: { id } });

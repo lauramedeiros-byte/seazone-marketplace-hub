@@ -28,6 +28,7 @@ interface Proposta {
   acaoId: string | null;
   acaoApagada: boolean;
   decididoEm: string | null;
+  origem?: string;
 }
 interface Aprendizado {
   id: string;
@@ -291,6 +292,7 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
                       <article key={p.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
                         <div className="flex flex-wrap items-center gap-2 border-l-4 border-amber-400 px-5 py-3 border-b border-b-gray-100">
                           <h3 className="font-semibold text-gray-900 flex-1 min-w-0">{p.titulo}</h3>
+                          <SeloOpp p={p} />
                           <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
                             <Clock className="w-3 h-3" /> Aguardando seu OK
                           </span>
@@ -634,11 +636,22 @@ function Detalhes({ p }: { p: Proposta }) {
   );
 }
 
+// Proposta do agente das opps da semana (quinta 8h40), não do agente das 14h.
+function SeloOpp({ p }: { p: Proposta }) {
+  if (p.origem !== "opp-semana") return null;
+  return (
+    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 shrink-0">
+      Opp da semana
+    </span>
+  );
+}
+
 function CardReprovada({ p, ocupado, onDesfazer }: { p: Proposta; ocupado: boolean; onDesfazer: () => void }) {
   return (
     <article className="rounded-2xl border border-red-200 bg-white shadow-sm overflow-hidden">
       <div className="flex flex-wrap items-center gap-2 border-l-4 border-red-400 bg-red-50/60 px-5 py-3">
         <h3 className="font-semibold text-gray-900 flex-1 min-w-0">{p.titulo}</h3>
+        <SeloOpp p={p} />
         <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">
           <Bot className="w-3 h-3" /> Reprovada · esperando o agente
         </span>
@@ -687,6 +700,7 @@ function ListaCompacta({
                 <summary className="flex cursor-pointer flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
                   <ChevronDown className="w-4 h-4 text-gray-400 transition group-open:rotate-180" />
                   <span className="flex-1 min-w-0 font-medium text-gray-900">{p.titulo}</span>
+                  <SeloOpp p={p} />
                   {p.contatos != null && <span className="text-xs text-gray-500 tabular-nums">~{num(p.contatos)}</span>}
                   {selo(p)}
                 </summary>

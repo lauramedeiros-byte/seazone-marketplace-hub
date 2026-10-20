@@ -35,8 +35,6 @@ import {
   Repeat,
   Radio,
   PenLine,
-  CalendarDays,
-  GripVertical,
   Snowflake,
   RotateCcw,
 } from "lucide-react";
@@ -50,6 +48,8 @@ import {
 import { lerOpps, FORMATO_MODELO, type OppLida, type LeituraOpps } from "@/lib/opps-formato";
 import type { Desempenho } from "@/lib/opps-desempenho";
 import { OppsDesempenho } from "@/components/opps-desempenho";
+import { OppsSemana, type ToqueView } from "@/components/opps-semana";
+import { ComoFunciona } from "@/components/opps-como-funciona";
 import {
   Dialog,
   DialogTrigger,
@@ -74,6 +74,10 @@ interface OppItem {
   Disparado: boolean;
   dataDisparo: Date | null;
   comentarioDisparo: string | null;
+  origem?: string | null;
+  slackStatus?: string | null;
+  slackLink?: string | null;
+  pedidoTroca?: string | null;
 }
 
 interface OppSemana {
@@ -87,11 +91,12 @@ interface OppSemana {
 interface Props {
   semanas: OppSemana[];
   passoInicial?: unknown;
-  calendarioInicial?: unknown;
   desempenho?: Desempenho | null;
   desempenhoAtualizadoEm?: string | null;
   /** Empreendimentos com cota em revenda no catálogo vivo do Nekt (somados à lista fixa). */
   catalogoRevenda?: { nome: string; novo: boolean }[];
+  /** Toques de marketing (propostas do agente + planejamento) de cada opp, para a aba Semana. */
+  toquesPorItem?: Record<string, ToqueView[]>;
 }
 
 function Step({ n, children, tone = "dark" }: { n: number; children: ReactNode; tone?: "dark" | "video" }) {
@@ -113,61 +118,6 @@ const linkCls = "text-teal-700 font-medium underline underline-offset-2";
 
 /** Quantas semanas do histórico de opps aparecem antes de "ver todas". */
 const SEMANAS_VISIVEIS = 6;
-
-// ── Calendário semanal das opps ────────────────────────────────────────────
-interface CalBloco {
-  id: string;
-  label: string;
-}
-type CalSemana = { seg: CalBloco[]; ter: CalBloco[]; qua: CalBloco[]; qui: CalBloco[]; sex: CalBloco[] };
-const CAL_DIAS: { key: keyof CalSemana; nome: string }[] = [
-  { key: "seg", nome: "Segunda" },
-  { key: "ter", nome: "Terça" },
-  { key: "qua", nome: "Quarta" },
-  { key: "qui", nome: "Quinta" },
-  { key: "sex", nome: "Sexta" },
-];
-const DEFAULT_CAL: CalSemana = {
-  seg: [
-    { id: "b1", label: "opp 1 - e-mail" },
-    { id: "b2", label: "opp 1 - estático social" },
-  ],
-  ter: [
-    { id: "b3", label: "opp 1 - MIA" },
-    { id: "b4", label: "opp 1 - vídeo narrado" },
-  ],
-  qua: [
-    { id: "b5", label: "opp 2 - e-mail" },
-    { id: "b6", label: "opp 2 - estático social" },
-  ],
-  qui: [
-    { id: "b7", label: "opp 2 - MIA" },
-    { id: "b8", label: "opp 2 - vídeo narrado" },
-  ],
-  sex: [],
-};
-function mergeCal(saved: unknown): CalSemana {
-  if (!saved || typeof saved !== "object") return DEFAULT_CAL;
-  const s = saved as Partial<Record<keyof CalSemana, unknown>>;
-  const norm = (arr: unknown): CalBloco[] =>
-    Array.isArray(arr)
-      ? arr
-          .filter((x) => x && typeof x === "object")
-          .map((x) => ({ id: String((x as CalBloco).id ?? Math.random()), label: String((x as CalBloco).label ?? "") }))
-      : [];
-  return { seg: norm(s.seg), ter: norm(s.ter), qua: norm(s.qua), qui: norm(s.qui), sex: norm(s.sex) };
-}
-function calBlocoCor(label: string): string {
-  const l = label.toLowerCase();
-  if (l.includes("opp 1")) return "bg-teal-50 text-teal-700 border-teal-200";
-  if (l.includes("opp 2")) return "bg-blue-50 text-blue-700 border-blue-200";
-  return "bg-gray-50 text-gray-600 border-gray-200";
-}
-function novoBlocoId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return String(Date.now()) + Math.random().toString(16).slice(2);
-}
-
 
 // ── Conteúdo editável da aba "Passo a passo" ───────────────────────────────
 interface PassoSecao {
@@ -233,10 +183,10 @@ function renderComLinks(text: string): ReactNode {
 export function OppsClient({
   semanas: initial,
   passoInicial,
-  calendarioInicial,
   desempenho = null,
   desempenhoAtualizadoEm = null,
   catalogoRevenda = [],
+  toquesPorItem = {},
 }: Props) {
   const { user } = useUser();
   const [semanas, setSemanas] = useState(initial);
@@ -245,46 +195,6 @@ export function OppsClient({
   const [draftPasso, setDraftPasso] = useState<PassoConteudo>(passo);
   const [savingPasso, setSavingPasso] = useState(false);
 
-  // Calendário semanal das opps (independente do resto da página)
-  const [calendario, setCalendario] = useState<CalSemana>(() => mergeCal(calendarioInicial));
-  const [calEdit, setCalEdit] = useState(false);
-  const [calDraft, setCalDraft] = useState<CalSemana>(calendario);
-  const [savingCal, setSavingCal] = useState(false);
-  const [dragInfo, setDragInfo] = useState<{ day: keyof CalSemana; id: string } | null>(null);
-
-  const startCalEdit = () => {
-    setCalDraft(JSON.parse(JSON.stringify(calendario)) as CalSemana);
-    setCalEdit(true);
-  };
-  const saveCal = async () => {
-    setSavingCal(true);
-    try {
-      await fetch("/api/opps", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save-calendario", conteudo: calDraft }),
-      });
-      setCalendario(calDraft);
-      setCalEdit(false);
-    } finally {
-      setSavingCal(false);
-    }
-  };
-  const addBloco = (day: keyof CalSemana) =>
-    setCalDraft((d) => ({ ...d, [day]: [...d[day], { id: novoBlocoId(), label: "" }] }));
-  const removeBloco = (day: keyof CalSemana, id: string) =>
-    setCalDraft((d) => ({ ...d, [day]: d[day].filter((b) => b.id !== id) }));
-  const updateBloco = (day: keyof CalSemana, id: string, label: string) =>
-    setCalDraft((d) => ({ ...d, [day]: d[day].map((b) => (b.id === id ? { ...b, label } : b)) }));
-  const moveBloco = (fromDay: keyof CalSemana, id: string, toDay: keyof CalSemana) => {
-    if (fromDay === toDay) return;
-    setCalDraft((d) => {
-      const bloco = d[fromDay].find((b) => b.id === id);
-      if (!bloco) return d;
-      return { ...d, [fromDay]: d[fromDay].filter((b) => b.id !== id), [toDay]: [...d[toDay], bloco] };
-    });
-  };
-  const calData = calEdit ? calDraft : calendario;
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [verTodoHistorico, setVerTodoHistorico] = useState(false);
@@ -769,113 +679,38 @@ export function OppsClient({
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Opps da Semana</h1>
         <p className="text-gray-500 text-sm">
-          Escolha as opps que vão para publicação e monte os textos de WhatsApp e e-mail.
+          As 4 cotas de cada semana (2 Mônica + 2 marketing), o andamento e o resultado.
         </p>
         <div className="inline-flex items-center gap-2 text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-3 py-1.5 mt-2">
           <Clock className="w-3.5 h-3.5" />
-          Você escolhe na sexta — as 5 que sobem esta semana são para publicar na semana seguinte.
+          O agente escolhe toda quinta às 8h40 as cotas da semana seguinte.
         </div>
       </div>
 
-      {/* Calendário semanal das opps (independente das abas abaixo) */}
-      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-teal-600" />
-            Calendário da semana das opps
-          </h2>
-          {calEdit ? (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setCalEdit(false)} disabled={savingCal}>
-                Cancelar
-              </Button>
-              <Button size="sm" onClick={saveCal} disabled={savingCal}>
-                <Check className="w-4 h-4" /> {savingCal ? "Salvando..." : "Salvar"}
-              </Button>
-            </div>
-          ) : (
-            <Button variant="outline" size="sm" onClick={startCalEdit}>
-              <Edit2 className="w-4 h-4" /> Editar
-            </Button>
-          )}
-        </div>
-        {calEdit && (
-          <p className="text-[11px] text-gray-400 mb-2">
-            Arraste os blocos para mudar de dia. Clique no texto para editar. Use “+ bloco” para adicionar e o × para remover.
-          </p>
-        )}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {CAL_DIAS.map(({ key, nome }) => (
-            <div
-              key={key}
-              onDragOver={calEdit ? (e) => e.preventDefault() : undefined}
-              onDrop={
-                calEdit
-                  ? () => {
-                      if (dragInfo) moveBloco(dragInfo.day, dragInfo.id, key);
-                      setDragInfo(null);
-                    }
-                  : undefined
-              }
-              className={`rounded-lg border p-2 min-h-[92px] ${
-                calEdit ? "border-dashed border-gray-300 bg-gray-50/60" : "border-gray-100 bg-gray-50/30"
-              }`}
-            >
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide text-center mb-2">{nome}</p>
-              <div className="space-y-1.5">
-                {calData[key].length === 0 && !calEdit && <p className="text-center text-gray-300 text-xs">—</p>}
-                {calData[key].map((b) =>
-                  calEdit ? (
-                    <div
-                      key={b.id}
-                      draggable
-                      onDragStart={() => setDragInfo({ day: key, id: b.id })}
-                      onDragEnd={() => setDragInfo(null)}
-                      className={`flex items-center gap-1 rounded-md border px-1.5 py-1 cursor-grab active:cursor-grabbing ${calBlocoCor(b.label)}`}
-                    >
-                      <GripVertical className="w-3 h-3 opacity-50 shrink-0" />
-                      <input
-                        value={b.label}
-                        onChange={(e) => updateBloco(key, b.id, e.target.value)}
-                        placeholder="atividade…"
-                        className="bg-transparent text-[11px] font-semibold flex-1 min-w-0 outline-none"
-                      />
-                      <button onClick={() => removeBloco(key, b.id)} className="shrink-0 opacity-60 hover:opacity-100">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div key={b.id} className={`rounded-md border px-2 py-1 text-[11px] font-semibold ${calBlocoCor(b.label)}`}>
-                      {b.label || "—"}
-                    </div>
-                  )
-                )}
-                {calEdit && (
-                  <button
-                    onClick={() => addBloco(key)}
-                    className="w-full text-[11px] text-gray-400 border border-dashed border-gray-300 rounded-md py-1 hover:bg-white"
-                  >
-                    + bloco
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Tabs defaultValue="fluxo">
-        <TabsList className="mb-4">
-          <TabsTrigger value="fluxo">Opps da semana</TabsTrigger>
-          <TabsTrigger value="passo">Passo a passo das opps</TabsTrigger>
+      <Tabs defaultValue="semana">
+        <TabsList className="mb-4 flex-wrap h-auto">
+          <TabsTrigger value="semana">Semana</TabsTrigger>
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
+          <TabsTrigger value="como">Como funciona</TabsTrigger>
+          <TabsTrigger value="fluxo">Modo manual</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="semana">
+          <OppsSemana semanas={semanas} toquesPorItem={toquesPorItem} />
+        </TabsContent>
 
         <TabsContent value="desempenho">
           <OppsDesempenho data={desempenho} atualizadoEm={desempenhoAtualizadoEm} />
         </TabsContent>
 
         <TabsContent value="fluxo">
+      <div className="mb-4 flex gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[12px] text-amber-900">
+        <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+        <p>
+          Plano B, para quando o agente não rodar: colar e escolher as opps à mão, como era antes. Com o agente
+          funcionando, use a aba <b>Semana</b>. Esta aba sai depois de 2–3 quintas sem problema.
+        </p>
+      </div>
 
       {/* Grupo: tudo para o artefato da Mônica */}
       <div className="mb-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/30 p-4">
@@ -1534,7 +1369,13 @@ export function OppsClient({
         </TabsContent>
 
         {/* ── ABA: Passo a passo ──────────────────────────────────────────── */}
-        <TabsContent value="passo">
+        <TabsContent value="como">
+          <ComoFunciona />
+          <details className="mt-6 rounded-lg border border-gray-200 bg-white px-3 py-2">
+            <summary className="cursor-pointer text-[12px] font-medium text-gray-600">
+              Passo a passo antigo (manual, editável) — referência do modo manual
+            </summary>
+            <div className="mt-3">
           {/* Barra de edição */}
           <div className="flex justify-end mb-3">
             {editPasso ? (
@@ -1680,6 +1521,8 @@ export function OppsClient({
               </Card>
             </>
           )}
+            </div>
+          </details>
         </TabsContent>
       </Tabs>
     </div>

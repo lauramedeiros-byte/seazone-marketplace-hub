@@ -3,6 +3,7 @@ import { getOrCreateOppSemana } from "@/lib/actions";
 import { OppsClient } from "@/components/opps-client";
 import { getAllWeeks } from "@/lib/utils";
 import { montarDesempenho } from "@/lib/opps-desempenho";
+import type { ToqueView } from "@/components/opps-semana";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,8 @@ export default async function OppsPage() {
 
   const allWeeks = getAllWeeks(2025, 52);
 
-  const [passoRow, calRow] = await Promise.all([
-    db.oppsPassoAPasso.findUnique({ where: { id: "singleton" } }),
-    db.oppsCalendarioSemana.findUnique({ where: { id: "singleton" } }),
-  ]);
+  const passoRow = await db.oppsPassoAPasso.findUnique({ where: { id: "singleton" } });
   const passoInicial = (passoRow?.conteudoJson as unknown) ?? null;
-  const calendarioInicial = (calRow?.conteudoJson as unknown) ?? null;
 
   // Aba "Desempenho" + catálogo vivo para o "esfriando" (dados do cron sync-opps-desempenho)
   const [todosItens, campanhas, cotas, catalogo] = await Promise.all([
@@ -42,9 +39,33 @@ export default async function OppsPage() {
   const NOVO_DIAS = 30;
   const catalogoRevenda = catalogo.map((e) => ({
     nome: e.nome,
-    novo: Date.now() - e.primeiraVez.getTime() < NOVO_DIAS * 24 * 60 * 60 * 1000,
+    novo: now.getTime() - e.primeiraVez.getTime() < NOVO_DIAS * 24 * 60 * 60 * 1000,
   }));
-  const extras = { desempenho, desempenhoAtualizadoEm, catalogoRevenda };
+
+  // Aba "Semana": toques de marketing de cada opp (propostas do agente + ação no planejamento)
+  const propostasOpp = await db.propostaDisparo.findMany({
+    where: { origem: "opp-semana", oppItemId: { not: null } },
+    orderBy: [{ mes: "asc" }, { dia: "asc" }],
+  });
+  const acoes = await db.planejamentoAcao.findMany({
+    where: { id: { in: propostasOpp.map((p) => p.acaoId).filter((x): x is string => !!x) } },
+    select: { id: true, feito: true, rdCampanha: true },
+  });
+  const acaoPorId = new Map(acoes.map((a) => [a.id, a]));
+  const toquesPorItem: Record<string, ToqueView[]> = {};
+  for (const p of propostasOpp) {
+    const a = p.acaoId ? acaoPorId.get(p.acaoId) : undefined;
+    (toquesPorItem[p.oppItemId!] ??= []).push({
+      titulo: p.titulo,
+      mes: p.mes,
+      dia: p.dia,
+      status: p.status,
+      feito: a?.feito ?? false,
+      rdCampanha: a?.rdCampanha ?? null,
+    });
+  }
+
+  const extras = { desempenho, desempenhoAtualizadoEm, catalogoRevenda, toquesPorItem };
 
   const semanas = await Promise.all(
     allWeeks
@@ -76,7 +97,6 @@ export default async function OppsPage() {
       <OppsClient
         semanas={[withItems!]}
         passoInicial={passoInicial}
-        calendarioInicial={calendarioInicial}
         {...extras}
       />
     );
@@ -96,5 +116,5 @@ export default async function OppsPage() {
     validSemanas.unshift(withItems!);
   }
 
-  return <OppsClient semanas={validSemanas} passoInicial={passoInicial} calendarioInicial={calendarioInicial} {...extras} />;
+  return <OppsClient semanas={validSemanas} passoInicial={passoInicial} {...extras} />;
 }

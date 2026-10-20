@@ -78,6 +78,10 @@ model OppItem {
   Disparado          Boolean   @default(false)
   dataDisparo        DateTime?
   comentarioDisparo  String?
+  origem             String?   // "agente" = escolhida pelo agente da quinta; null = manual
+  slackStatus        String?   // Mônica: sugerida | aprovada | postada
+  slackLink          String?   // thread no #social-media-mkt (Mônica) ou no #laura-aprovar
+  pedidoTroca        String?   // motivo do botão "Trocar cota" (a cota morreu); o agente troca e limpa
   semanaId           String
   semana             OppSemana @relation(fields: [semanaId], references: [id], onDelete: Cascade)
   criadoPorId        String?
@@ -556,6 +560,8 @@ model PropostaDisparo {
   substituiId     String?   // proposta reprovada que esta substitui
   acaoExistenteId String?   // ação que a Laura já tinha planejado (proposta só traz a copy)
   acaoId          String?   // ação do planejamento criada/atualizada ao aprovar
+  origem          String    @default("propostas") // "propostas" (agente das 14h) | "opp-semana" (agente da quinta)
+  oppItemId       String?   // opp da semana (marketing) que esta proposta leva ao ar
   decididoEm      DateTime?
   criadoEm        DateTime  @default(now())
   atualizadoEm    DateTime  @updatedAt
@@ -568,6 +574,7 @@ model AprendizadoDisparo {
   id               String   @id @default(cuid())
   texto            String
   origemPropostaId String?
+  origem           String   @default("propostas") // de qual agente veio a reprovação
   ativo            Boolean  @default(true)
   criadoEm         DateTime @default(now())
 }

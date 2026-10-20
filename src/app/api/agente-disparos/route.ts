@@ -9,14 +9,17 @@ function autorizado(request: Request) {
   return !!esperado && request.headers.get("x-agente-token") === esperado;
 }
 
-// GET ?mes=YYYY-MM&dia=D  → planejamento do dia (frente Disparos Marketplace),
-// propostas do dia, reprovadas ainda sem substituta, aprendizados ativos e o pedido de
-// repasse em aberto (botão "Gerar aprendizado"), se houver.
+// GET ?mes=YYYY-MM&dia=D[&origem=propostas|opp-semana]  → planejamento do dia (frente
+// Disparos Marketplace), propostas do dia, reprovadas ainda sem substituta, aprendizados
+// ativos e o pedido de repasse em aberto (botão "Gerar aprendizado"), se houver.
+// `origem` separa os dois agentes: reprovadas e aprendizados vêm só da origem pedida
+// (padrão "propostas" = agente das 14h, que não manda o parâmetro).
 export async function GET(request: Request) {
   if (!autorizado(request)) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const url = new URL(request.url);
   const mes = url.searchParams.get("mes");
   const dia = Number(url.searchParams.get("dia"));
+  const origem = url.searchParams.get("origem") === "opp-semana" ? "opp-semana" : "propostas";
 
   const frente = await db.planejamentoFrente.findFirst({
     where: { nome: { equals: "Disparos Marketplace", mode: "insensitive" } },
@@ -28,8 +31,8 @@ export async function GET(request: Request) {
     mes && dia
       ? db.propostaDisparo.findMany({ where: { mes, dia }, orderBy: { ordem: "asc" } })
       : Promise.resolve([]),
-    db.propostaDisparo.findMany({ where: { status: "reprovada" }, orderBy: { decididoEm: "asc" } }),
-    db.aprendizadoDisparo.findMany({ where: { ativo: true }, orderBy: { criadoEm: "asc" } }),
+    db.propostaDisparo.findMany({ where: { status: "reprovada", origem }, orderBy: { decididoEm: "asc" } }),
+    db.aprendizadoDisparo.findMany({ where: { ativo: true, origem }, orderBy: { criadoEm: "asc" } }),
     db.pedidoRepasseDisparo.findFirst({
       where: { status: { in: ["pendente", "andamento"] } },
       orderBy: { criadoEm: "asc" },
@@ -94,6 +97,8 @@ export async function POST(request: Request) {
           racional: p.racional ?? null,
           substituiId: p.substituiId ?? null,
           acaoExistenteId: p.acaoExistenteId ?? null,
+          origem: p.origem === "opp-semana" ? "opp-semana" : "propostas",
+          oppItemId: p.oppItemId ?? null,
         },
       });
       if (p.substituiId)
