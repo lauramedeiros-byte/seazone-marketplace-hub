@@ -48,7 +48,8 @@ function publicacao(weekStart: Date | string): Date {
   const d = new Date(weekStart);
   return d.getTime() >= Date.UTC(2026, 9, 5) ? d : new Date(d.getTime() + 7 * 86400000);
 }
-const dm = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+// weekStart é a segunda à meia-noite "sem fuso" (lida como 00:00 UTC): formatar em UTC
+const dm = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
 
 function Passo({ ok, atual, children }: { ok: boolean; atual?: boolean; children: React.ReactNode }) {
   return (
