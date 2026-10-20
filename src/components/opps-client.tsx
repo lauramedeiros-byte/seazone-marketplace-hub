@@ -48,6 +48,8 @@ import {
   SEMANAS_PARA_ESFRIAR,
 } from "@/lib/empreendimentos-revenda";
 import { lerOpps, FORMATO_MODELO, type OppLida, type LeituraOpps } from "@/lib/opps-formato";
+import type { Desempenho } from "@/lib/opps-desempenho";
+import { OppsDesempenho } from "@/components/opps-desempenho";
 import {
   Dialog,
   DialogTrigger,
@@ -86,6 +88,10 @@ interface Props {
   semanas: OppSemana[];
   passoInicial?: unknown;
   calendarioInicial?: unknown;
+  desempenho?: Desempenho | null;
+  desempenhoAtualizadoEm?: string | null;
+  /** Empreendimentos com cota em revenda no catálogo vivo do Nekt (somados à lista fixa). */
+  catalogoRevenda?: { nome: string; novo: boolean }[];
 }
 
 function Step({ n, children, tone = "dark" }: { n: number; children: ReactNode; tone?: "dark" | "video" }) {
@@ -224,7 +230,14 @@ function renderComLinks(text: string): ReactNode {
   );
 }
 
-export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }: Props) {
+export function OppsClient({
+  semanas: initial,
+  passoInicial,
+  calendarioInicial,
+  desempenho = null,
+  desempenhoAtualizadoEm = null,
+  catalogoRevenda = [],
+}: Props) {
   const { user } = useUser();
   const [semanas, setSemanas] = useState(initial);
   const [passo, setPasso] = useState<PassoConteudo>(() => mergePasso(passoInicial));
@@ -324,7 +337,7 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
   // "Abordado" = apareceu em qualquer opp daquela semana, tendo ido ao ar ou não.
   // Tudo é contado só até a semana que está aberta, para a conta não mudar quando
   // ela navega para uma semana passada.
-  const { ofertasPorSemana, esfriando, inicioHistorico } = useMemo(() => {
+  const { ofertasPorSemana, esfriando, inicioHistorico, totalPortfolio } = useMemo(() => {
     const semanaBase = activeSemana ? new Date(activeSemana.weekStart) : new Date();
     const prevWeekTime = prevSemana ? new Date(prevSemana.weekStart).getTime() : null;
     const trazidos = new Set(
@@ -380,9 +393,18 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
       if (ofertas.length) grupos.push({ weekStart: s.weekStart, ofertas });
     }
 
-    const frios = EMPREENDIMENTOS_REVENDA.map((nome) => {
-      const ultimo = ultimoToque.get(chaveEmpreendimento(nome)) ?? null;
-      return { nome, ultimo, semanas: ultimo ? semanasEntre(ultimo, semanaBase) : null };
+    // lista fixa + catálogo vivo (empreendimento que sai de lançamento entra em revenda sozinho)
+    const portfolio = new Map<string, { nome: string; novo: boolean }>(
+      EMPREENDIMENTOS_REVENDA.map((nome) => [chaveEmpreendimento(nome), { nome, novo: false }])
+    );
+    for (const e of catalogoRevenda) {
+      const chave = chaveEmpreendimento(e.nome);
+      const ja = portfolio.get(chave);
+      portfolio.set(chave, { nome: ja?.nome ?? e.nome, novo: e.novo });
+    }
+    const frios = [...portfolio.entries()].map(([chave, { nome, novo }]) => {
+      const ultimo = ultimoToque.get(chave) ?? null;
+      return { nome: novo ? `🆕 ${nome}` : nome, ultimo, semanas: ultimo ? semanasEntre(ultimo, semanaBase) : null };
     })
       .filter((e) => e.semanas === null || e.semanas >= SEMANAS_PARA_ESFRIAR)
       .sort(
@@ -394,8 +416,9 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
       ofertasPorSemana: grupos,
       esfriando: frios,
       inicioHistorico: ate.length ? ate[ate.length - 1].weekStart : null,
+      totalPortfolio: portfolio.size,
     };
-  }, [semanas, activeSemana, prevSemana]);
+  }, [semanas, activeSemana, prevSemana, catalogoRevenda]);
 
   /** Grava no banco as opps já lidas. Devolve quantas entraram. */
   const gravarOpps = async (opps: OppLida[]) => {
@@ -845,7 +868,12 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
         <TabsList className="mb-4">
           <TabsTrigger value="fluxo">Opps da semana</TabsTrigger>
           <TabsTrigger value="passo">Passo a passo das opps</TabsTrigger>
+          <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="desempenho">
+          <OppsDesempenho data={desempenho} atualizadoEm={desempenhoAtualizadoEm} />
+        </TabsContent>
 
         <TabsContent value="fluxo">
 
@@ -1363,7 +1391,7 @@ export function OppsClient({ semanas: initial, passoInicial, calendarioInicial }
                   Esfriando · {SEMANAS_PARA_ESFRIAR}+ semanas fora
                 </h3>
                 <span className="text-[11px] text-gray-400 shrink-0">
-                  {esfriando.length} de {EMPREENDIMENTOS_REVENDA.length}
+                  {esfriando.length} de {totalPortfolio}
                 </span>
               </div>
               <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[420px] overflow-y-auto">

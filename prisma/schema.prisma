@@ -584,3 +584,44 @@ model PedidoRepasseDisparo {
 
   @@index([status])
 }
+
+// Desempenho das opps da semana (aba "Desempenho" de /opps-da-semana).
+// Preenchido pelo cron /api/cron/sync-opps-desempenho a partir do Nekt; uma linha por
+// campanha de opp da semana no motor (SIA). Levantada = clique positivo sem botão de
+// saída (piso); reunião = Reunião Realizada a Reserva, por acúmulo pós-envio.
+model OppDesempenho {
+  id           String   @id @default(cuid())
+  campanha     String   @unique
+  dataCamp     String   // "YYYY-MM-DD", do prefixo do nome da campanha
+  spotChave    String   // chaveEmpreendimento() do SPOT no nome da campanha
+  toque        String   // "1T" | "2T"
+  envios       Int
+  levantadas   Int
+  agendou      Int
+  reuniao      Int
+  contrato     Int
+  atualizadoEm DateTime @updatedAt
+}
+
+// Status de venda das cotas que já apareceram em opp da semana (Nekt, histórico do marketplace).
+model OppCotaStatus {
+  id               String   @id @default(cuid())
+  spotChave        String
+  cota             String
+  statusAtual      String?
+  primeiraVendaEm  String?  // "YYYY-MM-DD" do 1º registro com status 'vendida'
+  primeiraReservaEm String? // "YYYY-MM-DD" do 1º registro em negociacao/contrato/bloqueada
+  atualizadoEm     DateTime @updatedAt
+
+  @@unique([spotChave, cota])
+}
+
+// Empreendimentos com cota em revenda no catálogo vivo do Nekt. Empreendimento que sai
+// de lançamento (grupo fechado) passa a ter cota em revenda e aparece aqui sozinho.
+model RevendaEmpreendimento {
+  chave            String   @id
+  nome             String
+  primeiraVez      DateTime @default(now()) // 2000-01-01 = já existia no 1º sync
+  cotasDisponiveis Int
+  atualizadoEm     DateTime @updatedAt
+}
