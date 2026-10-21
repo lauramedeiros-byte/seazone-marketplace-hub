@@ -40,7 +40,8 @@ export async function GET(request: Request) {
       }),
       db.oppItem.findMany({ where: { pedidoTroca: { not: null } }, include: { semana: true } }),
       db.propostaDisparo.findMany({ where: { status: "reprovada", origem: "opp-semana" }, orderBy: { decididoEm: "asc" } }),
-      db.aprendizadoDisparo.findMany({ where: { ativo: true }, orderBy: { criadoEm: "asc" } }),
+      // aprendizados da comunidade (posts do WhatsApp) não valem para a escolha das opps
+      db.aprendizadoDisparo.findMany({ where: { ativo: true, origem: { not: "comunidade" } }, orderBy: { criadoEm: "asc" } }),
       db.revendaEmpreendimento.findMany({ orderBy: { nome: "asc" } }),
     ]);
 

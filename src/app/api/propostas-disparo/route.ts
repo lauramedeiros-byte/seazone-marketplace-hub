@@ -52,7 +52,8 @@ export async function POST(request: Request) {
       case "criar-aprendizado": {
         const texto = String(data.texto ?? "").trim();
         if (!texto) return NextResponse.json({ error: "Texto vazio" }, { status: 400 });
-        const aprendizado = await db.aprendizadoDisparo.create({ data: { texto } });
+        const origem = data.origem === "comunidade" ? "comunidade" : "propostas";
+        const aprendizado = await db.aprendizadoDisparo.create({ data: { texto, origem } });
         revalidatePath("/planejamento-organico/propostas");
         return NextResponse.json({ success: true, aprendizado });
       }

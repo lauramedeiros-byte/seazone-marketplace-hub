@@ -1,13 +1,17 @@
 import { db } from "@/lib/db";
 
 // Frente onde as propostas aprovadas entram (por nome, para não depender do id).
-const FRENTE_NOME = "Disparos Marketplace";
+// Agente da comunidade (segunda 8h40) → "Comunidade WPP"; os outros → "Disparos Marketplace".
+export function nomeFrente(origem: string) {
+  return origem === "comunidade" ? "Comunidade WPP" : "Disparos Marketplace";
+}
 
-async function frenteMarketplaceId(): Promise<string> {
+async function frenteId(origem: string): Promise<string> {
+  const nome = nomeFrente(origem);
   const f = await db.planejamentoFrente.findFirst({
-    where: { nome: { equals: FRENTE_NOME, mode: "insensitive" } },
+    where: { nome: { equals: nome, mode: "insensitive" } },
   });
-  if (!f) throw new Error(`Frente "${FRENTE_NOME}" não encontrada no planejamento`);
+  if (!f) throw new Error(`Frente "${nome}" não encontrada no planejamento`);
   return f.id;
 }
 
@@ -23,7 +27,7 @@ export async function aprovarProposta(id: string, whatsappEditado?: string) {
 
   const whatsapp = whatsappEditado?.trim() || p.whatsapp;
   const nota = [
-    "Proposta do agente de disparos",
+    p.origem === "comunidade" ? "Proposta do agente da comunidade" : "Proposta do agente de disparos",
     p.contatos ? `~${p.contatos.toLocaleString("pt-BR")} contatos` : null,
     p.base,
   ]
@@ -46,11 +50,11 @@ export async function aprovarProposta(id: string, whatsappEditado?: string) {
     });
     acaoId = a.id;
   } else {
-    const frenteId = await frenteMarketplaceId();
-    const ordem = await db.planejamentoAcao.count({ where: { frenteId, mes: p.mes, dia: p.dia } });
+    const fid = await frenteId(p.origem);
+    const ordem = await db.planejamentoAcao.count({ where: { frenteId: fid, mes: p.mes, dia: p.dia } });
     const a = await db.planejamentoAcao.create({
       data: {
-        frenteId,
+        frenteId: fid,
         mes: p.mes,
         dia: p.dia,
         titulo: p.titulo,

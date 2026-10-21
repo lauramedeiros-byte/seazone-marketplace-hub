@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Check, X, Undo2, Lightbulb, Users, Building2, Plus, Sparkles, Loader2, AlertTriangle, Trash2, ExternalLink,
   Bot, Inbox, CheckCircle2, History, BookOpen, Clock, MessageSquare, Send, CalendarCheck, Target, Rocket,
-  ArrowRight, ChevronDown, Database, Pencil,
+  ArrowRight, ChevronDown, Database, Pencil, Megaphone, Newspaper,
 } from "lucide-react";
 
 interface Proposta {
@@ -34,6 +34,7 @@ interface Aprendizado {
   id: string;
   texto: string;
   ativo: boolean;
+  origem?: string;
   criadoEm: string;
 }
 interface Pedido {
@@ -51,6 +52,9 @@ interface Dados {
 }
 
 type Aba = "decidir" | "aprovadas" | "historico" | "aprendizados" | "como-funciona";
+// Dois agentes na mesma página: disparos (14h + opps da quinta) e comunidade do WhatsApp (segunda 8h40).
+type Grupo = "disparos" | "comunidade";
+const daComunidade = (x: { origem?: string }) => x.origem === "comunidade";
 
 const META_DIA = 4000;
 const DIAS_SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
@@ -86,9 +90,23 @@ async function api(body: Record<string, unknown>) {
   return j;
 }
 
-export function PropostasClient({ inicial }: { inicial: Dados }) {
-  const [propostas, setPropostas] = useState(inicial.propostas);
-  const [aprendizados, setAprendizados] = useState(inicial.aprendizados);
+export function PropostasClient({ inicial, grupoInicial = "disparos" }: { inicial: Dados; grupoInicial?: Grupo }) {
+  const [todasPropostas, setPropostas] = useState(inicial.propostas);
+  const [todosAprendizados, setAprendizados] = useState(inicial.aprendizados);
+  const [grupo, setGrupo] = useState<Grupo>(grupoInicial);
+  const comunidade = grupo === "comunidade";
+  const propostas = useMemo(
+    () => todasPropostas.filter((p) => daComunidade(p) === comunidade),
+    [todasPropostas, comunidade]
+  );
+  const aprendizados = useMemo(
+    () => todosAprendizados.filter((a) => daComunidade(a) === comunidade),
+    [todosAprendizados, comunidade]
+  );
+  const contagem = (g: Grupo) =>
+    todasPropostas.filter(
+      (p) => daComunidade(p) === (g === "comunidade") && (p.status === "pendente" || p.status === "reprovada")
+    ).length;
   const [pedido, setPedido] = useState(inicial.pedido);
   const [aba, setAba] = useState<Aba>("decidir");
   const [copias, setCopias] = useState<Record<string, string>>({});
@@ -164,7 +182,7 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
   async function criarAprendizado() {
     if (!novoAprendizado.trim()) return;
     try {
-      const j = await api({ action: "criar-aprendizado", texto: novoAprendizado });
+      const j = await api({ action: "criar-aprendizado", texto: novoAprendizado, origem: comunidade ? "comunidade" : "propostas" });
       setAprendizados((a) => [j.aprendizado, ...a]);
       setNovoAprendizado("");
     } catch (e) {
@@ -184,6 +202,29 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <BackButton />
 
+      {/* Qual agente */}
+      <div className="mb-4 inline-flex rounded-xl border border-gray-200 bg-gray-50 p-1">
+        {([
+          ["disparos", "Disparos Marketplace", Send],
+          ["comunidade", "Comunidade WPP", Megaphone],
+        ] as const).map(([g, label, Icon]) => (
+          <button
+            key={g}
+            onClick={() => {
+              setGrupo(g);
+              setReprovando(null);
+            }}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+              grupo === g ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+            {contagem(g) > 0 && <span className="rounded-full bg-amber-200 px-1.5 text-xs text-amber-900">{contagem(g)}</span>}
+          </button>
+        ))}
+      </div>
+
       {/* Cabeçalho */}
       <div className="mb-6 rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-white to-blue-50/60 p-6 shadow-sm">
         <div className="flex flex-wrap items-start gap-4">
@@ -191,11 +232,15 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
             <Bot className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-[240px]">
-            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">Agente de disparos · Marketplace</div>
-            <h1 className="text-2xl font-bold text-gray-900">Propostas de disparo</h1>
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+              {comunidade ? "Agente da comunidade · WhatsApp" : "Agente de disparos · Marketplace"}
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">{comunidade ? "Posts da comunidade" : "Propostas de disparo"}</h1>
             <p className="mt-1 text-sm text-gray-600 max-w-2xl">
-              Todo dia útil às 14h o agente propõe os disparos do dia seguinte. Você aprova (vai direto para o
-              planejamento) ou reprova com um comentário (vira aprendizado e ele refaz).{" "}
+              {comunidade
+                ? "Toda segunda às 8h40 o agente propõe os posts da semana (seg a sex), com uma oportunidade de revenda na quarta ou na quinta. "
+                : "Todo dia útil às 14h o agente propõe os disparos do dia seguinte. "}
+              Você aprova (vai direto para o planejamento) ou reprova com um comentário (vira aprendizado e ele refaz).{" "}
               <button onClick={() => setAba("como-funciona")} className="font-medium text-blue-700 hover:underline">
                 Ver passo a passo →
               </button>
@@ -211,18 +256,27 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
             rotulo="aguardando seu OK"
             detalhe={reprovadas.length ? `+ ${reprovadas.length} reprovada${reprovadas.length > 1 ? "s" : ""} com o agente` : undefined}
           />
-          <Indicador
-            icon={Users}
-            cor="text-blue-600 bg-blue-50"
-            valor={num(somaContatos(pendentes))}
-            rotulo="contatos nas pendentes"
-          />
+          {comunidade ? (
+            <Indicador
+              icon={Building2}
+              cor="text-orange-600 bg-orange-50"
+              valor={num(pendentes.filter((p) => p.empreendimentos).length)}
+              rotulo="oportunidades nas pendentes"
+            />
+          ) : (
+            <Indicador
+              icon={Users}
+              cor="text-blue-600 bg-blue-50"
+              valor={num(somaContatos(pendentes))}
+              rotulo="contatos nas pendentes"
+            />
+          )}
           <Indicador
             icon={CheckCircle2}
             cor="text-green-600 bg-green-50"
             valor={num(aprovadas.length)}
             rotulo="aprovadas em 30 dias"
-            detalhe={aprovadas.length ? `${num(somaContatos(aprovadas))} contatos` : undefined}
+            detalhe={!comunidade && aprovadas.length ? `${num(somaContatos(aprovadas))} contatos` : undefined}
           />
           <Indicador icon={Lightbulb} cor="text-violet-600 bg-violet-50" valor={num(ativos)} rotulo="aprendizados ativos" />
         </div>
@@ -274,7 +328,9 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
 
           {decidir.length === 0 && (
             <Vazio icon={CalendarCheck} titulo="Tudo decidido por aqui">
-              A próxima rodada do agente sai às 14h. Na sexta ele já propõe sábado, domingo e segunda.
+              {comunidade
+                ? "A próxima rodada sai na segunda às 8h40, com a semana inteira."
+                : "A próxima rodada do agente sai às 14h. Na sexta ele já propõe sábado, domingo e segunda."}
             </Vazio>
           )}
 
@@ -283,7 +339,7 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
             const jaAprovados = somaContatos(aprovadas.filter((p) => chaveDia(p) === k));
             return (
               <section key={k} className="mb-10">
-                <CabecalhoDia mes={lista[0].mes} dia={lista[0].dia} pendentes={somaPend} aprovados={jaAprovados} />
+                <CabecalhoDia mes={lista[0].mes} dia={lista[0].dia} pendentes={somaPend} aprovados={jaAprovados} semMeta={comunidade} />
                 <div className="space-y-5">
                   {lista.map((p) =>
                     p.status === "reprovada" ? (
@@ -358,7 +414,11 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
                               <Textarea
                                 autoFocus
                                 className="bg-white"
-                                placeholder="Ex.: troque o SPOT, Urubici não converte em lost com opp · para hóspede de SP ofereça SPOT pronto · tom muito formal · não citar 3 cotas"
+                                placeholder={
+                                  comunidade
+                                    ? "Ex.: tema parecido com o da semana passada · notícia velha, busque outra · tom muito formal · troque a oportunidade"
+                                    : "Ex.: troque o SPOT, Urubici não converte em lost com opp · para hóspede de SP ofereça SPOT pronto · tom muito formal · não citar 3 cotas"
+                                }
                                 value={comentarios[p.id] ?? ""}
                                 onChange={(e) => setComentarios((c) => ({ ...c, [p.id]: e.target.value }))}
                               />
@@ -404,7 +464,7 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
           renderAcoes={(p) => (
             <>
               <a
-                href="/planejamento-organico"
+                href={comunidade ? "/planejamento-organico?frente=comunidade-wpp" : "/planejamento-organico"}
                 className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:underline"
               >
                 <ExternalLink className="w-3.5 h-3.5" /> Ver no planejamento
@@ -481,7 +541,7 @@ export function PropostasClient({ inicial }: { inicial: Dados }) {
         </section>
       )}
 
-      {aba === "como-funciona" && <ComoFunciona />}
+      {aba === "como-funciona" && (comunidade ? <ComoFuncionaComunidade /> : <ComoFunciona />)}
     </div>
   );
 }
@@ -516,7 +576,10 @@ function Vazio({ icon: Icon, titulo, children }: { icon: typeof Inbox; titulo: s
 }
 
 // Dia + barra de progresso até a meta de contatos (aprovados + pendentes).
-function CabecalhoDia({ mes, dia, pendentes, aprovados }: { mes: string; dia: number; pendentes: number; aprovados: number }) {
+function CabecalhoDia({
+  mes, dia, pendentes, aprovados, semMeta,
+}: { mes: string; dia: number; pendentes: number; aprovados: number; semMeta?: boolean }) {
+  if (semMeta) return <h2 className="mb-4 text-lg font-semibold text-gray-900 capitalize">{rotuloDia(mes, dia)}</h2>;
   const total = pendentes + aprovados;
   const ok = total >= META_DIA;
   const pct = (v: number) => `${Math.min(100, (v / Math.max(total, META_DIA)) * 100)}%`;
@@ -619,7 +682,7 @@ function Detalhes({ p }: { p: Proposta }) {
       )}
       {p.base && (
         <div className="rounded-xl bg-gray-50 px-3 py-2.5">
-          <div className="mb-0.5 flex items-center gap-1 text-xs font-semibold text-gray-500"><Database className="w-3.5 h-3.5" /> Base e recorte</div>
+          <div className="mb-0.5 flex items-center gap-1 text-xs font-semibold text-gray-500"><Database className="w-3.5 h-3.5" /> {daComunidade(p) ? "Tema e fontes" : "Base e recorte"}</div>
           <div className="leading-relaxed text-gray-800">{p.base}</div>
         </div>
       )}
@@ -638,6 +701,16 @@ function Detalhes({ p }: { p: Proposta }) {
 
 // Proposta do agente das opps da semana (quinta 8h40), não do agente das 14h.
 function SeloOpp({ p }: { p: Proposta }) {
+  if (daComunidade(p))
+    return p.empreendimentos ? (
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 shrink-0">
+        <Building2 className="w-3 h-3" /> Oportunidade
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 shrink-0">
+        <Newspaper className="w-3 h-3" /> Conteúdo
+      </span>
+    );
   if (p.origem !== "opp-semana") return null;
   return (
     <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 shrink-0">
@@ -692,7 +765,7 @@ function ListaCompacta({
         <section key={k} className="mb-8">
           <div className="flex items-baseline justify-between mb-2">
             <h2 className="text-base font-semibold text-gray-900 capitalize">{rotuloDia(lista[0].mes, lista[0].dia)}</h2>
-            <span className="text-xs text-gray-500">{num(somaContatos(lista))} contatos</span>
+            {somaContatos(lista) > 0 && <span className="text-xs text-gray-500">{num(somaContatos(lista))} contatos</span>}
           </div>
           <div className="space-y-2">
             {lista.map((p) => (
@@ -898,5 +971,83 @@ function ComoFunciona() {
         </div>
       </section>
     </div>
+  );
+}
+
+// ── Passo a passo do agente da comunidade ───────────────────────────────────
+const PASSOS_COMUNIDADE: { icon: typeof Inbox; titulo: string; quando: string; texto: ReactNode }[] = [
+  {
+    icon: Bot,
+    titulo: "O agente monta a semana",
+    quando: "Segunda, 8h40",
+    texto: (
+      <>
+        Lê os posts que você já publicou na frente Comunidade WPP (tom e temas dos últimos 60 dias), busca notícia de
+        aluguel por temporada (FipeZap, Folha, Estadão), turismo por região no blog da Seazone e vídeos da Mônica, e
+        propõe <b>um post por dia, de segunda a sexta</b>. Dia que você já planejou não é tocado.
+      </>
+    ),
+  },
+  {
+    icon: Building2,
+    titulo: "Uma oportunidade no meio da semana",
+    quando: "Quarta ou quinta, à tarde",
+    texto: (
+      <>
+        Um 2º post com uma oportunidade de revenda bem forte (preço que baixou, vista para o mar, renda alta para o
+        preço), <b>nunca uma das opps da semana</b>, no tom do post do Cachoeira Beach Spot.
+      </>
+    ),
+  },
+  {
+    icon: Check,
+    titulo: "Aprovar",
+    quando: "Quando o post está bom",
+    texto: (
+      <>
+        O post entra direto no <b>Planejamento Orgânico</b>, na frente &quot;Comunidade WPP&quot;, com o texto do jeito
+        que você editou.
+      </>
+    ),
+  },
+  {
+    icon: X,
+    titulo: "Reprovar com comentário",
+    quando: "Quando algo não ficou legal",
+    texto: (
+      <>
+        O comentário vira um <b>aprendizado</b> só da comunidade (não mistura com os disparos) e o agente refaz: na
+        hora com &quot;Reprovar e refazer agora&quot;, ou sozinho de 30 em 30 minutos.
+      </>
+    ),
+  },
+];
+
+function ComoFuncionaComunidade() {
+  return (
+    <section>
+      <h2 className="text-lg font-semibold text-gray-900 mb-1">Passo a passo</h2>
+      <p className="text-sm text-gray-600 mb-4">Da semana proposta até o post no planejamento.</p>
+      <ol className="grid gap-3 sm:grid-cols-2">
+        {PASSOS_COMUNIDADE.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <li key={s.titulo} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="mb-2 flex items-center gap-2.5">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                  {i + 1}
+                </span>
+                <Icon className="w-4 h-4 text-blue-600" />
+                <h3 className="font-semibold text-gray-900">{s.titulo}</h3>
+              </div>
+              <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                <Clock className="w-3 h-3" /> {s.quando}
+              </div>
+              <p className="text-sm leading-relaxed text-gray-700">{s.texto}</p>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }
