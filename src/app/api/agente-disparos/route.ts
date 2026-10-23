@@ -14,7 +14,7 @@ function autorizado(request: Request) {
 // Disparos Marketplace), propostas do dia, reprovadas ainda sem substituta, aprendizados
 // ativos e o pedido de repasse em aberto (botão "Gerar aprendizado"), se houver.
 // `origem` separa os agentes: reprovadas e aprendizados vêm só da origem pedida
-// (padrão "propostas" = agente das 14h, que não manda o parâmetro).
+// (padrão "propostas" = agente das 11h, que não manda o parâmetro).
 // origem=comunidade (agente da comunidade, segunda 8h40): frente "Comunidade WPP" e, sem
 // mes/dia, os posts e as propostas dos últimos ~60 dias (tom, temas já usados, dias ocupados).
 export async function GET(request: Request) {
