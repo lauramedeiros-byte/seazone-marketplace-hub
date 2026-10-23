@@ -52,7 +52,7 @@ interface Dados {
 }
 
 type Aba = "decidir" | "aprovadas" | "historico" | "aprendizados" | "como-funciona";
-// Dois agentes na mesma página: disparos (14h + opps da quinta) e comunidade do WhatsApp (segunda 8h40).
+// Dois agentes na mesma página: disparos (11h + opps da quinta) e comunidade do WhatsApp (segunda 8h40).
 type Grupo = "disparos" | "comunidade";
 const daComunidade = (x: { origem?: string }) => x.origem === "comunidade";
 
@@ -239,7 +239,7 @@ export function PropostasClient({ inicial, grupoInicial = "disparos" }: { inicia
             <p className="mt-1 text-sm text-gray-600 max-w-2xl">
               {comunidade
                 ? "Toda segunda às 8h40 o agente propõe os posts da semana (seg a sex), com uma oportunidade de revenda na quarta ou na quinta. "
-                : "Todo dia útil às 14h o agente propõe os disparos do dia seguinte. "}
+                : "Todo dia útil às 11h o agente propõe os disparos do dia seguinte. "}
               Você aprova (vai direto para o planejamento) ou reprova com um comentário (vira aprendizado e ele refaz).{" "}
               <button onClick={() => setAba("como-funciona")} className="font-medium text-blue-700 hover:underline">
                 Ver passo a passo →
@@ -330,7 +330,7 @@ export function PropostasClient({ inicial, grupoInicial = "disparos" }: { inicia
             <Vazio icon={CalendarCheck} titulo="Tudo decidido por aqui">
               {comunidade
                 ? "A próxima rodada sai na segunda às 8h40, com a semana inteira."
-                : "A próxima rodada do agente sai às 14h. Na sexta ele já propõe sábado, domingo e segunda."}
+                : "A próxima rodada do agente sai às 11h. Na sexta ele já propõe sábado, domingo e segunda."}
             </Vazio>
           )}
 
@@ -699,7 +699,7 @@ function Detalhes({ p }: { p: Proposta }) {
   );
 }
 
-// Proposta do agente das opps da semana (quinta 8h40), não do agente das 14h.
+// Proposta do agente das opps da semana (quinta 8h40), não do agente das 11h.
 function SeloOpp({ p }: { p: Proposta }) {
   if (daComunidade(p))
     return p.empreendimentos ? (
@@ -804,7 +804,7 @@ const PASSOS: { icon: typeof Inbox; titulo: string; quando: string; texto: React
   {
     icon: Bot,
     titulo: "O agente estuda os dados",
-    quando: "Seg a sex, 14h",
+    quando: "Seg a sex, 11h",
     texto: (
       <>
         Lê no data lake (Nekt) as levantadas de mão e as reuniões dos últimos 30 dias por base e por SPOT, o histórico
@@ -845,7 +845,7 @@ const PASSOS: { icon: typeof Inbox; titulo: string; quando: string; texto: React
       <>
         O comentário vira um <b>aprendizado</b>. Com &quot;Reprovar e refazer agora&quot; o agente refaz em 5 a 10
         minutos. Para comentar várias antes, use &quot;Só reprovar&quot; e, no fim, o botão <b>Gerar aprendizado</b>.
-        Sem clique, ele refaz sozinho de 30 em 30 minutos, das 14h30 às 19h.
+        Sem clique, ele refaz sozinho de 30 em 30 minutos, das 11h30 às 19h.
       </>
     ),
   },
