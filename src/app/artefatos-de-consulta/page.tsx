@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, Users, TrendingUp, Search, Layers, Send, MessageSquare, Activity, CalendarDays, Presentation, Sparkles, ArrowRight, Link2, BarChart3, Archive } from "lucide-react";
+import { ExternalLink, ShoppingCart, Megaphone, Building2, Image, Users, TrendingUp, Search, Layers, Send, MessageSquare, Activity, CalendarDays, Presentation, Sparkles, ArrowRight, Link2, BarChart3, Archive, Map as MapIcon } from "lucide-react";
 
 type Link = {
   url: string;
@@ -110,6 +110,16 @@ const links: Link[] = [
     descricao:
       "Material de apoio do time comercial: o que cada criativo no ar promete e o que sondar do lead. Editável — dá para adicionar e remover materiais.",
     icone: Megaphone,
+    cor: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+  {
+    grupo: "comercial",
+    interno: true,
+    url: "/artefatos-de-consulta/mapa-spots",
+    titulo: "Mapa interativo dos SPOTs",
+    descricao:
+      "Mapas de satélite do Brasil e de Florianópolis para mostrar ao cliente onde fica cada SPOT, com fotos, a partir de, metragem, entrega e fase da obra — números ao vivo do spotômetro e do SZI.",
+    icone: MapIcon,
     cor: "bg-orange-100 text-orange-700 border-orange-200",
   },
 

@@ -1,0 +1,2438 @@
+[
+ {
+  "id": 2,
+  "nome": "Cachoeira Beach Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Cachoeira do Bom Jesus",
+  "lat": -27.42154,
+  "lon": -48.43521,
+  "dif": "Frente-mar na Praia da Cachoeira do Bom Jesus, com piscina climatizada",
+  "fotos": [
+   "fotos/s2-0.jpg",
+   "fotos/s2-1.jpg"
+  ],
+  "tags": [
+   [
+    "areia",
+    "Pé na areia"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Trapiche de Canasvieiras",
+    "2,5 km"
+   ],
+   [
+    "Trilha Caminho do Rei",
+    "3,1 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 285000.0,
+   "m2min": 14.58,
+   "m2max": 27.31
+  }
+ },
+ {
+  "id": 3,
+  "nome": "Cachoeira Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Cachoeira do Bom Jesus",
+  "lat": -27.422848,
+  "lon": -48.437919,
+  "dif": "Pé na areia da Praia da Cachoeira do Bom Jesus, com piscina aquecida de borda infinita",
+  "fotos": [
+   "fotos/s3-0.jpg",
+   "fotos/s3-1.jpg",
+   "fotos/s3-2.jpg"
+  ],
+  "tags": [
+   [
+    "areia",
+    "Pé na areia"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ],
+   [
+    "bar",
+    "Bar"
+   ]
+  ],
+  "perto": [
+   [
+    "Trapiche de Canasvieiras",
+    "1,3 km"
+   ],
+   [
+    "Trilha Caminho do Rei",
+    "3,5 km"
+   ],
+   [
+    "Travessia para Ilha do Francês",
+    "4,9 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2028,
+   "pct": 0,
+   "preco": 316629.71,
+   "m2min": 15.07,
+   "m2max": 34.99
+  }
+ },
+ {
+  "id": 4,
+  "nome": "Santo Antônio Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Sambaqui",
+  "lat": -27.4929,
+  "lon": -48.5276,
+  "dif": "No bairro histórico à beira-mar de Santo Antônio de Lisboa, com rooftop de frente para a Baía Norte",
+  "fotos": [
+   "fotos/s4-0.jpg",
+   "fotos/s4-1.jpg",
+   "fotos/s4-2.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Feira das Alfaias",
+    "300 m"
+   ],
+   [
+    "Igreja Nossa Senhora das Necessidades",
+    "550 m"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 283067.18,
+   "m2min": 15.25,
+   "m2max": 98.98
+  }
+ },
+ {
+  "id": 5,
+  "nome": "Canasvieiras Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Canasvieiras",
+  "lat": -27.431068,
+  "lon": -48.465181,
+  "dif": "A 450 m da Praia de Canasvieiras, com piscina aquecida de borda infinita",
+  "fotos": [
+   "fotos/s5-0.jpg",
+   "fotos/s5-1.jpg",
+   "fotos/s5-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 450 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ],
+   [
+    "bar",
+    "Bar"
+   ]
+  ],
+  "perto": [
+   [
+    "Travessia para a Ilha do Francês",
+    "1,4 km"
+   ],
+   [
+    "Trapiche de Canasvieiras",
+    "1,8 km"
+   ],
+   [
+    "Praia Brava",
+    "9,4 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2027,
+   "pct": 10.67,
+   "preco": 263000.0,
+   "m2min": 14.64,
+   "m2max": 40.32
+  }
+ },
+ {
+  "id": 6,
+  "nome": "Ilha do Campeche Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Campeche",
+  "lat": -27.684216,
+  "lon": -48.482494,
+  "dif": "A 170 m da Praia do Campeche, com piscina aquecida de borda infinita e minimarket",
+  "fotos": [
+   "fotos/s6-0.jpg",
+   "fotos/s6-1.jpg",
+   "fotos/s6-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 170 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ],
+   [
+    "bar",
+    "Bar"
+   ]
+  ],
+  "perto": [
+   [
+    "Travessia para a Ilha do Campeche",
+    "1 km"
+   ],
+   [
+    "Mirante do Morro das Pedras",
+    "5 km"
+   ],
+   [
+    "Trilha da Lagoinha do Leste",
+    "11 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2028,
+   "pct": 0,
+   "preco": 320605.27,
+   "m2min": 19.48,
+   "m2max": 40.49
+  }
+ },
+ {
+  "id": 8,
+  "nome": "Ingleses Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Ingleses",
+  "lat": -27.4317296,
+  "lon": -48.4016796,
+  "dif": "A 300 m da Praia dos Ingleses, com rooftop e piscina",
+  "fotos": [
+   "fotos/s8-0.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 300 m"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Comércio, padarias e restaurantes",
+    "próximo"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2026,
+   "pct": 80.56,
+   "preco": 353797.37,
+   "m2min": 15.57,
+   "m2max": 38.18
+  }
+ },
+ {
+  "id": 10,
+  "nome": "Jurerê Beach Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Jurerê",
+  "lat": -27.438967,
+  "lon": -48.484253,
+  "dif": "Seis pavimentos em Jurerê, com rooftop e deck de lazer perto da praia",
+  "fotos": [
+   "fotos/s10-0.jpg",
+   "fotos/s10-1.jpg",
+   "fotos/s10-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 100 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia de Canajurê",
+    "1,6 km"
+   ],
+   [
+    "Praia de Canasvieiras",
+    "3,7 km"
+   ],
+   [
+    "Praia do Forte",
+    "4 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2027,
+   "pct": 8.99,
+   "preco": 689000.0,
+   "m2min": 16.81,
+   "m2max": 32.92
+  }
+ },
+ {
+  "id": 11,
+  "nome": "Lagoa Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Lagoa da Conceição",
+  "lat": -27.6047439,
+  "lon": -48.4698026,
+  "dif": "Rooftop com piscina de borda infinita e vista para a Lagoa da Conceição",
+  "fotos": [
+   "fotos/s11-0.jpg",
+   "fotos/s11-1.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista para a lagoa"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia da Joaquina",
+    "6,5 km"
+   ],
+   [
+    "Barra da Lagoa",
+    "9,3 km"
+   ]
+  ],
+  "reserva": {
+   "status": "entregue",
+   "ano": 2025,
+   "pct": 100,
+   "preco": 620000.0,
+   "m2min": 19.72,
+   "m2max": 28.3
+  }
+ },
+ {
+  "id": 12,
+  "nome": "Morro das Pedras Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Morro das Pedras",
+  "lat": -27.713043,
+  "lon": -48.503425,
+  "dif": "Bairro tranquilo com vista para o mar, piscina aquecida e lazer completo",
+  "fotos": [
+   "fotos/s12-0.jpg",
+   "fotos/s12-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 230 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Morro das Pedras Bar e Restaurante",
+    "550 m"
+   ],
+   [
+    "Mirante do Morro das Pedras",
+    "900 m"
+   ],
+   [
+    "Praia da Armação",
+    "4,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2028,
+   "pct": 0,
+   "preco": 342485.69,
+   "m2min": 17.81,
+   "m2max": 44.27
+  }
+ },
+ {
+  "id": 17,
+  "nome": "Campeche Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Campeche",
+  "lat": -27.70498,
+  "lon": -48.49999,
+  "dif": "A 220 m da Praia do Campeche, com piscina vista mar e lazer entregue mobiliado",
+  "fotos": [
+   "fotos/s17-0.jpg",
+   "fotos/s17-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 220 m"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ],
+   [
+    "bar",
+    "Bar"
+   ]
+  ],
+  "perto": [
+   [
+    "Mirante do Morro das Pedras",
+    "2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2027,
+   "pct": 26.71,
+   "preco": 348000.0,
+   "m2min": 18.86,
+   "m2max": 50.12
+  }
+ },
+ {
+  "id": 18,
+  "nome": "Sul da Ilha Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Campeche",
+  "lat": -27.6980291,
+  "lon": -48.4932862,
+  "dif": "A poucos metros da Praia do Campeche, com piscina de borda infinita",
+  "fotos": [
+   "fotos/s18-0.jpg",
+   "fotos/s18-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 750 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Travessia para Ilha do Campeche",
+    "1,4 km"
+   ],
+   [
+    "Mirante do Morro das Pedras",
+    "3,9 km"
+   ],
+   [
+    "Via Gastronômica Ribeirão da Ilha",
+    "10,7 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 288439.89,
+   "m2min": 16.75,
+   "m2max": 45.09
+  }
+ },
+ {
+  "id": 24,
+  "nome": "Barra Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Barra da Lagoa",
+  "lat": -27.574837,
+  "lon": -48.427367,
+  "dif": "Piscina com vista para o mar na Barra da Lagoa e rooftop de lazer",
+  "fotos": [
+   "fotos/s24-0.jpg",
+   "fotos/s24-1.jpg",
+   "fotos/s24-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 400 m"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Piscinas Naturais da Barra da Lagoa",
+    "850 m"
+   ],
+   [
+    "Lagoa da Conceição",
+    "2 km"
+   ],
+   [
+    "Praia Mole",
+    "4,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2028,
+   "pct": 0,
+   "preco": null,
+   "m2min": null,
+   "m2max": null
+  }
+ },
+ {
+  "id": 25,
+  "nome": "Santinho Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Santinho",
+  "lat": -27.4598252,
+  "lon": -48.3810825,
+  "dif": "Perto da Praia do Santinho, com deck externo e piscina",
+  "fotos": [
+   "fotos/s25-0.jpg",
+   "fotos/s25-1.jpg"
+  ],
+  "tags": [
+   [
+    "areia",
+    "Pé na areia"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Costão do Santinho",
+    "550 m"
+   ],
+   [
+    "Museu Arqueológico ao Ar Livre",
+    "1,2 km"
+   ],
+   [
+    "Trilha do Santinho",
+    "1,4 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 295000.0,
+   "m2min": 17.44,
+   "m2max": 53.69
+  }
+ },
+ {
+  "id": 29,
+  "nome": "Ilha do Campeche II Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Campeche",
+  "lat": -27.6840272,
+  "lon": -48.4824023,
+  "dif": "Pé na areia no Campeche, em localização premium",
+  "fotos": [
+   "fotos/s29-0.jpg",
+   "fotos/s29-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 190 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Travessia para Ilha do Campeche",
+    "1 km"
+   ],
+   [
+    "Mirante do Morro das Pedras",
+    "5 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 342929.51,
+   "m2min": 14.31,
+   "m2max": 34.58
+  }
+ },
+ {
+  "id": 31,
+  "nome": "Jurerê Spot II",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Jurerê",
+  "lat": -27.437765,
+  "lon": -48.481952,
+  "dif": "Rooftop com piscina e vista para a Praia de Jurerê",
+  "fotos": [
+   "fotos/s31-0.jpg",
+   "fotos/s31-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 100 m"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia de Canajurê",
+    "1,4 km"
+   ],
+   [
+    "Jurerê Open Shopping",
+    "2,4 km"
+   ],
+   [
+    "Parador Internacional P12",
+    "4 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 499423.18,
+   "m2min": 15.28,
+   "m2max": 32.61
+  }
+ },
+ {
+  "id": 35,
+  "nome": "Ponta das Canas Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Ponta das Canas",
+  "lat": -27.401107,
+  "lon": -48.4275436,
+  "dif": "Frente-mar na Praia de Ponta das Canas, com piscina aquecida e minimarket",
+  "fotos": [
+   "fotos/s35-0.jpg",
+   "fotos/s35-1.jpg",
+   "fotos/s35-2.jpg"
+  ],
+  "tags": [
+   [
+    "areia",
+    "Pé na areia"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia Brava",
+    "2,6 km"
+   ],
+   [
+    "Praia da Cachoeira do Bom Jesus",
+    "2,9 km"
+   ],
+   [
+    "Praia de Canasvieiras",
+    "5,6 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 244066.77,
+   "m2min": 16.86,
+   "m2max": 36.38
+  }
+ },
+ {
+  "id": 38,
+  "nome": "Canas Beach Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Canasvieiras",
+  "lat": -27.4297531,
+  "lon": -48.4513707,
+  "dif": "Em Canasvieiras, com rooftop, piscina e vista para o mar",
+  "fotos": [
+   "fotos/s38-0.jpg",
+   "fotos/s38-1.jpg",
+   "fotos/s38-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 130 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Trapiche de Canasvieiras",
+    "250 m"
+   ],
+   [
+    "Travessia para Ilha do Francês",
+    "2,4 km"
+   ],
+   [
+    "Praia da Cachoeira do Bom Jesus",
+    "2,6 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 255000.0,
+   "m2min": 16.02,
+   "m2max": 35.87
+  }
+ },
+ {
+  "id": 39,
+  "nome": "Ponta das Canas Spot II",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Ponta das Canas",
+  "lat": -27.4005783,
+  "lon": -48.4275472,
+  "dif": "Em Ponta das Canas, com rooftop e piscina com vista",
+  "fotos": [
+   "fotos/s39-0.jpg",
+   "fotos/s39-1.jpg",
+   "fotos/s39-2.jpg"
+  ],
+  "tags": [
+   [
+    "areia",
+    "Pé na areia"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Entregue mobiliado"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia da Lagoinha do Norte",
+    "2 km"
+   ],
+   [
+    "Praia Brava",
+    "2,6 km"
+   ],
+   [
+    "Praia da Cachoeira do Bom Jesus",
+    "2,9 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 283297.81,
+   "m2min": 15.71,
+   "m2max": 28.21
+  }
+ },
+ {
+  "id": 40,
+  "nome": "Novo Campeche Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Campeche",
+  "lat": -27.6664024,
+  "lon": -48.4785364,
+  "dif": "Perto da Praia do Novo Campeche, com rooftop e piscina",
+  "fotos": [
+   "fotos/s40-0.jpg",
+   "fotos/s40-1.jpg",
+   "fotos/s40-2.jpg",
+   "fotos/s40-3.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 250 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Multi Open Shopping",
+    "1,7 km"
+   ],
+   [
+    "Avenida Pequeno Príncipe",
+    "3 km"
+   ],
+   [
+    "Pico da Cruz",
+    "3,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 330994.32,
+   "m2min": 15.32,
+   "m2max": 38.67
+  }
+ },
+ {
+  "id": 42,
+  "nome": "Jurerê Spot III",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Jurerê",
+  "lat": -27.4376,
+  "lon": -48.48245,
+  "dif": "Em Jurerê, com rooftop, piscina e vista para o mar",
+  "fotos": [
+   "fotos/s42-0.jpg",
+   "fotos/s42-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 100 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia de Canajurê",
+    "1,4 km"
+   ],
+   [
+    "Jurerê Open Shopping",
+    "2,4 km"
+   ],
+   [
+    "P12 Parador Internacional",
+    "4 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 414976.77,
+   "m2min": 15.38,
+   "m2max": 15.38
+  }
+ },
+ {
+  "id": 43,
+  "nome": "Novo Campeche Spot II",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Campeche",
+  "lat": -27.665461,
+  "lon": -48.479274,
+  "dif": "No Novo Campeche, com rooftop, piscina e vista para o mar",
+  "fotos": [
+   "fotos/s43-0.jpg",
+   "fotos/s43-1.jpg",
+   "fotos/s43-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 250 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Multi Open Shopping",
+    "1,7 km"
+   ],
+   [
+    "Avenida Pequeno Príncipe",
+    "3 km"
+   ],
+   [
+    "Pico da Cruz",
+    "3,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "lancamento",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 351886.0,
+   "m2min": 14.51,
+   "m2max": 22.21
+  }
+ },
+ {
+  "id": 44,
+  "nome": "Jurerê Spot",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Jurerê",
+  "lat": -27.4397148,
+  "lon": -48.4891211,
+  "dif": "Piscina com vista para o mar em Jurerê, a praia mais valorizada de Floripa",
+  "fotos": [
+   "fotos/s44-0.jpg",
+   "fotos/s44-1.jpg",
+   "fotos/s44-2.jpg",
+   "fotos/s44-3.jpg",
+   "fotos/s44-4.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 100 m"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "bar",
+    "Bar"
+   ]
+  ],
+  "perto": [
+   [
+    "Jurerê Tradicional",
+    "900 m"
+   ],
+   [
+    "Praia de Canajurê",
+    "2,1 km"
+   ]
+  ],
+  "reserva": {
+   "status": "entregue",
+   "ano": 2023,
+   "pct": 100,
+   "preco": 1000000.0,
+   "m2min": 20.16,
+   "m2max": 20.16
+  }
+ },
+ {
+  "id": 50,
+  "nome": "Novo Campeche Spot III",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "bairro": "Campeche",
+  "lat": -27.6658538,
+  "lon": -48.4775653,
+  "dif": "A 30 m da Praia do Novo Campeche, com vista mar nas unidades e rooftop frente-mar",
+  "fotos": [
+   "fotos/s50-0.jpg",
+   "fotos/s50-1.jpg",
+   "fotos/s50-2.jpg",
+   "fotos/s50-3.jpg"
+  ],
+  "tags": [
+   [
+    "areia",
+    "Pé na areia"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Multi Open Shopping",
+    "1,7 km"
+   ],
+   [
+    "Avenida Pequeno Príncipe",
+    "3 km"
+   ],
+   [
+    "Pico da Cruz",
+    "3,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "lancamento",
+   "ano": 2030,
+   "pct": 0,
+   "preco": "vendido",
+   "m2min": 19.73,
+   "m2max": 19.73
+  }
+ },
+ {
+  "id": 9,
+  "nome": "Japaratinga Spot",
+  "cidade": "Japaratinga",
+  "uf": "AL",
+  "bairro": "Barreira do Boqueirão",
+  "lat": -9.1235,
+  "lon": -35.283,
+  "dif": "Vista para o mar e piscina de borda infinita no litoral norte de Alagoas",
+  "fotos": [
+   "fotos/s9-0.jpg",
+   "fotos/s9-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 110 m"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "mar",
+    "Vista mar"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Mirante Aruanã",
+    "3 min"
+   ],
+   [
+    "Praia de Bitingui",
+    "8 min"
+   ],
+   [
+    "Piscinas naturais de Japaratinga",
+    "16 min"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2026,
+   "pct": 42.26,
+   "preco": 304178.0,
+   "m2min": 19.31,
+   "m2max": 49.32
+  }
+ },
+ {
+  "id": 33,
+  "nome": "Itacaré Spot",
+  "cidade": "Itacaré",
+  "uf": "BA",
+  "bairro": "Conchas do Mar",
+  "lat": -14.2779643,
+  "lon": -38.9884277,
+  "dif": "Em Itacaré, perto da Praia da Concha, com rooftop e piscina ao pôr do sol",
+  "fotos": [
+   "fotos/s33-0.jpg",
+   "fotos/s33-1.jpg"
+  ],
+  "tags": [
+   [
+    "areia",
+    "Pé na areia"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ]
+  ],
+  "perto": [
+   [
+    "Mirante da Ponta do Xaréu",
+    "200 m"
+   ],
+   [
+    "Praia da Coroinha",
+    "850 m"
+   ],
+   [
+    "Praia do Resende",
+    "2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 370000.0,
+   "m2min": 14.93,
+   "m2max": 14.93
+  }
+ },
+ {
+  "id": 34,
+  "nome": "Barra Grande Spot",
+  "cidade": "Maraú",
+  "uf": "BA",
+  "bairro": "Barra Grande",
+  "lat": -13.8899954,
+  "lon": -38.9499066,
+  "dif": "Na Península de Maraú, na vila de Barra Grande",
+  "fotos": [
+   "fotos/s34-0.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 300 m"
+   ],
+   [
+    "mobiliado",
+    "Entregue mobiliado"
+   ]
+  ],
+  "perto": [
+   [
+    "Píer de chegada",
+    "300 m"
+   ],
+   [
+    "Ponta do Mutá",
+    "1,9 km"
+   ],
+   [
+    "Praia Três Coqueiros",
+    "1,9 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 342500.0,
+   "m2min": 22.64,
+   "m2max": 61.41
+  }
+ },
+ {
+  "id": 7,
+  "nome": "Imbassaí Spot",
+  "cidade": "Mata de São João",
+  "uf": "BA",
+  "bairro": "Imbassaí",
+  "lat": -12.4934537,
+  "lon": -37.9598311,
+  "dif": "A 6 minutos da Praia de Imbassaí, com área de descanso com redes e pergolados",
+  "fotos": [
+   "fotos/s7-0.jpg",
+   "fotos/s7-1.jpg",
+   "fotos/s7-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 6 min a pé"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "rede",
+    "Redes e pergolados"
+   ]
+  ],
+  "perto": [
+   [
+    "Lagoa Jauara",
+    "6,2 km"
+   ],
+   [
+    "Aeroporto de Salvador",
+    "70 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2028,
+   "pct": 0,
+   "preco": 228256.66,
+   "m2min": 19.31,
+   "m2max": 19.73
+  }
+ },
+ {
+  "id": 19,
+  "nome": "Trancoso Spot",
+  "cidade": "Porto Seguro",
+  "uf": "BA",
+  "bairro": "Trancoso",
+  "lat": -16.5911985,
+  "lon": -39.0979654,
+  "dif": "A 3 minutos do Quadrado de Trancoso, com piscina aquecida",
+  "fotos": [
+   "fotos/s19-0.jpg",
+   "fotos/s19-1.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 10 min"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ]
+  ],
+  "perto": [
+   [
+    "Quadrado de Trancoso",
+    "3 min"
+   ],
+   [
+    "Falésias",
+    "12 min"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2026,
+   "pct": 73.46,
+   "preco": 767885.16,
+   "m2min": 21.04,
+   "m2max": 21.62
+  }
+ },
+ {
+  "id": 16,
+  "nome": "Salvador Spot",
+  "cidade": "Salvador",
+  "uf": "BA",
+  "bairro": "Barra",
+  "lat": -13.007548,
+  "lon": -38.528898,
+  "dif": "A 1 minuto da Praia do Farol da Barra, com piscina aquecida de borda infinita e rooftop",
+  "fotos": [
+   "fotos/s16-0.jpg",
+   "fotos/s16-1.jpg",
+   "fotos/s16-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 1 min"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Baía de Todos os Santos",
+    "10 min"
+   ],
+   [
+    "Elevador Lacerda",
+    "10 min"
+   ],
+   [
+    "Pelourinho",
+    "11 min"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2028,
+   "pct": 0,
+   "preco": 290000.0,
+   "m2min": 19.46,
+   "m2max": 20.31
+  }
+ },
+ {
+  "id": 27,
+  "nome": "Meireles Spot",
+  "cidade": "Fortaleza",
+  "uf": "CE",
+  "bairro": "Meireles",
+  "lat": -3.727254,
+  "lon": -38.500599,
+  "dif": "A 280 m da Praia do Meireles, com áreas comuns entregues mobiliadas e piscina aquecida",
+  "fotos": [
+   "fotos/s27-0.jpg",
+   "fotos/s27-1.jpg",
+   "fotos/s27-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 280 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Museu da Imagem e do Som",
+    "500 m"
+   ],
+   [
+    "Feirinha da Beira Mar",
+    "650 m"
+   ],
+   [
+    "Espigão Rui Barbosa",
+    "1,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 413685.95,
+   "m2min": 15.96,
+   "m2max": 15.96
+  }
+ },
+ {
+  "id": 28,
+  "nome": "Marista 144 Spot",
+  "cidade": "Goiânia",
+  "uf": "GO",
+  "bairro": "Setor Marista",
+  "lat": -16.6956359,
+  "lon": -49.2633467,
+  "dif": "No Setor Marista, com rooftop e piscina com vista da cidade",
+  "fotos": [
+   "fotos/s28-0.jpg",
+   "fotos/s28-1.jpg",
+   "fotos/s28-2.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Colégio Marista",
+    "250 m"
+   ],
+   [
+    "Shopping Bougainville",
+    "400 m"
+   ],
+   [
+    "Polo gastronômico da 144",
+    "550 m"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2028,
+   "pct": 0,
+   "preco": 252184.0,
+   "m2min": 18.07,
+   "m2max": 22.25
+  }
+ },
+ {
+  "id": 26,
+  "nome": "Bonito Spot",
+  "cidade": "Bonito",
+  "uf": "MS",
+  "bairro": "Alvorada",
+  "lat": -21.125862,
+  "lon": -56.491567,
+  "dif": "Na capital do ecoturismo, com lazer completo e piscina aquecida",
+  "fotos": [
+   "fotos/s26-0.jpg",
+   "fotos/s26-1.jpg",
+   "fotos/s26-2.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina aquecida"
+   ]
+  ],
+  "perto": [
+   [
+    "Projeto Jiboia",
+    "950 m"
+   ],
+   [
+    "Aquário Natural",
+    "8,8 km"
+   ],
+   [
+    "Parque das Cachoeiras",
+    "13,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 215966.94,
+   "m2min": 14.86,
+   "m2max": 26.15
+  }
+ },
+ {
+  "id": 36,
+  "nome": "Bonito Spot II",
+  "cidade": "Bonito",
+  "uf": "MS",
+  "bairro": "Centro",
+  "lat": -21.1291561,
+  "lon": -56.4818811,
+  "dif": "No centro de Bonito, com rooftop e piscina",
+  "fotos": [
+   "fotos/s36-0.jpg",
+   "fotos/s36-1.jpg",
+   "fotos/s36-2.jpg"
+  ],
+  "tags": [
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Projeto Jibóia",
+    "1,9 km"
+   ],
+   [
+    "Aquário Natural",
+    "7,7 km"
+   ],
+   [
+    "Parque das Cachoeiras",
+    "13,7 km"
+   ]
+  ],
+  "reserva": {
+   "status": "lancamento",
+   "ano": 2029,
+   "pct": 0,
+   "preco": 221811.0,
+   "m2min": 15.0,
+   "m2max": 15.0
+  }
+ },
+ {
+  "id": 1,
+  "nome": "Batel Spot",
+  "cidade": "Curitiba",
+  "uf": "PR",
+  "bairro": "Batel",
+  "lat": -25.445408,
+  "lon": -49.291865,
+  "dif": "No Batel, bairro nobre de Curitiba, com piscina aquecida e rooftop",
+  "fotos": [
+   "fotos/s1-0.jpg",
+   "fotos/s1-1.jpg",
+   "fotos/s1-2.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ],
+   [
+    "lareira",
+    "Lareira"
+   ]
+  ],
+  "perto": [
+   [
+    "Shopping Pátio Batel",
+    "300 m"
+   ],
+   [
+    "Centro Histórico",
+    "3,3 km"
+   ],
+   [
+    "Mercado Municipal",
+    "3,9 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2028,
+   "pct": 1.42,
+   "preco": 314126.2,
+   "m2min": 16.3,
+   "m2max": 28.64
+  }
+ },
+ {
+  "id": 37,
+  "nome": "Foz Spot",
+  "cidade": "Foz do Iguaçu",
+  "uf": "PR",
+  "bairro": "Centro",
+  "lat": -25.5482143,
+  "lon": -54.5812097,
+  "dif": "No centro de Foz do Iguaçu, com rooftop e piscina",
+  "fotos": [
+   "fotos/s37-0.jpg",
+   "fotos/s37-1.jpg",
+   "fotos/s37-2.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "mobiliado",
+    "Área comum mobiliada"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ]
+  ],
+  "perto": [
+   [
+    "Supermercado Muffato",
+    "450 m"
+   ],
+   [
+    "Shopping Catuaí Palladium",
+    "5,2 km"
+   ],
+   [
+    "Marco das Três Fronteiras",
+    "6 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 249500.0,
+   "m2min": 17.22,
+   "m2max": 20.07
+  }
+ },
+ {
+  "id": 41,
+  "nome": "Natal Spot",
+  "cidade": "Natal",
+  "uf": "RN",
+  "bairro": "Ponta Negra",
+  "lat": -5.879892,
+  "lon": -35.175167,
+  "dif": "Em Ponta Negra, na Avenida Engenheiro Roberto Freire",
+  "fotos": [
+   "fotos/s41-0.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 200 m"
+   ],
+   [
+    "mobiliado",
+    "Entregue mobiliado"
+   ]
+  ],
+  "perto": [
+   [
+    "Restaurante Camarões Potiguar",
+    "1,4 km"
+   ],
+   [
+    "Morro do Careca",
+    "1,5 km"
+   ],
+   [
+    "Centro de Convenções de Natal",
+    "2,9 km"
+   ]
+  ],
+  "reserva": {
+   "status": "planta",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 268000.0,
+   "m2min": 16.84,
+   "m2max": 16.84
+  }
+ },
+ {
+  "id": 22,
+  "nome": "Vistas de Anitá I",
+  "cidade": "Anitápolis",
+  "uf": "SC",
+  "bairro": "Rio dos Pinheiros",
+  "lat": -27.8503738,
+  "lon": -49.0966434,
+  "dif": "Na serra catarinense, entregue mobiliado e com vista panorâmica",
+  "fotos": [
+   "fotos/s22-0.jpg"
+  ],
+  "tags": [
+   [
+    "serra",
+    "Vista para a serra"
+   ],
+   [
+    "mobiliado",
+    "Entregue mobiliado"
+   ]
+  ],
+  "perto": [
+   [
+    "Centro de Anitápolis",
+    "18 min"
+   ],
+   [
+    "Cachoeira da Usina",
+    "25 min"
+   ],
+   [
+    "Centro de Rancho Queimado",
+    "40 min"
+   ]
+  ],
+  "reserva": {
+   "status": "entregue",
+   "ano": 2023,
+   "pct": 100,
+   "preco": 375000.0,
+   "m2min": 45.0,
+   "m2max": 45.0
+  }
+ },
+ {
+  "id": 23,
+  "nome": "Vistas de Anitá II",
+  "cidade": "Anitápolis",
+  "uf": "SC",
+  "bairro": "Rio dos Pinheiros",
+  "lat": -27.8508,
+  "lon": -49.096,
+  "dif": "Na serra catarinense, com vista panorâmica para o vale",
+  "fotos": [
+   "fotos/s23-0.jpg"
+  ],
+  "tags": [
+   [
+    "mobiliado",
+    "Entregue mobiliado"
+   ],
+   [
+    "lareira",
+    "Lareira"
+   ]
+  ],
+  "perto": [
+   [
+    "4 cachoeiras",
+    "na região"
+   ],
+   [
+    "Acesso a restaurantes típicos",
+    "na região"
+   ],
+   [
+    "Centro de Anitápolis",
+    "18 min"
+   ]
+  ],
+  "reserva": {
+   "status": "entregue",
+   "ano": null,
+   "pct": 100,
+   "preco": 402014.0,
+   "m2min": 45.0,
+   "m2max": 45.0
+  }
+ },
+ {
+  "id": 47,
+  "nome": "Vistas de Anitá III",
+  "cidade": "Anitápolis",
+  "uf": "SC",
+  "bairro": "Rio dos Pinheiros",
+  "lat": -27.8498,
+  "lon": -49.0972,
+  "dif": "Na serra catarinense, com vista panorâmica para o vale",
+  "fotos": [
+   "fotos/s47-0.jpg"
+  ],
+  "tags": [
+   [
+    "mobiliado",
+    "Entregue mobiliado"
+   ],
+   [
+    "lareira",
+    "Lareira"
+   ]
+  ],
+  "perto": [
+   [
+    "Centro de Anitápolis",
+    "18 min"
+   ],
+   [
+    "Cachoeira da Usina",
+    "25 min"
+   ],
+   [
+    "Rancho Queimado",
+    "40 min"
+   ]
+  ],
+  "reserva": {
+   "status": "lancamento",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 469886.0,
+   "m2min": 40.0,
+   "m2max": 71.0
+  }
+ },
+ {
+  "id": 13,
+  "nome": "Rosa Norte Spot",
+  "cidade": "Imbituba",
+  "uf": "SC",
+  "bairro": "Praia do Rosa",
+  "lat": -28.1319674,
+  "lon": -48.6550204,
+  "dif": "Perto do centrinho da Praia do Rosa, com piscina aquecida e minimarket",
+  "fotos": [
+   "fotos/s13-0.jpg",
+   "fotos/s13-1.jpg",
+   "fotos/s13-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 400 m"
+   ],
+   [
+    "piscina",
+    "Piscina aquecida"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ],
+   [
+    "mercado",
+    "Minimarket"
+   ],
+   [
+    "lareira",
+    "Lareira"
+   ],
+   [
+    "bar",
+    "Bar"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia Vermelha",
+    "3,7 km"
+   ],
+   [
+    "Praia do Ouvidor",
+    "3,7 km"
+   ],
+   [
+    "Lagoa da Ibiraquera",
+    "11 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2028,
+   "pct": 0,
+   "preco": 247115.52,
+   "m2min": 17.1,
+   "m2max": 25.93
+  }
+ },
+ {
+  "id": 14,
+  "nome": "Rosa Spot",
+  "cidade": "Imbituba",
+  "uf": "SC",
+  "bairro": "Praia do Rosa",
+  "lat": -28.1257548,
+  "lon": -48.6531435,
+  "dif": "Rooftop com borda infinita na Praia do Rosa, entre o mar e a natureza",
+  "fotos": [
+   "fotos/s14-0.jpg",
+   "fotos/s14-1.jpg",
+   "fotos/s14-2.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia Vermelha",
+    "3,5 km"
+   ],
+   [
+    "Lagoa de Ibiraquera",
+    "7,3 km"
+   ],
+   [
+    "Praia da Ferrugem",
+    "17 km"
+   ]
+  ],
+  "reserva": {
+   "status": "entregue",
+   "ano": 2025,
+   "pct": 100,
+   "preco": 443000.0,
+   "m2min": 24.22,
+   "m2max": 49.71
+  }
+ },
+ {
+  "id": 15,
+  "nome": "Rosa Sul Spot",
+  "cidade": "Imbituba",
+  "uf": "SC",
+  "bairro": "Ibiraquera",
+  "lat": -28.1289418,
+  "lon": -48.6577285,
+  "dif": "Rooftop com vista para a Lagoa de Ibiraquera",
+  "fotos": [
+   "fotos/s15-0.jpg"
+  ],
+  "tags": [
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Pico da Tribo",
+    "0,8 km"
+   ],
+   [
+    "Quintal Butiá",
+    "1 km"
+   ],
+   [
+    "Praia do Rosa Sul",
+    "2,7 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2026,
+   "pct": 76.52,
+   "preco": 408584.73,
+   "m2min": 30.62,
+   "m2max": 43.13
+  }
+ },
+ {
+  "id": 30,
+  "nome": "Penha Spot",
+  "cidade": "Penha",
+  "uf": "SC",
+  "bairro": "Praia da Armação",
+  "lat": -26.7916239,
+  "lon": -48.6110592,
+  "dif": "Perto do Beto Carrero World e das praias de Penha",
+  "fotos": [
+   "fotos/s30-0.jpg",
+   "fotos/s30-1.jpg",
+   "fotos/s30-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 550 m"
+   ],
+   [
+    "piscina",
+    "Piscina"
+   ],
+   [
+    "infinita",
+    "Borda infinita"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Praia da Armação",
+    "1 km"
+   ],
+   [
+    "Beto Carrero World",
+    "2,2 km"
+   ]
+  ],
+  "reserva": {
+   "status": "entregue",
+   "ano": 2025,
+   "pct": 100,
+   "preco": 515000.0,
+   "m2min": 24.11,
+   "m2max": 48.69
+  }
+ },
+ {
+  "id": 20,
+  "nome": "Urubici Spot",
+  "cidade": "Urubici",
+  "uf": "SC",
+  "bairro": "Esquina",
+  "lat": -27.9954555,
+  "lon": -49.5860797,
+  "dif": "Na Serra Catarinense, com espaço de convívio e lareira",
+  "fotos": [
+   "fotos/s20-0.jpg",
+   "fotos/s20-1.jpg",
+   "fotos/s20-2.jpg",
+   "fotos/s20-3.jpg"
+  ],
+  "tags": [
+   [
+    "serra",
+    "Vista para a serra"
+   ]
+  ],
+  "perto": [
+   [
+    "Cascata do Avencal",
+    "8 km"
+   ],
+   [
+    "Morro do Campestre",
+    "11 km"
+   ],
+   [
+    "Cascata Véu de Noiva",
+    "19 km"
+   ]
+  ],
+  "reserva": {
+   "status": "entregue",
+   "ano": 2026,
+   "pct": 100,
+   "preco": 310001.82,
+   "m2min": 19.66,
+   "m2max": 26.4
+  }
+ },
+ {
+  "id": 21,
+  "nome": "Urubici Spot II",
+  "cidade": "Urubici",
+  "uf": "SC",
+  "bairro": "Traçado",
+  "lat": -27.9988531,
+  "lon": -49.586303,
+  "dif": "Na Serra Catarinense, com rooftop e vista para a serra",
+  "fotos": [
+   "fotos/s21-0.jpg",
+   "fotos/s21-1.jpg"
+  ],
+  "tags": [
+   [
+    "mercado",
+    "Minimarket"
+   ],
+   [
+    "lareira",
+    "Lareira"
+   ]
+  ],
+  "perto": [
+   [
+    "Cascata do Avencal",
+    "8 km"
+   ],
+   [
+    "Morro do Campestre",
+    "11 km"
+   ],
+   [
+    "Cascata Véu de Noiva",
+    "19 km"
+   ]
+  ],
+  "reserva": {
+   "status": "obra",
+   "ano": 2027,
+   "pct": 29.84,
+   "preco": 231321.74,
+   "m2min": 17.27,
+   "m2max": 25.32
+  }
+ },
+ {
+  "id": 32,
+  "nome": "Caraguá Spot",
+  "cidade": "Caraguatatuba",
+  "uf": "SP",
+  "bairro": "Martim de Sá",
+  "lat": -23.6314,
+  "lon": -45.387571,
+  "dif": "Em Martim de Sá, com rooftop e piscina com vista para o mar",
+  "fotos": [
+   "fotos/s32-0.jpg",
+   "fotos/s32-1.jpg",
+   "fotos/s32-2.jpg"
+  ],
+  "tags": [
+   [
+    "praia",
+    "Praia a 150 m"
+   ],
+   [
+    "rooftop",
+    "Rooftop"
+   ]
+  ],
+  "perto": [
+   [
+    "Prainha",
+    "450 m"
+   ],
+   [
+    "Mirante do Camaroeiro",
+    "2,3 km"
+   ],
+   [
+    "Feira do Artesanato",
+    "2,9 km"
+   ]
+  ],
+  "reserva": {
+   "status": "lancamento",
+   "ano": 2030,
+   "pct": 0,
+   "preco": 210879.0,
+   "m2min": 16.0,
+   "m2max": 27.0
+  }
+ }
+]
