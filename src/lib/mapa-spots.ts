@@ -67,7 +67,8 @@ SELECT b.id, b.building_status, b.commercial_status,
        sp.disp, sp.a_partir, sp.m2min, sp.m2max,
        un.disp_lanc, un.m2min_l, un.m2max_l, un.idx_min * cub.amount AS preco_lanc,
        d.construction_completion_pct AS pct,
-       substr(cast(d.construction_delivery_date_actual AS varchar), 1, 10) AS entrega
+       substr(cast(d.construction_delivery_date_actual AS varchar), 1, 10) AS entrega,
+       (SELECT MAX(_nekt_sync_at) FROM nekt_operacional_bronze.sup_bd_szi_szi_spot_building_unit_marketplaces) AS copia
 FROM nekt_operacional_bronze.sup_bd_szi_szi_spot_buildings b
 LEFT JOIN nekt_operacional_bronze.sup_bd_szi_szi_spot_buildings_details d ON d.spot_building_id = b.id
 LEFT JOIN sp ON sp.sid = b.id
@@ -95,7 +96,9 @@ function fase(building: string | null, comercial: string | null, reserva: Status
 const somenteReserva = (): SpotMapa[] =>
   fixos.map(({ reserva, ...f }) => ({ ...f, ...reserva, status: reserva.status as Status, preco: reserva.preco as Preco }));
 
-export async function carregarSpots(): Promise<{ spots: SpotMapa[]; aoVivo: boolean; erro?: string }> {
+// Hora em que a Nekt copiou o spotômetro pela última vez (a cópia roda várias vezes ao dia).
+// O mapa consulta a Nekt toda vez que abre; o número é o desta cópia, não o do segundo exato.
+export async function carregarSpots(): Promise<{ spots: SpotMapa[]; aoVivo: boolean; copia?: number | null; erro?: string }> {
   let rows;
   try {
     ({ rows } = await queryNekt(SQL));
@@ -134,5 +137,6 @@ export async function carregarSpots(): Promise<{ spots: SpotMapa[]; aoVivo: bool
     return { ...base, status, preco, m2min, m2max, ano, pct };
   });
 
-  return { spots, aoVivo: true };
+  const copia = num(rows[0]?.copia as string | number | null);
+  return { spots, aoVivo: true, copia: copia ? copia * 1000 : null };
 }

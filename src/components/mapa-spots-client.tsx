@@ -32,7 +32,9 @@ export function MapaSpotsClient() {
           <p className="text-gray-500 text-sm max-w-2xl">
             Para mostrar ao cliente, na call, onde fica cada SPOT. Toque no ponto: o mapa voa até o
             prédio e abre a ficha com fotos, &quot;a partir de&quot;, metragem, entrega e fase da obra.
-            Os números são buscados no spotômetro e no SZI toda vez que o mapa abre.
+            Os números são buscados no spotômetro e no SZI toda vez que o mapa abre (não é atualização
+            semanal); o rodapé do mapa mostra a hora da última atualização. O botão acima do + troca
+            entre satélite e terreno.
           </p>
         </div>
 
