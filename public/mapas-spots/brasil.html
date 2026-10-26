@@ -851,6 +851,10 @@ button:focus-visible{outline:3px solid var(--planta);outline-offset:2px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .rodape .aviso{color:#d9402f;font-weight:600}
+.zoom button.camada{width:auto;height:40px;padding:0 12px;font-size:13px;font-weight:700;white-space:nowrap;align-self:flex-end}
+.mapa.terreno .marca{color:var(--tinta);text-shadow:0 1px 10px rgb(255 255 255/.9)}
+.mapa.terreno .marca small{color:#41607a}
+.mapa.terreno .lugar{color:#1d4a6e;text-shadow:0 1px 4px rgb(255 255 255/.95)}
 </style>
 
 <div class="app">
@@ -870,6 +874,7 @@ button:focus-visible{outline:3px solid var(--planta);outline-offset:2px}
     <div class="dica" id="dica">Toque em um ponto para ver o SPOT</div>
     <div class="carregando" id="carregando" hidden></div>
     <div class="zoom">
+      <button id="camada" class="camada" aria-label="Trocar para terreno">🗺️ Terreno</button>
       <button id="mais" aria-label="Aproximar">+</button>
       <button id="menos" aria-label="Afastar">−</button>
     </div>
@@ -962,7 +967,24 @@ const BRASIL=L.latLngBounds([-33.7,-73.9],[5.2,-34.8]);
 const map=L.map("leaf",{zoomControl:false,minZoom:3,maxZoom:18.5,zoomSnap:.25,zoomDelta:.5,wheelPxPerZoomLevel:90,
   maxBounds:L.latLngBounds([-45,-90],[15,-20]),maxBoundsViscosity:.8,attributionControl:true});
 map.attributionControl.setPrefix(false).addAttribution("Imagens © Esri, Maxar, Earthstar Geographics");
-L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxNativeZoom:19,maxZoom:19,keepBuffer:4}).addTo(map);
+const CAM={
+  sat:{t:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxNativeZoom:19,maxZoom:19,keepBuffer:4}),
+       attr:"Imagens © Esri, Maxar, Earthstar Geographics", rotulo:"🗺️ Terreno", outra:"terreno"},
+  ter:{t:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",{maxNativeZoom:18,maxZoom:19,keepBuffer:4}),
+       attr:"Mapa © Esri, HERE, Garmin, OpenStreetMap", rotulo:"🛰️ Satélite", outra:"satélite"}
+};
+map.attributionControl.removeAttribution("Imagens © Esri, Maxar, Earthstar Geographics");
+let camada=null;
+function usarCamada(c){
+  if(camada){map.removeLayer(CAM[camada].t);map.attributionControl.removeAttribution(CAM[camada].attr)}
+  camada=c; CAM[c].t.addTo(map).bringToBack(); map.attributionControl.addAttribution(CAM[c].attr);
+  const b=document.getElementById("camada"); b.textContent=CAM[c].rotulo; b.setAttribute("aria-label","Trocar para "+CAM[c].outra);
+  document.getElementById("mapa").classList.toggle("terreno",c==="ter");
+  try{localStorage.setItem("mapaSpotsCamada",c)}catch(e){}
+}
+let salva="sat"; try{salva=localStorage.getItem("mapaSpotsCamada")==="ter"?"ter":"sat"}catch(e){}
+usarCamada(salva);
+document.getElementById("camada").onclick=()=>usarCamada(camada==="sat"?"ter":"sat");
 const PAD={paddingTopLeft:[30,130],paddingBottomRight:[90,80]};
 map.fitBounds(BRASIL,PAD);
 
@@ -1152,7 +1174,7 @@ fetch("/api/mapa-spots",{cache:"no-store",credentials:"same-origin"})
   .then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
   .then(d=>{
     window.SPOTS=d.spots.filter(s=>true);
-    rod.textContent=d.aoVivo?"Números ao vivo · spotômetro e SZI · "+d.horario:"⚠ Números de 23/10/2026 (a consulta ao vivo falhou)";
+    rod.textContent=d.aoVivo?"Números do spotômetro e do SZI · atualizados "+(d.atualizado||d.horario):"⚠ Números de 23/10/2026 (a consulta ao vivo falhou)";
     if(!d.aoVivo) rod.classList.add("aviso");
     iniciar();
   })
