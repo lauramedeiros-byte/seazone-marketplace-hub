@@ -5,6 +5,7 @@ import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { sugerirMarcacao } from "@/lib/disparazone";
 import {
   ChevronLeft,
   ChevronRight,
@@ -249,7 +250,19 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
       if (!confirm(`Esta ação já foi enviada no Slack${a.slackEnviadoEm ? ` em ${fmtEnvio(a.slackEnviadoEm)}` : ""}. Enviar de novo (cria outra thread)?`)) return;
       force = true;
     }
-    if (!force && !confirm(`Enviar "${a.titulo || "(sem título)"}" no #entrega_disparos?`)) return;
+    // Com WhatsApp, a última linha da thread marca o Disparazone para cadastrar o template:
+    // mostra a sugestão para conferir/ajustar (Cancelar = não envia).
+    let marcacao: string | undefined;
+    if (a.whatsapp?.trim()) {
+      const r = prompt(
+        `Enviar "${a.titulo || "(sem título)"}" no #entrega_disparos.
+
+Última linha (marca o Disparazone): "@Disparazone cadastre esse template, …". Confira a vertical e o tema + empreendimento:`,
+        sugerirMarcacao(a.titulo, a.empreendimentos)
+      );
+      if (r === null || !r.trim()) return;
+      marcacao = r.trim();
+    } else if (!force && !confirm(`Enviar "${a.titulo || "(sem título)"}" no #entrega_disparos?`)) return;
 
     setEnviandoId(a.id);
     try {
@@ -258,7 +271,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
       const res = await fetch("/api/planejamento/slack", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ acaoId: a.id, force }),
+        body: JSON.stringify({ acaoId: a.id, force, marcacao }),
       });
       const d = await res.json();
       if (!res.ok || !d.success) {

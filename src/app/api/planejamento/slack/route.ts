@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { CANAL_ENTREGA_DISPAROS, postMessage, slackEscape } from "@/lib/slack";
+import { linhaDisparazone, sugerirMarcacao } from "@/lib/disparazone";
 
 // Prefixo fixo do título da thread. Se um dia precisar variar por frente,
 // é só trocar por um mapa frente -> prefixo.
@@ -21,32 +22,33 @@ export function tituloThread(titulo: string, mes: string, dia: number) {
   return `[${PREFIXO} - ${nome} - ${dataBR(mes, dia)}]`;
 }
 
-/** Mensagem do disparo (WhatsApp e/ou e-mail). */
-function mensagemDisparo(acao: { whatsapp: string | null; email: string | null }) {
-  const partes: string[] = [];
+type AcaoTexto = { whatsapp: string | null; email: string | null; anotacoes: string | null };
+
+/**
+ * Respostas da thread, na ordem (pedido da Lívia, 28/10/2026, para o Disparazone cadastrar o template):
+ * 1ª: as Anotações (e o e-mail, se houver — não é template de WhatsApp);
+ * 2ª e última: SÓ o texto do WhatsApp, com a marcação do Disparazone na última linha.
+ * Ação só de e-mail não marca o Disparazone: vai como antes, numa resposta só.
+ * Os textos já saem escapados para o Slack (a menção <@…> não pode ser escapada).
+ */
+export function respostasThread(acao: AcaoTexto, marcacao: string) {
   const wpp = acao.whatsapp?.trim();
   const mail = acao.email?.trim();
-
-  // Quando só um dos dois está preenchido, vai puro — sem rótulo.
-  if (wpp && !mail) return wpp;
-  if (mail && !wpp) return mail;
-
-  if (wpp) partes.push(`*WhatsApp*\n${wpp}`);
-  if (mail) partes.push(`*E-mail*\n${mail}`);
-  return partes.join("\n\n———\n\n");
-}
-
-/** Corpo da thread: a mensagem do disparo + as anotações da ação, se houver. */
-export function corpoThread(acao: { whatsapp: string | null; email: string | null; anotacoes: string | null }) {
-  const msg = mensagemDisparo(acao);
   const notas = acao.anotacoes?.trim();
-  if (!msg || !notas) return msg;
-  return `${msg}\n\n———\n\n*Anotações*\n${notas}`;
+
+  const primeira: string[] = [];
+  if (notas) primeira.push(`*Anotações*\n${notas}`);
+  if (mail) primeira.push(wpp || notas ? `*E-mail*\n${mail}` : mail);
+
+  const respostas: string[] = [];
+  if (primeira.length) respostas.push(slackEscape(primeira.join("\n\n———\n\n")));
+  if (wpp) respostas.push(`${slackEscape(wpp)}\n\n${linhaDisparazone(slackEscape(marcacao))}`);
+  return respostas;
 }
 
 export async function POST(request: Request) {
   try {
-    const { acaoId, force } = await request.json();
+    const { acaoId, force, marcacao } = await request.json();
     if (!acaoId) {
       return NextResponse.json({ error: "acaoId é obrigatório" }, { status: 400 });
     }
@@ -64,8 +66,10 @@ export async function POST(request: Request) {
       }, { status: 409 });
     }
 
-    const corpo = corpoThread(acao);
-    if (!corpo) {
+    const linha =
+      typeof marcacao === "string" && marcacao.trim() ? marcacao : sugerirMarcacao(acao.titulo, acao.empreendimentos);
+    const respostas = respostasThread(acao, linha);
+    if (!acao.whatsapp?.trim() && !acao.email?.trim()) {
       return NextResponse.json(
         { error: "A ação não tem mensagem de WhatsApp nem de e-mail para enviar." },
         { status: 400 }
@@ -75,8 +79,10 @@ export async function POST(request: Request) {
     // 1) mensagem-pai: só o título entre colchetes
     const pai = await postMessage({ text: slackEscape(tituloThread(acao.titulo, acao.mes, acao.dia)) });
 
-    // 2) resposta na thread: a mensagem do disparo
-    await postMessage({ channel: pai.channel, threadTs: pai.ts, text: slackEscape(corpo) });
+    // 2) respostas na thread, em ordem: anotações, depois o template com a marcação do Disparazone
+    for (const text of respostas) {
+      await postMessage({ channel: pai.channel, threadTs: pai.ts, text });
+    }
 
     const atualizada = await db.planejamentoAcao.update({
       where: { id: acao.id },
