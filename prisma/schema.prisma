@@ -288,6 +288,7 @@ model PlanejamentoAcao {
   email          String?
   rdCampanha     String?
   anotacoes      String?
+  imagemUrl      String?            // link da imagem do disparo (sobe junto com o template no Slack); null = sem imagem
   links          Json               @default("[]") // [{ label, url }]
   feito          Boolean            @default(false)
   ordem          Int                @default(0)
@@ -554,6 +555,7 @@ model PropostaDisparo {
   contatos        Int?
   empreendimentos String?
   whatsapp        String    // copy completa com os botões
+  imagemUrl       String?   // link da imagem do disparo (no máx. 1 a cada 15 dias); vai para a ação ao aprovar
   racional        String?   // por que esta proposta (dados que sustentam)
   status          String    @default("pendente") // pendente | aprovada | reprovada | substituida
   comentario      String?   // motivo da reprovação / ajuste pedido

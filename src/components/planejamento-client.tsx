@@ -42,6 +42,7 @@ interface Acao {
   email: string | null;
   rdCampanhas: string[];
   anotacoes: string | null;
+  imagemUrl: string | null;
   links: LinkItem[];
   feito: boolean;
   ordem: number;
@@ -233,6 +234,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
         email: a.email,
         rdCampanha: joinRds(a.rdCampanhas),
         anotacoes: a.anotacoes,
+        imagemUrl: a.imagemUrl?.trim() || null,
         links: a.links,
       });
     } finally {
@@ -279,6 +281,7 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
         return;
       }
       patchLocal(a.id, { slackTs: d.slackTs, slackEnviadoEm: d.slackEnviadoEm });
+      if (d.aviso) alert(d.aviso);
     } catch (e) {
       alert(`Falha ao enviar no Slack: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -516,6 +519,11 @@ export function PlanejamentoClient({ frentesInit, acoesInit, frenteSlugInit }: P
       <div className="mt-3">
         <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Anotações</label>
         <Textarea value={a.anotacoes ?? ""} onChange={(e) => patchLocal(a.id, { anotacoes: e.target.value })} rows={2} className="text-sm mt-1" placeholder="Observações livres…" />
+      </div>
+
+      <div className="mt-3">
+        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Link da imagem (opcional)</label>
+        <Input value={a.imagemUrl ?? ""} onChange={(e) => patchLocal(a.id, { imagemUrl: e.target.value })} className="text-sm mt-1" placeholder="Link do Drive (qualquer pessoa com o link) ou da imagem — sobe junto com o template no Slack" />
       </div>
 
       <div className="flex justify-end mt-3">
