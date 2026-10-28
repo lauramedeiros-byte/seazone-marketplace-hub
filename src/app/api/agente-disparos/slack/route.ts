@@ -7,17 +7,21 @@ import { enviarAcaoNoSlack } from "@/lib/planejamento-slack";
 // disparo, confere as cotas do texto com o Spotômetro e "aperta o botão" Enviar no Slack por ela.
 // Fora do Clerk, protegida por x-agente-token. Monta a thread igual ao botão (@/lib/planejamento-slack).
 // Travas: só frente Disparos Marketplace, só ação de HOJE (horário de Brasília), nunca reenvia.
+// Exceção da sexta (Laura, 28/10/2026): sábado, domingo e segunda precisam estar no canal até as 16h de
+// sexta, então na sexta a rota aceita também essas três datas (rodada das 14h).
 function autorizado(request: Request) {
   const esperado = process.env.AGENTE_DISPAROS_TOKEN;
   return !!esperado && request.headers.get("x-agente-token") === esperado;
 }
 
-/** Hoje em Brasília -> { mes: "2026-10", dia: 29 } */
-function hojeBrasilia() {
-  const [ano, mes, dia] = new Date()
-    .toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
-    .split("-");
-  return { mes: `${ano}-${mes}`, dia: Number(dia) };
+/** Datas que o agente pode enviar agora (Brasília): hoje; na sexta, também sáb, dom e seg. Formato "2026-10-30". */
+function datasPermitidas() {
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const base = new Date(`${hoje}T12:00:00Z`);
+  const extras = base.getUTCDay() === 5 ? 3 : 0;
+  return Array.from({ length: extras + 1 }, (_, i) =>
+    new Date(base.getTime() + i * 86_400_000).toISOString().slice(0, 10)
+  );
 }
 
 // POST { acaoId } → posta a thread no #entrega_disparos
@@ -32,9 +36,12 @@ export async function POST(request: Request) {
     if (acao.frente.nome.toLowerCase() !== "disparos marketplace") {
       return NextResponse.json({ error: "Ação fora da frente Disparos Marketplace" }, { status: 403 });
     }
-    const hoje = hojeBrasilia();
-    if (acao.mes !== hoje.mes || acao.dia !== hoje.dia) {
-      return NextResponse.json({ error: "O agente só envia ação do dia de hoje" }, { status: 403 });
+    const data = `${acao.mes}-${String(acao.dia).padStart(2, "0")}`;
+    if (!datasPermitidas().includes(data)) {
+      return NextResponse.json(
+        { error: "O agente só envia ação de hoje (na sexta, também de sábado, domingo e segunda)" },
+        { status: 403 }
+      );
     }
 
     const r = await enviarAcaoNoSlack(acaoId); // sem force: nunca reenvia
