@@ -20,6 +20,7 @@ interface Proposta {
   contatos: number | null;
   empreendimentos: string | null;
   whatsapp: string;
+  imagemUrl?: string | null;
   racional: string | null;
   status: "pendente" | "aprovada" | "reprovada" | "substituida" | "descartada";
   comentario: string | null;
@@ -381,6 +382,14 @@ export function PropostasClient({ inicial, grupoInicial = "disparos" }: { inicia
                                 onChange={(e) => setCopias((c) => ({ ...c, [p.id]: e.target.value }))}
                               />
                             </div>
+                            {p.imagemUrl && (
+                              <div className="mt-2 text-xs">
+                                <a href={p.imagemUrl} target="_blank" rel="noreferrer" className="font-semibold text-blue-700 underline">
+                                  Ver a imagem sugerida
+                                </a>{" "}
+                                <span className="text-gray-500">— vai junto com o template no Slack. Comente se o ajuste for na imagem ou no texto.</span>
+                              </div>
+                            )}
                             {copias[p.id] !== undefined && copias[p.id] !== p.whatsapp && (
                               <div className="mt-1 text-xs text-blue-700">Você editou a mensagem; a versão editada é a que vai para o planejamento.</div>
                             )}

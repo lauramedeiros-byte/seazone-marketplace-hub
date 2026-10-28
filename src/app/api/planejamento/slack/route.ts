@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { CANAL_ENTREGA_DISPAROS, postMessage, slackEscape } from "@/lib/slack";
+import { CANAL_ENTREGA_DISPAROS, baixarImagem, postMessage, slackEscape, uploadImagem } from "@/lib/slack";
 import { linhaDisparazone, sugerirMarcacao } from "@/lib/disparazone";
 
 // Prefixo fixo do título da thread. Se um dia precisar variar por frente,
@@ -76,11 +76,26 @@ export async function POST(request: Request) {
       );
     }
 
+    // Imagem (opcional) sobe junto com o template. Baixa antes de abrir a thread: link ruim
+    // dá erro aqui, sem deixar uma thread pela metade no canal.
+    const imagem = acao.imagemUrl?.trim() && acao.whatsapp?.trim() ? await baixarImagem(acao.imagemUrl) : null;
+
     // 1) mensagem-pai: só o título entre colchetes
     const pai = await postMessage({ text: slackEscape(tituloThread(acao.titulo, acao.mes, acao.dia)) });
 
-    // 2) respostas na thread, em ordem: anotações, depois o template com a marcação do Disparazone
-    for (const text of respostas) {
+    // 2) respostas na thread, em ordem: anotações, depois o template com a marcação do Disparazone.
+    // Com imagem, a última vai como arquivo + texto numa mensagem só. Se o upload falhar, o template
+    // vai só em texto (o Disparazone ainda cadastra) e a tela avisa.
+    let aviso: string | undefined;
+    for (const [i, text] of respostas.entries()) {
+      if (imagem && i === respostas.length - 1) {
+        try {
+          await uploadImagem({ channel: pai.channel, threadTs: pai.ts, initialComment: text, ...imagem });
+          continue;
+        } catch (e) {
+          aviso = `O template foi sem a imagem: ${e instanceof Error ? e.message : String(e)}`;
+        }
+      }
       await postMessage({ channel: pai.channel, threadTs: pai.ts, text });
     }
 
@@ -95,6 +110,7 @@ export async function POST(request: Request) {
       canal: CANAL_ENTREGA_DISPAROS,
       slackTs: atualizada.slackTs,
       slackEnviadoEm: atualizada.slackEnviadoEm,
+      aviso,
     });
   } catch (error) {
     console.error("Erro ao enviar planejamento no Slack:", error);

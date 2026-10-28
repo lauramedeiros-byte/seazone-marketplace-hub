@@ -46,6 +46,7 @@ export async function aprovarProposta(id: string, whatsappEditado?: string) {
         whatsapp,
         ...(existente.empreendimentos ? {} : { empreendimentos: p.empreendimentos }),
         ...(existente.anotacoes ? {} : { anotacoes: nota }),
+        ...(p.imagemUrl ? { imagemUrl: p.imagemUrl } : {}),
       },
     });
     acaoId = a.id;
@@ -61,6 +62,7 @@ export async function aprovarProposta(id: string, whatsappEditado?: string) {
         empreendimentos: p.empreendimentos,
         whatsapp,
         anotacoes: nota,
+        imagemUrl: p.imagemUrl,
         links: [],
         ordem,
       },

@@ -121,6 +121,7 @@ export async function POST(request: Request) {
           contatos: p.contatos != null ? Number(p.contatos) : null,
           empreendimentos: p.empreendimentos ?? null,
           whatsapp: String(p.whatsapp),
+          imagemUrl: p.imagemUrl ? String(p.imagemUrl) : null,
           racional: p.racional ?? null,
           substituiId: p.substituiId ?? null,
           acaoExistenteId: p.acaoExistenteId ?? null,
