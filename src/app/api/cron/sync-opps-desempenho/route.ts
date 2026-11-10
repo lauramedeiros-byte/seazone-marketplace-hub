@@ -5,7 +5,7 @@ import { chaveEmpreendimento, separarNomeECota } from "@/lib/empreendimentos-rev
 import { spotDaCampanha, toqueDaCampanha } from "@/lib/opps-desempenho";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300; // Nekt às 7h pode demorar; mesmo teto do sync-losts
 
 // Sync da aba "Desempenho" de /opps-da-semana (Vercel Cron diário, ver vercel.json).
 // 1) resultado de cada campanha de opp da semana no motor (SIA), desde 01/08/2026 —
@@ -160,39 +160,53 @@ async function run(request: Request) {
     }));
 
     // catálogo: empreendimento que aparece pela 1ª vez ganha a data de hoje;
-    // no 1º sync de todos, os que já existiam ficam com 2000-01-01 (não são "novos")
-    const jaConhecidos = await db.revendaEmpreendimento.findMany({ select: { chave: true } });
-    const primeiroSync = jaConhecidos.length === 0;
-    const conhecidos = new Set(jaConhecidos.map((e) => e.chave));
-    const catalogoOps = catalogo.rows
-      .map((r) => ({ nome: String(r.spot ?? "").trim(), disp: num(r.disponiveis) }))
-      .filter((r) => r.nome)
-      .map((r) => {
-        const chave = chaveEmpreendimento(r.nome);
-        return conhecidos.has(chave)
-          ? db.revendaEmpreendimento.update({ where: { chave }, data: { nome: r.nome, cotasDisponiveis: r.disp } })
-          : db.revendaEmpreendimento.create({
-              data: {
-                chave,
-                nome: r.nome,
-                cotasDisponiveis: r.disp,
-                primeiraVez: primeiroSync ? new Date("2000-01-01T00:00:00Z") : new Date(),
-              },
-            });
-      });
+    // no 1º sync de todos, os que já existiam ficam com 2000-01-01 (não são "novos").
+    // Mesma chave vinda de dois nomes: fica a última linha (como antes, quando o 2º update vencia).
+    const primeiroSync = (await db.revendaEmpreendimento.count()) === 0;
+    const porChave = new Map<string, { chave: string; nome: string; disp: number }>();
+    for (const r of catalogo.rows) {
+      const nome = String(r.spot ?? "").trim();
+      if (nome) porChave.set(chaveEmpreendimento(nome), { chave: chaveEmpreendimento(nome), nome, disp: num(r.disponiveis) });
+    }
+    const catalogoLinhas = [...porChave.values()];
+    // hora UTC sem fuso, como o Prisma grava nas colunas "timestamp without time zone"
+    const primeiraVez = primeiroSync ? "2000-01-01 00:00:00" : new Date().toISOString().replace("T", " ").slice(0, 23);
 
-    await db.$transaction([
-      db.oppDesempenho.deleteMany(),
-      db.oppDesempenho.createMany({ data: desempenho }),
-      ...(statusCotas.length ? [db.oppCotaStatus.deleteMany(), db.oppCotaStatus.createMany({ data: statusCotas, skipDuplicates: true })] : []),
-      ...catalogoOps,
-    ]);
+    // Tudo-ou-nada, em 5 comandos (antes eram ~41: um update por empreendimento). A Vercel
+    // roda em iad1 (Washington) e o banco fica em São Paulo: cada ida e volta custa ~120 ms,
+    // e os ~41 comandos estouravam o timeout padrão de 5s da transação do Prisma. O sync
+    // ficou parado de 20/10 a 10/11/2026 sem ninguém ver (mesma história do sync-losts, 30/09).
+    await db.$transaction(
+      [
+        db.oppDesempenho.deleteMany(),
+        db.oppDesempenho.createMany({ data: desempenho }),
+        ...(statusCotas.length ? [db.oppCotaStatus.deleteMany(), db.oppCotaStatus.createMany({ data: statusCotas, skipDuplicates: true })] : []),
+        ...(catalogoLinhas.length
+          ? [
+              // upsert num INSERT só: quem já existe mantém a "primeiraVez" e só atualiza nome e contagem
+              db.$executeRaw`
+                INSERT INTO "RevendaEmpreendimento" ("chave", "nome", "cotasDisponiveis", "primeiraVez", "atualizadoEm")
+                SELECT c.chave, c.nome, c.disp, ${primeiraVez}::timestamp(3), (now() AT TIME ZONE 'UTC')
+                FROM unnest(
+                  ${catalogoLinhas.map((c) => c.chave)}::text[],
+                  ${catalogoLinhas.map((c) => c.nome)}::text[],
+                  ${catalogoLinhas.map((c) => c.disp)}::int[]
+                ) AS c(chave, nome, disp)
+                ON CONFLICT ("chave") DO UPDATE
+                  SET "nome" = EXCLUDED."nome",
+                      "cotasDisponiveis" = EXCLUDED."cotasDisponiveis",
+                      "atualizadoEm" = EXCLUDED."atualizadoEm"`,
+            ]
+          : []),
+      ],
+      { timeout: 120_000, maxWait: 10_000 }
+    );
 
     return NextResponse.json({
       ok: true,
       campanhas: desempenho.length,
       cotas: statusCotas.length,
-      empreendimentos: catalogoOps.length,
+      empreendimentos: catalogoLinhas.length,
       at: new Date().toISOString(),
     });
   } catch (error) {
