@@ -10,7 +10,8 @@ export const maxDuration = 60;
 // Sync da aba "Desempenho" de /opps-da-semana (Vercel Cron diário, ver vercel.json).
 // 1) resultado de cada campanha de opp da semana no motor (SIA), desde 01/08/2026 —
 //    antes disso as opps saíam pela MIA, que não está no motor;
-// 2) status de venda das cotas que já apareceram em opp da semana;
+// 2) status de venda das cotas que já apareceram em opp da semana (TODAS as datas de venda
+//    e de reserva, para a página olhar só o que aconteceu depois da opp);
 // 3) catálogo vivo de empreendimentos com cota em revenda.
 // Regras de contagem: as mesmas do agente de propostas (projects/disparos, queries/6):
 // levantada = clique positivo sem botão de saída (piso, a recusa não grava desde ~17/09);
@@ -75,8 +76,8 @@ function sqlStatusCotas(codigos: string[]): string {
   return String.raw`
 SELECT b.short_name spot, u.code cota,
   max_by(m.status, m.reference_date) status_atual,
-  date_format(min(CASE WHEN m.status = 'vendida' THEN m.reference_date END), '%Y-%m-%d') primeira_venda,
-  date_format(min(CASE WHEN m.status IN ('negociacao','contrato','bloqueada') THEN m.reference_date END), '%Y-%m-%d') primeira_reserva
+  array_join(array_sort(array_distinct(array_agg(CASE WHEN m.status = 'vendida' THEN date_format(m.reference_date, '%Y-%m-%d') END))), ',') vendas,
+  array_join(array_sort(array_distinct(array_agg(CASE WHEN m.status IN ('negociacao','contrato','bloqueada') THEN date_format(m.reference_date, '%Y-%m-%d') END))), ',') reservas
 FROM "nekt_operacional_bronze"."sup_bd_szi_szi_spot_building_unit_marketplaces" m
 JOIN "nekt_operacional_bronze"."sup_bd_szi_szi_spot_building_units" u ON u.id = m.spot_building_unit_id
 JOIN "nekt_operacional_bronze"."sup_bd_szi_szi_spot_buildings" b ON b.id = u.spot_building_id
@@ -154,8 +155,8 @@ async function run(request: Request) {
       spotChave: chaveEmpreendimento(String(r.spot ?? "")),
       cota: String(r.cota ?? "").trim().toUpperCase(),
       statusAtual: r.status_atual ? String(r.status_atual) : null,
-      primeiraVendaEm: r.primeira_venda ? String(r.primeira_venda) : null,
-      primeiraReservaEm: r.primeira_reserva ? String(r.primeira_reserva) : null,
+      primeiraVendaEm: r.vendas ? String(r.vendas) : null,
+      primeiraReservaEm: r.reservas ? String(r.reservas) : null,
     }));
 
     // catálogo: empreendimento que aparece pela 1ª vez ganha a data de hoje;

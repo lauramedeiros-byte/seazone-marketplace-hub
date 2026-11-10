@@ -25,8 +25,9 @@ export function spotDaCampanha(nome: string): string {
   return m ? chaveEmpreendimento(m[1].replace(/_/g, " ")) : "";
 }
 
+/** 2º toque: "_2T_", "_T2_" (usado desde 29/10/2026), "_2TOQUE_", "_2_TOQUE_" ou "_2ºT_" no nome. */
 export function toqueDaCampanha(nome: string): "1T" | "2T" {
-  return /(^|_)(2T|2_?TOQUE|2ºT)(_|$)/i.test(nome) ? "2T" : "1T";
+  return /(^|_)(2T|T2|2_?TOQUE|2ºT)(_|$)/i.test(nome) ? "2T" : "1T";
 }
 
 /** "R$ 302.000,00" · "250.000,00" · "R$ 529 mil" → número em reais. */
@@ -66,7 +67,12 @@ export interface CotaStatus {
   spotChave: string;
   cota: string;
   statusAtual: string | null;
+  /**
+   * Apesar do nome (coluna antiga, mantida para não mexer no banco), desde 10/11/2026 traz
+   * TODAS as datas em que a cota entrou como 'vendida': "YYYY-MM-DD,YYYY-MM-DD".
+   */
   primeiraVendaEm: string | null;
+  /** Idem para negociacao/contrato/bloqueada: todas as datas, separadas por vírgula. */
   primeiraReservaEm: string | null;
 }
 
@@ -107,18 +113,36 @@ export function semanaDePublicacao(weekStart: Date): Date {
   return weekStart.getTime() >= INICIO_REGISTRO_POR_PUBLICACAO ? weekStart : new Date(weekStart.getTime() + 7 * DIA);
 }
 
-function statusDeVenda(s: CotaStatus | undefined, publicacao: Date): { venda: Venda; vendaEm: string | null } {
+/** "2024-09-17,2026-07-07" → datas em ordem (ignora vazio e lixo). */
+function lerDatas(lista: string | null): string[] {
+  return (lista ?? "")
+    .split(",")
+    .map((d) => d.trim())
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort();
+}
+
+/**
+ * Venda/reserva da cota em relação à opp. Só conta o que aconteceu DEPOIS da publicação
+ * (com 3 dias de folga para o envio que sai antes da segunda) e até DIAS_VENDA dias.
+ * Cota vendida no lançamento que voltou para revenda tem venda antiga no histórico:
+ * essa venda não é da opp e não pode marcar a cota como "vendida antes".
+ * "vendida-antes" fica só para a cota que hoje consta vendida e cuja última venda é
+ * anterior à opp (a opp ofertou uma cota que o sistema já dava como vendida).
+ */
+export function statusDeVenda(s: CotaStatus | undefined, publicacao: Date): { venda: Venda; vendaEm: string | null } {
   if (!s) return { venda: "sem-dado", vendaEm: null };
-  const ini = publicacao.getTime();
-  const fim = ini + DIAS_VENDA * DIA;
-  if (s.primeiraVendaEm) {
-    const t = Date.parse(s.primeiraVendaEm + "T00:00:00Z");
-    if (t < ini - 3 * DIA) return { venda: "vendida-antes", vendaEm: s.primeiraVendaEm };
-    if (t <= fim) return { venda: "vendida", vendaEm: s.primeiraVendaEm };
-  }
-  if (s.primeiraReservaEm) {
-    const t = Date.parse(s.primeiraReservaEm + "T00:00:00Z");
-    if (t >= ini - 3 * DIA && t <= fim) return { venda: "reservada", vendaEm: s.primeiraReservaEm };
+  const ini = publicacao.getTime() - 3 * DIA;
+  const fim = publicacao.getTime() + DIAS_VENDA * DIA;
+  const t = (d: string) => Date.parse(d + "T00:00:00Z");
+  const vendas = lerDatas(s.primeiraVendaEm);
+  const vendaNaJanela = vendas.find((d) => t(d) >= ini && t(d) <= fim);
+  if (vendaNaJanela) return { venda: "vendida", vendaEm: vendaNaJanela };
+  const reservaNaJanela = lerDatas(s.primeiraReservaEm).find((d) => t(d) >= ini && t(d) <= fim);
+  if (reservaNaJanela) return { venda: "reservada", vendaEm: reservaNaJanela };
+  const vendasAntes = vendas.filter((d) => t(d) < ini);
+  if (s.statusAtual === "vendida" && vendasAntes.length && vendasAntes.length === vendas.length) {
+    return { venda: "vendida-antes", vendaEm: vendasAntes[vendasAntes.length - 1] };
   }
   return { venda: s.statusAtual === "disponivel" ? "disponivel" : "sem-dado", vendaEm: null };
 }
