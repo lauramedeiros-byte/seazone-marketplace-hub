@@ -6,11 +6,6 @@ const isPublicRoute = createRouteMatcher([
   "/sign-out(.*)",
   "/webhooks(.*)",
   "/api/cron(.*)",
-  "/api/seed-respescagem(.*)",
-  "/api/seed-opps(.*)",
-  "/api/create-empreendimento(.*)",
-  "/api/toggle-verificado(.*)",
-  "/api/opps(.*)",
   "/api/agente-disparos(.*)", // agente local; protegido por x-agente-token
   "/api/agente-opps(.*)", // agente das opps da semana; mesmo x-agente-token
 ]);
