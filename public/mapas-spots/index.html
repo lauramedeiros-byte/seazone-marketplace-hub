@@ -8,230 +8,244 @@
 <meta name="robots" content="noindex">
 <meta property="og:title" content="SPOTs Seazone · mapa interativo">
 <meta property="og:description" content="Imóveis feitos para o Airbnb, desde a planta. Veja todos os SPOTs no mapa.">
+<meta property="og:image" content="/mapas-spots/hero-natal-rooftop.jpg">
 <link rel="icon" href="/favicon.ico">
 <style>
-/* Mesmo azul e coral dos mapas (brasil-src.html), em versão mais contida */
+/* Mesmo padrão das LPs de revenda do site (seazone.com.br/marketplace/investir/spot/...):
+   azul #0055FF, marinho #00143D, coral #FC6058, fundo branco e cinza-claro, cartões de borda fina */
 :root{
-  --mar:#0a1f30;
-  --coral:#ff5b4d; --areia:#e9dfcf;
-  --planta:#6fd3ff; --entregue:#3ddc97; --obra:#ffb020;
-  --t1:#f4efe7; --t2:rgb(244 239 231/.66); --t3:rgb(244 239 231/.42);
-  --fio:rgb(244 239 231/.12);
-  --f-serif:"Helvetica Neue",Helvetica,Arial,sans-serif;
-  --f-texto:"Helvetica Neue",Helvetica,Arial,sans-serif;
-  color-scheme:dark;
+  --azul:#0055FF; --azul-claro:#E8F0FF; --marinho:#00143D; --coral:#FC6058;
+  --tinta:#00143D; --tinta-2:#4B5563; --tinta-3:#6B7280; --borda:#E5E7EB; --cinza:#F3F4F6;
+  --planta:#38BDF8; --entregue:#22C55E; --obra:#F59E0B; --lanc:#FC6058;
+  --f:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  color-scheme:light;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--mar);color:var(--t1);font-family:var(--f-texto);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:#fff;color:var(--tinta);font-family:var(--f);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img{max-width:100%;display:block}
 a{color:inherit}
-.miolo{width:min(1200px,100% - 40px);margin-inline:auto}
-.rotulo{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--t3)}
+.miolo{width:min(1232px,100% - 32px);margin-inline:auto}
+.selo-azul{display:block;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--azul)}
+.destaque{color:var(--azul)}
 
-/* ---------- barra ---------- */
-.barra{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--fio)}
-.barra img{height:22px;width:auto}
-.barra a{font-size:13px;font-weight:500;color:var(--t2);text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:color .2s}
-.barra a:hover{color:var(--t1)}
+/* ---------- cabeçalho ---------- */
+.cab{position:sticky;top:0;z-index:50;background:rgb(255 255 255/.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgb(229 231 235/.7)}
+.cab .miolo{display:flex;align-items:center;justify-content:space-between;height:64px}
+.cab .logo svg{width:140px;height:auto;display:block}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--azul);color:#fff;font-weight:700;font-size:14px;text-decoration:none;padding:6px 6px 6px 18px;border-radius:999px;transition:background .2s}
+.btn:hover{background:#0047D6}
+.btn .seta{width:30px;height:30px;border-radius:50%;background:#fff;color:var(--azul);display:grid;place-items:center}
+.btn .seta svg{width:14px;height:14px}
 
-/* ---------- topo em duas colunas ---------- */
-.topo{position:relative;isolation:isolate}
-/* fundo: rooftop do Natal Spot (render do projeto), com véu azul para o texto ler bem */
-.topo{background:var(--mar)}
-.topo::before{content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;
-  background:url(/mapas-spots/hero-natal-rooftop.jpg) center 62%/cover no-repeat;
-  animation:aproxima 24s ease-out both}
-@keyframes aproxima{from{transform:scale(1.08)}to{transform:scale(1)}}
-.topo{overflow:hidden}
-.topo::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:
-    linear-gradient(90deg,rgb(10 31 48/.93) 0%,rgb(10 31 48/.78) 45%,rgb(10 31 48/.62) 100%),
-    linear-gradient(180deg,rgb(10 31 48/.35) 0%,transparent 30%,transparent 70%,var(--mar) 100%)}
-.credito{position:absolute;right:20px;bottom:12px;font-size:10.5px;color:var(--t3);letter-spacing:.02em}
-.duas{display:grid;grid-template-columns:1.05fr 1fr;gap:72px;align-items:center;padding:64px 0 60px}
-h1{font-family:var(--f-serif);font-weight:300;font-size:clamp(30px,3.4vw,46px);line-height:1.08;letter-spacing:-.03em;margin:14px 0 18px}
-h1 em{font-style:normal;font-weight:500;color:var(--areia)}
-.sub{font-size:16px;color:var(--t2);max-width:470px;margin:0 0 28px}
-.botao{display:inline-flex;align-items:center;gap:10px;background:var(--t1);color:var(--mar);font-size:14px;font-weight:600;text-decoration:none;padding:12px 20px;border-radius:6px;transition:background .25s,gap .25s}
-.botao:hover{background:#fff;gap:14px}
-.botao svg{width:15px;height:15px}
+/* ---------- topo: foto + véu marinho, texto à esquerda, cartão branco à direita ---------- */
+.topo{position:relative;isolation:isolate;overflow:hidden;color:#fff}
+.topo::before{content:"";position:absolute;inset:0;z-index:-2;background:url(/mapas-spots/hero-natal-rooftop.jpg) center 60%/cover no-repeat}
+.topo::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgb(0 20 61/.9) 0%,rgb(0 20 61/.72) 55%,rgb(0 20 61/.5) 100%)}
+.topo .miolo{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;padding:80px 0 88px}
+.pilula{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgb(255 255 255/.16);padding:7px 16px;border-radius:999px}
+.topo .nome{display:block;margin-top:18px;font-size:18px;font-weight:700;color:rgb(255 255 255/.92)}
+h1{font-weight:700;font-size:clamp(32px,3.8vw,50px);line-height:1.12;letter-spacing:-.02em;margin:8px 0 18px}
+h1 .destaque{color:#2F7BFF}
+.topo .sub{font-size:18px;color:rgb(255 255 255/.88);max-width:540px;margin:0 0 24px}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:12px;font-size:17px;font-weight:500}
+.checks li{display:flex;align-items:center;gap:12px}
+.ck{flex:none;width:22px;height:22px;border-radius:50%;background:var(--azul);display:grid;place-items:center}
+.ck svg{width:12px;height:12px;color:#fff}
+.credito{position:absolute;right:16px;bottom:10px;font-size:11px;color:rgb(255 255 255/.6)}
 
-.painel{border-top:1px solid var(--fio)}
-/* 4 em cima (SPOTs), 3 embaixo (gestão) */
-.nums{display:grid;grid-template-columns:repeat(12,1fr)}
-.num{grid-column:span 3;padding:22px 0 20px 0;border-bottom:1px solid var(--fio)}
-.num:nth-child(n+5){grid-column:span 4}
-.num:not(:nth-child(1)):not(:nth-child(5)){padding-left:20px;border-left:1px solid var(--fio)}
-.num b{display:block;font-family:var(--f-serif);font-weight:300;font-size:clamp(26px,2.6vw,36px);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.num span{display:block;margin-top:8px;font-size:12.5px;color:var(--t2);line-height:1.35}
-.fases{padding-top:22px}
-.fases-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
-.fases-topo small{font-size:11.5px;color:var(--t3)}
-.trilho{display:flex;height:4px;gap:2px;background:var(--fio)}
-.trilho span{width:0;background:var(--c);transition:width 1.6s cubic-bezier(.2,.7,.2,1)}
-.chaves{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:12px;font-size:12.5px;color:var(--t2)}
-.chaves span{display:inline-flex;align-items:center;gap:7px}
-.chaves i{width:6px;height:6px;border-radius:50%;background:var(--c)}
-.chaves b{color:var(--t1);font-weight:600;font-variant-numeric:tabular-nums}
+.cartao{background:#fff;color:var(--tinta);border-radius:24px;padding:30px 32px 26px;box-shadow:0 24px 60px -20px rgb(0 20 61/.5)}
+.cartao h2{font-size:19px;font-weight:700;margin:0 0 4px}
+.cartao .leg{font-size:14px;color:var(--tinta-2);margin:0 0 16px}
+.nums{display:grid;grid-template-columns:repeat(2,1fr)}
+.num{padding:14px 0;border-top:1px solid var(--borda)}
+.num:nth-child(even){padding-left:22px;border-left:1px solid var(--borda)}
+.num b{display:block;font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--azul);font-variant-numeric:tabular-nums}
+.num span{display:block;font-size:13.5px;color:var(--tinta-2);margin-top:2px}
+.gestao{padding-top:14px;border-top:1px solid var(--borda)}
+.gestao .rot{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--tinta-3)}
+.gestao .tres{display:grid;grid-template-columns:repeat(3,1fr);margin-top:8px}
+.gestao .tres > div+div{padding-left:14px;border-left:1px solid var(--borda)}
+.gestao b{display:flex;align-items:center;gap:5px;font-size:21px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.gestao b svg{width:16px;height:16px;color:var(--coral)}
+.gestao span{display:block;font-size:12.5px;color:var(--tinta-3);line-height:1.3;margin-top:2px}
 
-/* ---------- pilares numa faixa ---------- */
-.pilares{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--fio);border-bottom:1px solid var(--fio)}
-.pilar{padding:28px 26px 30px 0}
-.pilar+.pilar{padding-left:26px;border-left:1px solid var(--fio)}
-.pilar svg{width:22px;height:22px;color:var(--areia);margin-bottom:16px;stroke-width:1.4}
-.pilar h3{font-family:var(--f-serif);font-weight:500;font-size:16px;line-height:1.25;letter-spacing:-.01em;margin:0 0 6px}
-.pilar p{margin:0;font-size:13.5px;color:var(--t2)}
+/* ---------- seções ---------- */
+.secao{padding:88px 0}
+.secao.cinza{background:var(--cinza)}
+.cabeca{text-align:center;max-width:780px;margin:0 auto 44px}
+.cabeca h2{font-size:clamp(26px,3vw,38px);font-weight:700;line-height:1.18;letter-spacing:-.02em;margin:12px 0 12px}
+.cabeca p{margin:0;font-size:17px;color:var(--tinta-2)}
 
-/* ---------- mapas ---------- */
-.mapas{padding:56px 0 24px}
-.mapas-topo{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
-h2{font-family:var(--f-serif);font-weight:300;font-size:clamp(24px,2.3vw,30px);line-height:1.15;letter-spacing:-.025em;margin:8px 0 4px}
-.mapas-topo p{margin:0;font-size:14px;color:var(--t2)}
-.acoes{display:flex;gap:10px;align-items:center}
-.abas{position:relative;display:inline-flex;padding:3px;border:1px solid var(--fio);border-radius:8px}
-.abas button{position:relative;z-index:1;font:inherit;font-size:13px;font-weight:500;color:var(--t2);background:none;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;transition:color .3s}
-.abas button[aria-selected="true"]{color:var(--mar)}
-.abas button small{opacity:.6;margin-left:3px;font-variant-numeric:tabular-nums}
-.abas button:focus-visible,.cheia:focus-visible,.botao:focus-visible{outline:2px solid var(--planta);outline-offset:2px}
-.abas .corredica{position:absolute;z-index:0;top:3px;bottom:3px;left:3px;border-radius:6px;background:var(--t1);transition:transform .4s cubic-bezier(.4,0,.2,1),width .4s cubic-bezier(.4,0,.2,1)}
-.cheia{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--t2);text-decoration:none;padding:9px 13px;border:1px solid var(--fio);border-radius:8px;transition:color .2s,border-color .2s}
-.cheia:hover{color:var(--t1);border-color:rgb(244 239 231/.3)}
-.moldura{border-radius:10px;overflow:hidden;border:1px solid var(--fio);background:#0b2235}
-.moldura iframe{display:block;width:100%;height:calc(100vh - 110px);min-height:560px;max-height:860px;border:0;transition:opacity .3s}
+.pilares{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.pilar{background:#fff;border:1px solid var(--borda);border-radius:20px;padding:26px 24px 28px}
+.pilar .ic{width:46px;height:46px;border-radius:50%;background:var(--azul-claro);color:var(--azul);display:grid;place-items:center;margin-bottom:18px}
+.pilar .ic svg{width:22px;height:22px}
+.pilar h3{font-size:17px;font-weight:700;margin:0 0 8px}
+.pilar p{margin:0;font-size:14.5px;color:var(--tinta-2)}
+
+/* ---------- mapa ---------- */
+.fases{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.fase{background:#fff;border:1px solid var(--borda);border-radius:16px;padding:18px 22px}
+.fase b{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.fase span{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tinta-2);margin-top:4px}
+.fase i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.barra-mapa{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.abas{position:relative;display:inline-flex;padding:4px;background:#fff;border:1px solid var(--borda);border-radius:999px}
+.abas button{position:relative;z-index:1;font:inherit;font-size:14px;font-weight:700;color:var(--tinta-2);background:none;border:0;padding:10px 20px;border-radius:999px;cursor:pointer;transition:color .3s}
+.abas button[aria-selected="true"]{color:#fff}
+.abas button small{font-weight:500;opacity:.75;margin-left:3px}
+.abas .corredica{position:absolute;z-index:0;top:4px;bottom:4px;left:4px;border-radius:999px;background:var(--azul);transition:transform .4s cubic-bezier(.4,0,.2,1),width .4s cubic-bezier(.4,0,.2,1)}
+.abas button:focus-visible,.btn:focus-visible,.cheia:focus-visible{outline:3px solid #93B4FF;outline-offset:2px}
+.cheia{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--azul);text-decoration:none}
+.cheia:hover{text-decoration:underline}
+.cheia svg{width:15px;height:15px}
+.moldura{border-radius:20px;overflow:hidden;border:1px solid var(--borda);background:#0b2235}
+.moldura iframe{display:block;width:100%;height:calc(100vh - 140px);min-height:560px;max-height:860px;border:0;transition:opacity .3s}
 .moldura iframe.trocando{opacity:0}
+.hora{margin:12px 0 0;font-size:13px;color:var(--tinta-3);text-align:right}
 
-footer{padding:28px 0 36px}
-.rod{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--t3);border-top:1px solid var(--fio);padding-top:22px}
-.rod img{height:16px;width:auto;opacity:.7}
+/* ---------- rodapé ---------- */
+footer{background:var(--marinho);color:rgb(255 255 255/.72);padding:40px 0}
+footer .miolo{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px}
+footer img{height:24px;width:auto}
 
 /* ---------- entrada suave ---------- */
-.surge{opacity:0;transform:translateY(12px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.surge{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease;transition-delay:var(--d,0s)}
 .surge.visto{opacity:1;transform:none}
 
-@media (max-width:960px){
-  .duas{grid-template-columns:1fr;gap:40px;padding:44px 0 44px}
-  .pilares{grid-template-columns:repeat(2,1fr)}
-  .pilar:nth-child(3){padding-left:0;border-left:0}
-  .pilar:nth-child(n+3){border-top:1px solid var(--fio)}
+@media (max-width:1000px){
+  .topo .miolo{grid-template-columns:1fr;gap:36px;padding:52px 0 60px}
+  .pilares,.fases{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:560px){
-  .num,.num:nth-child(n+5){grid-column:span 6}
-  .num:not(:nth-child(1)):not(:nth-child(5)){padding-left:0;border-left:0}
-  .num:nth-child(even){padding-left:18px;border-left:1px solid var(--fio)}
-  .num:nth-child(7){grid-column:span 12}
-  .pilar{padding:20px 14px 20px 0}
-  .pilar:nth-child(even){padding-left:14px}
-  .pilar svg{margin-bottom:10px}
+  .cab .btn{font-size:13px;padding:5px 5px 5px 14px}
+  .cab .logo svg{width:112px}
+  .topo .sub,.checks{font-size:16px}
+  .cartao{padding:22px 20px}
+  .num b{font-size:25px}
+  .gestao b{font-size:17px}
+  .pilares{gap:12px}
+  .pilar{padding:18px 16px;border-radius:16px}
   .pilar h3{font-size:15px}
-  .pilar p{font-size:12.5px}
-  .acoes{width:100%;justify-content:space-between}
+  .pilar p{font-size:13px}
+  .secao{padding:60px 0}
+  .fases{gap:12px}
+  .fase{padding:14px 16px}
+  .fase b{font-size:22px}
 }
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{transition:none!important;animation:none!important}
+  *,*::before,*::after{transition:none!important}
   .surge{opacity:1;transform:none}
 }
 </style>
 </head>
 <body>
 
-<header class="topo">
-  <div class="miolo barra">
-    <img src="/mapas-spots/logo-seazone.png" alt="Seazone" width="600" height="99">
-    <a href="#mapas">Ver o mapa
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+<header class="cab">
+  <div class="miolo">
+    <a class="logo" href="https://seazone.com.br" aria-label="Seazone"><svg width="160" height="26" role="img" viewBox="0 0 411 68" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Seazone"><path d="M33.856 52.5045C33.856 41.2633 0.620441 47.8249 0.620441 28.9865C0.620441 20.5619 9.06051 13.5835 21.1421 13.5835C33.9571 13.5835 41.1454 20.1451 41.1454 24.3131C41.1454 26.3846 39.4827 28.576 36.6693 28.576C35.0003 28.576 33.856 27.5339 32.8128 26.4919C30.7328 24.4079 26.2504 21.9133 21.0473 21.9133C13.4418 21.9133 9.8002 25.1404 9.8002 28.1591C9.8002 38.4594 43.5541 32.9461 43.5541 51.6709C43.5541 61.769 33.0341 67.7054 21.4646 67.7054C7.80872 67.6991 0.0957031 60.4113 0.0957031 56.5589C0.0957031 53.9634 2.08086 52.1888 4.47063 52.1888C6.13968 52.1888 7.28399 53.1297 8.01735 53.856C11.0393 57.0831 15.4143 59.2682 21.5657 59.2682C28.754 59.2682 33.8623 56.4579 33.8623 52.5045" fill="#00143D"></path><path d="M60.8887 44.6989C62.1404 53.5402 69.6448 59.1608 78.597 59.1608C84.3249 59.1608 88.8073 56.8747 91.6206 55.3085C92.2465 55.0054 93.081 54.6896 94.1179 54.6896C96.6151 54.6896 98.3916 56.5589 98.3916 58.9587C98.3916 60.9354 97.1399 62.3942 96.2042 62.9184C94.1179 64.1688 87.6566 67.7054 78.5907 67.7054C62.9623 67.7054 51.083 56.0411 51.083 40.5434C51.083 25.0457 63.4807 13.5835 78.0659 13.5835C92.6511 13.5835 103.696 25.8667 103.696 38.352C103.696 41.5854 101.091 44.7052 97.8669 44.7052H60.876L60.8887 44.6989ZM60.8887 36.6785H94.7501C94.023 29.6053 87.0371 21.907 78.0786 21.907C69.1201 21.907 61.7232 28.3612 60.8887 36.6785Z" fill="#00143D"></path><path d="M190.833 22.7668C188.02 22.7668 185.965 20.9354 185.965 18.1188C185.965 15.3022 188.02 13.5781 190.833 13.5781H223.81C227.388 13.5781 229.335 16.4958 229.335 18.984C229.335 20.9291 228.678 22.009 227.388 23.5184L198.3 58.4166H225.333C228.14 58.4166 230.309 60.469 230.309 63.172C230.309 65.8749 228.147 67.599 225.333 67.599H190.505C187.476 67.599 184.985 65.2244 184.985 62.0921C184.985 60.3617 185.529 59.3891 187.046 57.5514L215.92 22.7668H190.833Z" fill="#00143D"></path><path d="M261.567 67.6991C246.147 67.6991 234.375 55.6243 234.375 40.5371C234.375 25.4499 246.356 13.5835 261.567 13.5835C276.778 13.5835 288.86 25.5573 288.86 40.5371C288.86 55.5169 276.772 67.6991 261.567 67.6991ZM261.567 22.2228C251.565 22.2228 243.543 30.6537 243.543 40.5371C243.543 50.4205 251.256 59.1671 261.567 59.1671C271.878 59.1671 279.484 50.4205 279.484 40.5371C279.484 30.6537 271.67 22.2228 261.567 22.2228Z" fill="#00143D"></path><path d="M367.304 44.6989C368.556 53.5402 376.054 59.1608 385.012 59.1608C390.746 59.1608 395.229 56.8747 398.042 55.3085C398.655 55.0054 399.496 54.6896 400.533 54.6896C403.037 54.6896 404.8 56.5589 404.8 58.9587C404.8 60.9354 403.549 62.3942 402.626 62.9184C400.533 64.1688 394.078 67.7054 385.012 67.7054C369.371 67.7054 357.504 56.0411 357.504 40.5434C357.504 25.0457 369.902 13.5835 384.481 13.5835C399.06 13.5835 410.124 25.8667 410.124 38.352C410.124 41.5854 407.513 44.7052 404.282 44.7052H367.297L367.304 44.6989ZM367.304 36.6785H401.171C400.425 29.6053 393.452 21.907 384.487 21.907C375.523 21.907 368.138 28.3612 367.304 36.6785Z" fill="#00143D"></path><path d="M325.206 13.698C321.343 13.3318 317.455 13.3065 313.579 13.357C309.862 13.4075 306.107 13.2876 302.396 13.4581C301.529 13.496 300.682 13.6475 299.898 14.0264C299.709 14.1149 299.525 14.2159 299.342 14.3296C298.552 14.8032 297.806 15.4853 297.313 16.2936C296.737 17.2472 296.737 18.1187 296.788 19.186C296.838 20.1965 296.788 21.2195 296.788 22.23C296.775 25.9055 296.769 29.5873 296.756 33.2691C296.75 35.6184 296.725 62.7046 296.725 62.7046C296.725 65.3065 299.02 67.7063 301.719 67.7063C304.419 67.7063 306.726 65.3065 306.726 62.7046V39.6096C306.726 28.9873 314.54 22.3247 323.183 22.3247C331.825 22.3247 339.646 28.9873 339.646 39.6096V62.7046C339.646 65.3065 341.846 67.7063 344.539 67.7063C347.232 67.7063 349.647 65.3065 349.647 62.7046V40.3296C349.647 26.5181 338.678 14.98 325.2 13.698" fill="#00143D"></path><path d="M174.96 20.973L163.2 14.0515C163.226 13.8873 163.302 13.7357 163.302 13.5715V3.13238C163.302 1.40199 161.898 0 160.166 0H153.894C152.162 0 150.758 1.40199 150.758 3.13238V6.77629L146.491 4.28176C144.759 3.24605 142.476 3.42288 140.871 4.61015L140.788 4.64173L113.736 20.3162C111.479 21.6614 110.537 24.7875 111.94 27.1304C113.395 29.5618 116.6 30.2186 118.851 28.8734L120.469 27.9388C118.553 31.6837 117.358 35.915 117.358 40.5314C117.358 47.8319 120.166 55.025 125.35 60.2098C127.385 62.2497 129.756 63.9548 132.355 65.2115C134.352 66.1778 136.464 66.9861 138.658 67.3903C141.566 67.9208 144.575 67.6492 147.515 67.6555C150.689 67.6555 153.869 67.6618 157.043 67.6682C159.919 67.6745 162.796 67.6871 165.704 67.6934C166.431 67.6934 167.145 67.504 167.79 67.1756C168.618 66.7524 169.112 66.2914 169.655 65.5652C170.275 64.7442 170.705 63.7527 170.705 62.6917V29.827C172.861 30.6038 175.478 29.9281 176.761 27.7809C178.165 25.4379 177.223 22.3119 174.96 20.9667M161.43 41.0493C161.43 51.04 154.659 59.1615 144.449 59.1615C134.239 59.1615 126.734 50.5222 126.734 40.5314C126.734 30.5407 134.239 22.2171 144.449 22.2171C154.659 22.2171 161.43 29.9218 161.43 39.8052V41.0556V41.0493Z" fill="#FC6058"></path></svg></a>
+    <a class="btn" href="#mapas">Ver os SPOTs no mapa<span class="seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
   </div>
+</header>
 
-  <div class="miolo duas">
+<section class="topo">
+  <div class="miolo">
     <div>
-      <span class="rotulo surge">Seazone Investimentos</span>
-      <h1 class="surge" style="--d:.08s">Imóveis feitos para o Airbnb, <em>desde a planta.</em></h1>
-      <p class="sub surge" style="--d:.16s">SPOTs em destinos com demanda comprovada de aluguel por temporada, operados pela Seazone depois da entrega.</p>
-      <a class="botao surge" style="--d:.24s" href="#mapas">Explorar os SPOTs no mapa
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <span class="pilula surge">Seazone Investimentos</span>
+      <h1 class="surge" style="--d:.05s">Imóveis feitos para o Airbnb, <span class="destaque">desde a planta</span></h1>
+      <p class="sub surge" style="--d:.1s">SPOTs em destinos com demanda comprovada de aluguel por temporada, operados pela Seazone depois da entrega.</p>
+      <ul class="checks surge" style="--d:.15s">
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>Gestão completa da Seazone</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>Destinos escolhidos com dados reais de ocupação</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>Obra acompanhada mês a mês</li>
+      </ul>
     </div>
 
-    <div class="painel surge" style="--d:.2s" id="painel">
+    <div class="cartao surge" style="--d:.12s" id="painel">
+      <h2>A Seazone em números</h2>
+      <p class="leg">SPOTs e cotas contados hoje, direto do nosso sistema.</p>
       <div class="nums">
         <div class="num"><b data-conta="spots" data-alvo="46">46</b><span>SPOTs</span></div>
+        <div class="num"><b data-conta="vendidas" data-alvo="3.6" data-prefixo="+" data-sufixo=" mil" data-casas="1">+3,6 mil</b><span>cotas comercializadas</span></div>
         <div class="num"><b data-conta="cidades" data-alvo="18">18</b><span>cidades</span></div>
         <div class="num"><b data-conta="estados" data-alvo="9">9</b><span>estados</span></div>
-        <div class="num"><b data-conta="vendidas" data-alvo="3.6" data-prefixo="+" data-sufixo=" mil" data-casas="1">+3,6 mil</b><span>cotas comercializadas</span></div>
-        <div class="num"><b data-alvo="4.3" data-prefixo="+" data-sufixo=" mil" data-casas="1">+4,3 mil</b><span>propriedades sob gestão</span></div>
-        <div class="num"><b data-alvo="4.76" data-casas="2">4,76</b><span>nota média no Airbnb</span></div>
-        <div class="num"><b data-alvo="120" data-prefixo="+" data-sufixo=" mil">+120 mil</b><span>avaliações de hóspedes</span></div>
       </div>
-      <div class="fases">
-        <div class="fases-topo"><span class="rotulo">Onde estão os SPOTs agora</span><small id="fases-hora"></small></div>
-        <div class="trilho" id="trilho" role="img" aria-label="SPOTs por fase">
-          <span style="--c:var(--entregue)" data-fase="entregue"></span>
-          <span style="--c:var(--obra)" data-fase="obra"></span>
-          <span style="--c:var(--planta)" data-fase="planta"></span>
-          <span style="--c:var(--coral)" data-fase="lancamento"></span>
-        </div>
-        <div class="chaves">
-          <span style="--c:var(--entregue)"><i></i><b data-fase-n="entregue">7</b> em operação</span>
-          <span style="--c:var(--obra)"><i></i><b data-fase-n="obra">13</b> em obra</span>
-          <span style="--c:var(--planta)"><i></i><b data-fase-n="planta">21</b> na planta</span>
-          <span style="--c:var(--coral)"><i></i><b data-fase-n="lancamento">5</b> em lançamento</span>
+      <div class="gestao">
+        <span class="rot">Gestão Seazone no Airbnb</span>
+        <div class="tres">
+          <div><b data-alvo="4.3" data-prefixo="+" data-sufixo=" mil" data-casas="1">+4,3 mil</b><span>propriedades sob gestão</span></div>
+          <div><b><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1 6.3L12 17.2l-5.6 2.9 1-6.3L3 9.4l6.3-.9z"/></svg><span data-alvo="4.76" data-casas="2" style="display:inline;font-size:inherit;color:inherit;margin:0">4,76</span></b><span>nota média</span></div>
+          <div><b data-alvo="120" data-prefixo="+" data-sufixo=" mil">+120 mil</b><span>avaliações de hóspedes</span></div>
         </div>
       </div>
     </div>
   </div>
   <span class="credito">Rooftop do Natal Spot · imagem ilustrativa</span>
-</header>
+</section>
 
-<main>
-  <section class="miolo pilares" aria-label="Por que a Seazone">
-    <article class="pilar surge">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 10h8v11M11 15h10M15 3v7"/></svg>
-      <h3>Pensado para temporada</h3>
-      <p>Planta, mobília e enxoval desenhados para o hóspede desde o primeiro traço.</p>
-    </article>
-    <article class="pilar surge" style="--d:.08s">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg>
-      <h3>Demanda comprovada</h3>
-      <p>Destinos escolhidos com dados de ocupação e diária de milhares de imóveis que já operamos.</p>
-    </article>
-    <article class="pilar surge" style="--d:.16s">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M17 6l3 3M14.5 8.5l2 2"/></svg>
-      <h3>Gestão completa</h3>
-      <p>Anúncio, preço, hóspedes, limpeza e manutenção: a Seazone opera, você acompanha.</p>
-    </article>
-    <article class="pilar surge" style="--d:.24s">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-      <h3>Obra à vista</h3>
-      <p>Informativo mensal com o avanço físico e fotos de cada SPOT em obra.</p>
-    </article>
-  </section>
-
-  <section class="mapas" id="mapas">
-    <div class="miolo">
-      <div class="mapas-topo">
-        <div class="surge">
-          <span class="rotulo">Mapa interativo</span>
-          <h2>Explore os SPOTs</h2>
-          <p>Toque em um ponto: o mapa voa até o prédio e abre a ficha.</p>
-        </div>
-        <div class="acoes surge" style="--d:.08s">
-          <div class="abas" role="tablist" aria-label="Escolha o mapa">
-            <span class="corredica" aria-hidden="true"></span>
-            <button role="tab" aria-selected="true" data-mapa="/mapas-spots/brasil.html">Brasil <small data-n="brasil">46</small></button>
-            <button role="tab" aria-selected="false" data-mapa="/mapas-spots/floripa.html">Florianópolis <small data-n="floripa">23</small></button>
-          </div>
-          <a class="cheia" id="cheia" href="/mapas-spots/brasil.html?publico" target="_blank" rel="noopener">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Tela cheia</a>
-        </div>
-      </div>
-      <div class="moldura surge" style="--d:.12s">
-        <iframe id="mapa" src="/mapas-spots/brasil.html?publico" title="Mapa dos SPOTs Seazone" allow="fullscreen" loading="lazy"></iframe>
-      </div>
+<section class="secao" id="porque">
+  <div class="miolo">
+    <div class="cabeca surge">
+      <span class="selo-azul">Por que a Seazone</span>
+      <h2>Quem projeta o SPOT é <span class="destaque">quem opera o aluguel</span></h2>
     </div>
-  </section>
-</main>
+    <div class="pilares">
+      <article class="pilar surge">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h8v11M11 15h10M15 3v7"/></svg></div>
+        <h3>Pensado para temporada</h3>
+        <p>Planta, mobília e enxoval desenhados para o hóspede desde o primeiro traço.</p>
+      </article>
+      <article class="pilar surge" style="--d:.05s">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg></div>
+        <h3>Demanda comprovada</h3>
+        <p>Destinos escolhidos com dados de ocupação e diária de milhares de imóveis que já operamos.</p>
+      </article>
+      <article class="pilar surge" style="--d:.1s">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M17 6l3 3M14.5 8.5l2 2"/></svg></div>
+        <h3>Gestão completa</h3>
+        <p>Anúncio, preço, hóspedes, limpeza e manutenção: a Seazone opera, você acompanha.</p>
+      </article>
+      <article class="pilar surge" style="--d:.15s">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Obra à vista</h3>
+        <p>Informativo mensal com o avanço físico e fotos de cada SPOT em obra.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="secao cinza" id="mapas">
+  <div class="miolo">
+    <div class="cabeca surge">
+      <span class="selo-azul">Mapa interativo</span>
+      <h2>Explore os SPOTs <span class="destaque">no mapa</span></h2>
+      <p>Toque em um ponto: o mapa voa até o prédio e abre a ficha com fotos, valores e o que tem perto.</p>
+    </div>
+    <div class="fases surge">
+      <div class="fase" style="--c:var(--entregue)"><b data-fase-n="entregue">7</b><span><i></i>em operação</span></div>
+      <div class="fase" style="--c:var(--obra)"><b data-fase-n="obra">13</b><span><i></i>em obra</span></div>
+      <div class="fase" style="--c:var(--planta)"><b data-fase-n="planta">21</b><span><i></i>na planta</span></div>
+      <div class="fase" style="--c:var(--lanc)"><b data-fase-n="lancamento">5</b><span><i></i>em lançamento</span></div>
+    </div>
+    <div class="barra-mapa">
+      <div class="abas" role="tablist" aria-label="Escolha o mapa">
+        <span class="corredica" aria-hidden="true"></span>
+        <button role="tab" aria-selected="true" data-mapa="/mapas-spots/brasil.html">Brasil <small data-n="brasil">46</small></button>
+        <button role="tab" aria-selected="false" data-mapa="/mapas-spots/floripa.html">Florianópolis <small data-n="floripa">23</small></button>
+      </div>
+      <a class="cheia" id="cheia" href="/mapas-spots/brasil.html?publico" target="_blank" rel="noopener">Abrir em tela cheia
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+    </div>
+    <div class="moldura">
+      <iframe id="mapa" src="/mapas-spots/brasil.html?publico" title="Mapa dos SPOTs Seazone" allow="fullscreen" loading="lazy"></iframe>
+    </div>
+    <p class="hora" id="hora"></p>
+  </div>
+</section>
 
 <footer>
-  <div class="miolo rod">
+  <div class="miolo">
     <img src="/mapas-spots/logo-seazone.png" alt="Seazone" width="600" height="99">
     <span>Valores e disponibilidade dos SPOTs atualizados automaticamente e sujeitos a alteração.</span>
   </div>
@@ -247,7 +261,7 @@ footer{padding:28px 0 36px}
     const alvo = parseFloat(el.dataset.alvo), casas = +(el.dataset.casas || 0);
     const pre = el.dataset.prefixo || "", suf = el.dataset.sufixo || "";
     if (reduzir){ el.textContent = pre + fmt(alvo, casas) + suf; return; }
-    const t0 = performance.now(), dur = 1400;
+    const t0 = performance.now(), dur = 1200;
     (function passo(t){
       const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 4);
       el.textContent = pre + fmt(alvo * e, casas) + suf;
@@ -255,23 +269,13 @@ footer{padding:28px 0 36px}
     })(t0);
   }
 
-  // fases (os valores do HTML valem até a resposta do mapa chegar)
   let fases = {entregue: 7, obra: 13, planta: 21, lancamento: 5}, painelVisto = false;
-  function encherTrilho(){
-    const total = Object.values(fases).reduce((a, b) => a + b, 0) || 1;
-    document.querySelectorAll("#trilho span").forEach(s => s.style.width = (fases[s.dataset.fase] / total * 100) + "%");
-    document.querySelectorAll("[data-fase-n]").forEach(b => b.textContent = fases[b.dataset.faseN]);
-  }
+  const mostrarFases = () => document.querySelectorAll("[data-fase-n]").forEach(b => b.textContent = fases[b.dataset.faseN]);
 
-  // entrada suave ao rolar
   const vistos = new IntersectionObserver(es => es.forEach(e => {
     if (!e.isIntersecting) return;
     e.target.classList.add("visto");
-    if (e.target.id === "painel"){
-      painelVisto = true;
-      e.target.querySelectorAll("b[data-alvo]").forEach(contar);
-      setTimeout(encherTrilho, reduzir ? 0 : 300);
-    }
+    if (e.target.id === "painel"){ painelVisto = true; e.target.querySelectorAll("[data-alvo]").forEach(contar); }
     vistos.unobserve(e.target);
   }), {threshold: .15});
   document.querySelectorAll(".surge").forEach(el => vistos.observe(el));
@@ -286,7 +290,7 @@ footer{padding:28px 0 36px}
       // "+3,6 mil": arredonda para baixo, nunca a favor da casa
       vendidas: d.vendidas ? Math.floor(d.vendidas / 100) / 10 : 3.6,
     };
-    document.querySelectorAll("b[data-conta]").forEach(b => {
+    document.querySelectorAll("[data-conta]").forEach(b => {
       b.dataset.alvo = vals[b.dataset.conta];
       if (painelVisto) contar(b);
     });
@@ -294,14 +298,14 @@ footer{padding:28px 0 36px}
     document.querySelector('[data-n="floripa"]').textContent = s.filter(x => x.cidade === "Florianópolis").length;
     fases = {entregue: 0, obra: 0, planta: 0, lancamento: 0};
     s.forEach(x => { if (x.status in fases) fases[x.status]++; });
-    if (painelVisto) encherTrilho();
-    if (d.aoVivo && (d.atualizado || d.horario)) document.getElementById("fases-hora").textContent = "atualizado " + (d.atualizado || d.horario);
+    mostrarFases();
+    if (d.aoVivo && (d.atualizado || d.horario)) document.getElementById("hora").textContent = "Números atualizados em " + (d.atualizado || d.horario);
   }).catch(() => {});
 
   // abas Brasil / Florianópolis
   const abas = [...document.querySelectorAll(".abas button")], corredica = document.querySelector(".abas .corredica");
   const mapa = document.getElementById("mapa"), cheia = document.getElementById("cheia");
-  function mover(b){ corredica.style.width = b.offsetWidth + "px"; corredica.style.transform = `translateX(${b.offsetLeft - 3}px)`; }
+  function mover(b){ corredica.style.width = b.offsetWidth + "px"; corredica.style.transform = `translateX(${b.offsetLeft - 4}px)`; }
   abas.forEach(b => b.addEventListener("click", () => {
     if (b.getAttribute("aria-selected") === "true") return;
     abas.forEach(x => x.setAttribute("aria-selected", x === b));
@@ -309,12 +313,11 @@ footer{padding:28px 0 36px}
     const src = b.dataset.mapa + "?publico";
     cheia.href = src;
     mapa.classList.add("trocando");
-    setTimeout(() => { mapa.src = src; }, reduzir ? 0 : 220);
+    setTimeout(() => { mapa.src = src; }, reduzir ? 0 : 200);
   }));
   mapa.addEventListener("load", () => mapa.classList.remove("trocando"));
   const ajustar = () => mover(abas.find(b => b.getAttribute("aria-selected") === "true"));
   addEventListener("resize", ajustar);
-  (document.fonts ? document.fonts.ready : Promise.resolve()).then(ajustar);
   ajustar();
 })();
 </script>
