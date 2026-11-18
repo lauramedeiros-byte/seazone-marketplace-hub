@@ -42,7 +42,7 @@ a{color:inherit}
 .topo{position:relative;isolation:isolate;overflow:hidden;color:#fff}
 .topo::before{content:"";position:absolute;inset:0;z-index:-2;background:url(/mapas-spots/hero-natal-rooftop.jpg) center 60%/cover no-repeat}
 .topo::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgb(0 20 61/.9) 0%,rgb(0 20 61/.72) 55%,rgb(0 20 61/.5) 100%)}
-.topo .miolo{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;padding:80px 0 88px}
+.topo .miolo{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;padding:44px 0 48px}
 .pilula{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgb(255 255 255/.16);padding:7px 16px;border-radius:999px}
 .topo .nome{display:block;margin-top:18px;font-size:18px;font-weight:700;color:rgb(255 255 255/.92)}
 h1{font-weight:700;font-size:clamp(32px,3.8vw,50px);line-height:1.12;letter-spacing:-.02em;margin:8px 0 18px}
@@ -77,20 +77,27 @@ h1 .destaque{color:#2F7BFF}
 .cabeca h2{font-size:clamp(26px,3vw,38px);font-weight:700;line-height:1.18;letter-spacing:-.02em;margin:12px 0 12px}
 .cabeca p{margin:0;font-size:17px;color:var(--tinta-2)}
 
-.pilares{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.pilar{background:#fff;border:1px solid var(--borda);border-radius:20px;padding:26px 24px 28px}
-.pilar .ic{width:46px;height:46px;border-radius:50%;background:var(--azul-claro);color:var(--azul);display:grid;place-items:center;margin-bottom:18px}
-.pilar .ic svg{width:22px;height:22px}
-.pilar h3{font-size:17px;font-weight:700;margin:0 0 8px}
-.pilar p{margin:0;font-size:14.5px;color:var(--tinta-2)}
+/* "Por que a Seazone" compacto: título à esquerda, 4 pilares em linha (ícone ao lado do título) */
+.faixa{padding:36px 0;border-bottom:1px solid var(--borda)}
+.faixa .miolo{display:grid;grid-template-columns:260px 1fr;gap:40px;align-items:center}
+.faixa-titulo h2{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:8px 0 0}
+.pilares{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.pilar{background:#fff;border:1px solid var(--borda);border-radius:16px;padding:16px 16px 18px}
+.pilar .ic{float:left;width:34px;height:34px;border-radius:50%;background:var(--azul-claro);color:var(--azul);display:grid;place-items:center;margin:0 10px 6px 0}
+.pilar .ic svg{width:17px;height:17px}
+.pilar h3{font-size:14.5px;font-weight:700;line-height:1.2;margin:0 0 6px;min-height:34px;display:flex;align-items:center}
+.pilar p{clear:left;margin:0;font-size:13px;line-height:1.45;color:var(--tinta-2)}
 
-/* ---------- mapa ---------- */
-.fases{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-.fase{background:#fff;border:1px solid var(--borda);border-radius:16px;padding:18px 22px}
-.fase b{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
-.fase span{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tinta-2);margin-top:4px}
-.fase i{width:9px;height:9px;border-radius:50%;background:var(--c)}
-.barra-mapa{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+/* ---------- mapa: título, fases e botões numa faixa só ---------- */
+#mapas.secao{padding:40px 0 56px}
+.barra-mapa{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.mapa-titulo h2{font-size:clamp(24px,2.4vw,30px);font-weight:700;line-height:1.15;letter-spacing:-.02em;margin:8px 0 4px}
+.mapa-titulo p{margin:0;font-size:14.5px;color:var(--tinta-2)}
+.fases{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:13.5px;color:var(--tinta-2)}
+.fases span{display:inline-flex;align-items:center;gap:7px}
+.fases i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.fases b{color:var(--tinta);font-variant-numeric:tabular-nums}
+.mapa-acoes{display:flex;align-items:center;gap:18px}
 .abas{position:relative;display:inline-flex;padding:4px;background:#fff;border:1px solid var(--borda);border-radius:999px}
 .abas button{position:relative;z-index:1;font:inherit;font-size:14px;font-weight:700;color:var(--tinta-2);background:none;border:0;padding:10px 20px;border-radius:999px;cursor:pointer;transition:color .3s}
 .abas button[aria-selected="true"]{color:#fff}
@@ -116,7 +123,8 @@ footer img{height:24px;width:auto}
 
 @media (max-width:1000px){
   .topo .miolo{grid-template-columns:1fr;gap:36px;padding:52px 0 60px}
-  .pilares,.fases{grid-template-columns:repeat(2,1fr)}
+  .pilares{grid-template-columns:repeat(2,1fr)}
+  .faixa .miolo{grid-template-columns:1fr;gap:18px}
 }
 @media (max-width:560px){
   .cab .btn{font-size:13px;padding:5px 5px 5px 14px}
@@ -126,6 +134,10 @@ footer img{height:24px;width:auto}
   .num b{font-size:25px}
   .gestao b{font-size:17px}
   .pilares{gap:12px}
+  .mapa-acoes{width:100%;justify-content:space-between;gap:10px}
+  .abas button,.cheia{white-space:nowrap}
+  .abas button{padding:9px 14px;font-size:13px}
+  .cheia{font-size:13px}
   .pilar{padding:18px 16px;border-radius:16px}
   .pilar h3{font-size:15px}
   .pilar p{font-size:13px}
@@ -184,9 +196,9 @@ footer img{height:24px;width:auto}
   <span class="credito">Rooftop do Natal Spot · imagem ilustrativa</span>
 </section>
 
-<section class="secao" id="porque">
+<section class="faixa" id="porque">
   <div class="miolo">
-    <div class="cabeca surge">
+    <div class="faixa-titulo surge">
       <span class="selo-azul">Por que a Seazone</span>
       <h2>Quem projeta o SPOT é <span class="destaque">quem opera o aluguel</span></h2>
     </div>
@@ -217,18 +229,19 @@ footer img{height:24px;width:auto}
 
 <section class="secao cinza" id="mapas">
   <div class="miolo">
-    <div class="cabeca surge">
-      <span class="selo-azul">Mapa interativo</span>
-      <h2>Explore os SPOTs <span class="destaque">no mapa</span></h2>
-      <p>Toque em um ponto: o mapa voa até o prédio e abre a ficha com fotos, valores e o que tem perto.</p>
-    </div>
-    <div class="fases surge">
-      <div class="fase" style="--c:var(--entregue)"><b data-fase-n="entregue">7</b><span><i></i>em operação</span></div>
-      <div class="fase" style="--c:var(--obra)"><b data-fase-n="obra">13</b><span><i></i>em obra</span></div>
-      <div class="fase" style="--c:var(--planta)"><b data-fase-n="planta">21</b><span><i></i>na planta</span></div>
-      <div class="fase" style="--c:var(--lanc)"><b data-fase-n="lancamento">5</b><span><i></i>em lançamento</span></div>
-    </div>
     <div class="barra-mapa">
+      <div class="mapa-titulo">
+        <span class="selo-azul">Mapa interativo</span>
+        <h2>Explore os SPOTs <span class="destaque">no mapa</span></h2>
+        <p>Toque em um ponto: o mapa voa até o prédio e abre a ficha com fotos, valores e o que tem perto.</p>
+        <div class="fases">
+          <span style="--c:var(--entregue)"><i></i><b data-fase-n="entregue">7</b> em operação</span>
+          <span style="--c:var(--obra)"><i></i><b data-fase-n="obra">13</b> em obra</span>
+          <span style="--c:var(--planta)"><i></i><b data-fase-n="planta">21</b> na planta</span>
+          <span style="--c:var(--lanc)"><i></i><b data-fase-n="lancamento">5</b> em lançamento</span>
+        </div>
+      </div>
+      <div class="mapa-acoes">
       <div class="abas" role="tablist" aria-label="Escolha o mapa">
         <span class="corredica" aria-hidden="true"></span>
         <button role="tab" aria-selected="true" data-mapa="/mapas-spots/brasil.html">Brasil <small data-n="brasil">46</small></button>
@@ -236,6 +249,7 @@ footer img{height:24px;width:auto}
       </div>
       <a class="cheia" id="cheia" href="/mapas-spots/brasil.html?publico" target="_blank" rel="noopener">Abrir em tela cheia
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+      </div>
     </div>
     <div class="moldura">
       <iframe id="mapa" src="/mapas-spots/brasil.html?publico" title="Mapa dos SPOTs Seazone" allow="fullscreen" loading="lazy"></iframe>
