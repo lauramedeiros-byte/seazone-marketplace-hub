@@ -44,6 +44,11 @@
     "3,1 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/cachoeira-beach-spot/cover.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-beach-spot-fachada-vista-da-praia.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-beach-spot-vista-da-praia-a-partir-do-rooftop.jpg"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -111,6 +116,11 @@
     "4,9 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/cachoeira-spot/cachoeira01.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-spot-fachada-vitrine-lp.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-spot-piscina-de-borda-infinita-com-vista-para-o-mar-vitrine-lp.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -161,6 +171,11 @@
     "Igreja Nossa Senhora das Necessidades",
     "550 m"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/santo-antonio-spot/cover.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/santo-antnio-spot-fachada-vitrine-lp.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/santo-antnio-spot-rooftop-com-piscina-e-vista-para-a-baa-norte-vitrine-lp.jpg"
   ],
   "reserva": {
    "status": "planta",
@@ -227,6 +242,11 @@
     "Praia Brava",
     "9,4 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_5.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canasvieiras-spot-fachada.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canasvieiras-spot-vista-area-com-a-praia.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -295,6 +315,11 @@
     "11 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_6.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-spot-vista-aerea-com-a-ilha.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-spot-vista-lateral-com-o-mar-e-a-ilha-do-campeche-ao-fundo.jpg"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -335,6 +360,9 @@
     "Comércio, padarias e restaurantes",
     "próximo"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/8/01KVXKCXM09EFEV6Y0EEJ8Q2TF.png"
   ],
   "reserva": {
    "status": "obra",
@@ -399,6 +427,11 @@
     "4 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_10.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-beach-spot-fachada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-beach-spot-rooftop-com-vista-para-o-mar.png"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2027,
@@ -448,6 +481,11 @@
     "Barra da Lagoa",
     "9,3 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/lagoa-spot/lagoa-spot-Ambiente-27.11.25-007-scaled.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/lagoa-spot-entregue-e-em-operao-florianpolis.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/case-lagoa-spot.jpg"
   ],
   "reserva": {
    "status": "entregue",
@@ -511,6 +549,11 @@
     "4,2 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_12.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/morro-das-pedras-spot-fachada-vitrine-lp.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/morro-das-pedras-spot-piscina-de-borda-infinita-com-vista-para-o-mar-vitrine-lp.jpg"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -572,6 +615,11 @@
     "Mirante do Morro das Pedras",
     "2 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/campeche-spot/campeche1-t.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/campeche-spot-fachada.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/campeche-spot-rooftop-com-piscina-e-vista-para-o-mar.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -635,6 +683,11 @@
     "10,7 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_18.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/sul-da-ilha-spot-fachada-vitrine-lp.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/sul-da-ilha-spot-rooftop-com-piscina-e-vista-para-o-mar-vitrine-lp.jpg"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -694,6 +747,11 @@
     "4,2 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_24.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/barra-spot-fachada-na-barra-da-lagoa.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/barra-spot-jardim-e-fachada-ao-entardecer.jpg"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -744,6 +802,10 @@
     "1,4 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/25/01M4B94ZWZQ97RGFSDT9Y6NE78.webp",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/santinho-spot-rooftop-com-espreguiadeiras-e-vista-para-a-praia.webp"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -790,6 +852,11 @@
     "5 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_29.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-ii-spot-fachada-vitrine-lp.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-ii-spot-rooftop-com-vista-para-o-mar-vitrine-lp.png"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -831,6 +898,11 @@
     "Parador Internacional P12",
     "4 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/jurere-spot-ii/fotos/externas/jurere_spot_ii_0.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-ii-fachada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-ii-rooftop-com-piscina-e-vista-para-a-praia-de-jurer.png"
   ],
   "reserva": {
    "status": "planta",
@@ -891,6 +963,11 @@
     "5,6 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_35.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-fachada-com-a-placa.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-rooftop-com-piscina.jpg"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -945,6 +1022,11 @@
     "Praia da Cachoeira do Bom Jesus",
     "2,6 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_38.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canas-beach-spot-fachada-vitrine-lp.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canas-beach-spot-rooftop-com-piscina-e-vista-para-o-mar-vitrine-lp.jpg"
   ],
   "reserva": {
    "status": "planta",
@@ -1004,6 +1086,11 @@
     "Praia da Cachoeira do Bom Jesus",
     "2,9 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/ponta-das-canas-spot-ii/fotos/externas/ponta_canas_ii_0.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-ii-fachada-vista-da-praia.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-ii-rooftop-com-piscina-e-vista.png"
   ],
   "reserva": {
    "status": "planta",
@@ -1065,6 +1152,12 @@
     "3,2 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_40.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-fachada-e-entrada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-vista-area-do-prdio-com-a-praia-do-novo-campeche-ao-fundo.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot_rooftop_01.png"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1118,6 +1211,11 @@
     "P12 Parador Internacional",
     "4 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/jurere-spot-iii/fotos/externas/jurere_spot_iii_0.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-iii-fachada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-iii-rooftop-com-piscina-e-vista-para-o-mar.png"
   ],
   "reserva": {
    "status": "planta",
@@ -1174,6 +1272,11 @@
     "3,2 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/novo-campeche-spot-ii/fotos/externas/novo_campeche_spot_ii_0.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-ii-fachada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-ii-rooftop-com-piscina.png"
+  ],
   "reserva": {
    "status": "lancamento",
    "ano": 2030,
@@ -1226,6 +1329,13 @@
     "Praia de Canajurê",
     "2,1 km"
    ]
+  ],
+  "origens": [
+   "https://seazone.com.br/image/6ad164b9916d20009dc2ea7f",
+   "https://seazone.com.br/image/6ad164bdee037909edac02eb",
+   "https://seazone.com.br/image/6aa4ba5e830245fcfafe4f99",
+   "https://seazone.com.br/image/6ad164be08a6dd0db0777fb1",
+   "https://seazone.com.br/image/6aa4678a70127a0b417c301d"
   ],
   "reserva": {
    "status": "entregue",
@@ -1282,6 +1392,12 @@
     "Pico da Cruz",
     "3,2 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/50/01M2NBJ0P47EZKSGTGFQQDK09F.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-iii-fachada-area-frente-mar.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-iii-piscina-do-rooftop-de-frente-para-o-mar.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-iii-terrao-com-hidromassagem-privativa-e-vista-para-o-mar.png"
   ],
   "reserva": {
    "status": "lancamento",
@@ -1345,6 +1461,10 @@
     "16 min"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_9.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/japaratinga-spot-seazone.png"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2026,
@@ -1399,6 +1519,11 @@
     "2 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/33/01KYSMCGJ4H6F4QAKVWG33GYY6.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/itacar-spot-entrada-com-a-praia-ao-fundo.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/itacar-spot-rooftop-com-piscina-ao-pr-do-sol.png"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -1443,6 +1568,10 @@
     "Praia Três Coqueiros",
     "1,9 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/barra-grande-spot/fotos/externas/barra_grande_spot_0.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/barra-grande-spot-fachada-do-empreendimento-pennsula-de-mara.png"
   ],
   "reserva": {
    "status": "planta",
@@ -1495,6 +1624,11 @@
     "70 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_7.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/imbassa-spot-fachada-entre-coqueiros.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/imbassa-spot-rea-de-lazer-com-piscina.jpg"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -1536,6 +1670,11 @@
     "Falésias",
     "12 min"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_19.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/trancoso-spot-costa-do-descobrimento-bahia.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/trancoso-spot-seazone.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -1596,6 +1735,12 @@
     "11 min"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_16.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/salvador-spot-fachada-do-empreendimento-na-barra-em-salvador.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/salvador-spot-rooftop-com-piscina-de-borda-infinita-visto-de-cima.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/salvador-spot-rooftop-piscina.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -1646,6 +1791,11 @@
     "Espigão Rui Barbosa",
     "1,2 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/meireles-spot/cover.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/meireles-spot-fachada-no-meireles-fortaleza.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/meireles-spot-rooftop-com-piscina.jpg"
   ],
   "reserva": {
    "status": "planta",
@@ -1698,6 +1848,11 @@
     "550 m"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/28/4b3201bb-1b4f-4ce9-8263-eea58ac92a01.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/marista-144-spot-fachada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/marista-144-spot-rooftop-com-piscina-e-vista-da-cidade.png"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -1741,6 +1896,11 @@
     "13,2 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_26.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-fachada-no-bairro-alvorada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-rooftop-com-piscina-e-vista.png"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -1783,6 +1943,11 @@
     "Parque das Cachoeiras",
     "13,7 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/bonito-spot-ii/fotos/externas/bonito_spot_ii_0.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-ii-fachada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-ii-rooftop-com-piscina.png"
   ],
   "reserva": {
    "status": "lancamento",
@@ -1843,6 +2008,11 @@
     "3,9 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/batel-spot/cover.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/batel-spot-fachada-ao-entardecer.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/batel-spot-rooftop-com-piscina.png"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -1893,6 +2063,11 @@
     "6 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_37.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/foz-spot-fachada-do-prdio-no-centro-de-foz-do-iguau.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/foz-spot-rooftop-com-piscina.png"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1938,6 +2113,9 @@
     "2,9 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/natal-spot/fotos/externas/natal_spot_0.png"
+  ],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1982,6 +2160,9 @@
     "Centro de Rancho Queimado",
     "40 min"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_22.jpg"
   ],
   "reserva": {
    "status": "entregue",
@@ -2032,6 +2213,13 @@
     "18 min"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/23/01M3MZWCGG23TRAF8A5XA5H4KH.png",
+   "https://drive.google.com/thumbnail?id=1fe5nsE5RxvynW4vhuBSGgfRjAexNhi08&sz=w1600",
+   "https://drive.google.com/thumbnail?id=1LnZzqfeocmFfdrJufjAEXK_BB6iDRCbI&sz=w1600",
+   "https://drive.google.com/thumbnail?id=1AzmlDsKBqwzpbw9iRiig1sZvHnC9Pwbu&sz=w1600",
+   "https://drive.google.com/thumbnail?id=18lZGU62d-Fb68OQ2QIB6F1Ag3-R_Tmgb&sz=w1600"
+  ],
   "reserva": {
    "status": "entregue",
    "ano": null,
@@ -2076,6 +2264,9 @@
     "Rancho Queimado",
     "40 min"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/47/01KWF7Y21DNE8VPJH9N8S0XKY0.jpg"
   ],
   "reserva": {
    "status": "lancamento",
@@ -2143,6 +2334,11 @@
     "11 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/rosa-norte-spot/cover.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-norte-spot-fachada-vitrine-lp.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-norte-spot-rooftop-com-piscina-de-borda-infinita-vitrine-lp.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -2194,6 +2390,12 @@
     "17 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/rosa-spot/cover.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-spot-entregue-e-em-operao-praia-do-rosa.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-spot-ambiente-11-12-25-003-scaled.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-spot-fachada-recortada.jpg"
+  ],
   "reserva": {
    "status": "entregue",
    "ano": 2025,
@@ -2240,6 +2442,11 @@
     "Praia do Rosa Sul",
     "2,7 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/construction/15/01M6RT141V2JAXVYXR89EAVTXX.jpg",
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/construction/15/01M6RT1RHYRG52W0WJKVBH9PXP.jpg",
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/construction/15/01M4G8TQ2VV3BJKXWRXHXJN0ZQ.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -2293,6 +2500,12 @@
     "2,2 km"
    ]
   ],
+  "origens": [
+   "https://drive.google.com/thumbnail?id=16iqMOL5SJWiXlLgA50o8UV-pNPml5xYW&sz=w1600",
+   "https://drive.google.com/thumbnail?id=15RY4bSULFtJUZgtmErbIebuFtp7Qacba&sz=w1600",
+   "https://drive.google.com/thumbnail?id=1LoTD_FRwZHs2Guid6VTHQfDQ4m2-D7tx&sz=w1600",
+   "https://drive.google.com/thumbnail?id=1unzg8nEJfjY8ADNNN0BL72b0NjX4CMne&sz=w1600"
+  ],
   "reserva": {
    "status": "entregue",
    "ano": 2025,
@@ -2335,6 +2548,11 @@
     "Cascata Véu de Noiva",
     "19 km"
    ]
+  ],
+  "origens": [
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-fachada-real-do-empreendimento-entregue-serra-catarinense.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-deck-com-fireplace.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-rea-de-convivncia-do-trreo-com-bar-e-mesas-prdio-em-operao.jpg"
   ],
   "reserva": {
    "status": "entregue",
@@ -2382,6 +2600,11 @@
     "19 km"
    ]
   ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_21.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-ii-fachada-com-a-placa.jpg",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-ii-rooftop-com-vista-para-a-serra.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2027,
@@ -2428,6 +2651,11 @@
     "Feira do Artesanato",
     "2,9 km"
    ]
+  ],
+  "origens": [
+   "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/caragua-spot/fotos/externas/caragua_spot_0.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/caragu-spot-fachada.png",
+   "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/caragu-spot-rooftop-com-piscina-e-vista-para-o-mar.png"
   ],
   "reserva": {
    "status": "lancamento",

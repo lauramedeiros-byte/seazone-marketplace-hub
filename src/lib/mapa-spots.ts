@@ -129,10 +129,14 @@ function tamanho(u: string, px: number): string {
 async function fotosDeObra(): Promise<Map<number, { mes: string; grandes: string[]; minis: string[] }>> {
   const { rows } = await queryNekt(SQL_FOTOS);
   const porSpot = new Map<number, { mes: string; grandes: string[]; minis: string[] }>();
+  // não repete foto que já está fixa no carrossel do SPOT (mesmo arquivo); outro ângulo entra normal
+  const arquivo = (u: string) => u.split("?")[0].split("/").pop() ?? u;
+  const jaTem = new Map(fixos.map((s) => [s.id, new Set((s.origens ?? []).map(arquivo))]));
   rows
     .sort((a, b) => Number(a.ordem) - Number(b.ordem))
     .forEach((r) => {
       const id = Number(r.sid);
+      if (jaTem.get(id)?.has(arquivo(String(r.u)))) return;
       const [ano, mes] = String(r.ym).split("-");
       const item = porSpot.get(id) ?? { mes: `${MESES[Number(mes) - 1]}/${ano}`, grandes: [], minis: [] };
       if (item.grandes.length < FOTOS_OBRA) {
@@ -161,7 +165,8 @@ function fase(building: string | null, comercial: string | null, reserva: Status
 }
 
 const somenteReserva = (): SpotMapa[] =>
-  fixos.map(({ reserva, ...f }) => ({ ...f, ...reserva, status: reserva.status as Status, preco: reserva.preco as Preco }));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- origens é só para o servidor
+  fixos.map(({ reserva, origens: _o, ...f }) => ({ ...f, ...reserva, status: reserva.status as Status, preco: reserva.preco as Preco }));
 
 // Hora em que a Nekt copiou o spotômetro pela última vez (a cópia roda várias vezes ao dia).
 // O mapa consulta a Nekt toda vez que abre; o número é o desta cópia, não o do segundo exato.
@@ -180,7 +185,8 @@ export async function carregarSpots(): Promise<{ spots: SpotMapa[]; aoVivo: bool
   const obraFotos = await obraP;
   const porId = new Map(rows.map((r) => [Number(r.id), r]));
 
-  const spots = fixos.map(({ reserva, ...f }): SpotMapa => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- origens é só para o servidor
+  const spots = fixos.map(({ reserva, origens: _o, ...f }): SpotMapa => {
     const r = porId.get(f.id);
     const base: SpotMapa = { ...f, ...reserva, status: reserva.status as Status, preco: reserva.preco as Preco };
     if (!r) return base;
