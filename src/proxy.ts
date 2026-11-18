@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/cron(.*)",
   "/api/agente-disparos(.*)", // agente local; protegido por x-agente-token
   "/api/agente-opps(.*)", // agente das opps da semana; mesmo x-agente-token
+  "/spots", // página pública dos mapas de SPOTs (public/mapas-spots/index.html)
+  "/api/mapa-spots/publico", // números dos mapas para a página pública (só leitura, guardado 5 min)
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
