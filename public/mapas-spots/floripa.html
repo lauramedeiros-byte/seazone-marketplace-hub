@@ -769,6 +769,8 @@ button:focus-visible{outline:3px solid var(--planta);outline-offset:2px}
 .miniaturas button{width:84px;height:58px;padding:0;border-radius:10px;overflow:hidden;border:3px solid transparent;background:none;opacity:.75}
 .miniaturas button[aria-current="true"]{border-color:#fff;opacity:1}
 .miniaturas img{width:100%;height:100%;object-fit:cover}
+.miniaturas{overflow-x:auto;justify-content:safe center;scrollbar-width:none}.miniaturas button{flex-shrink:0}
+.foto-legenda{position:absolute;top:max(20px,env(safe-area-inset-top,0px));right:max(20px,env(safe-area-inset-right,0px));background:var(--coral);color:#fff;border-radius:999px;padding:10px 16px;font-weight:700;font-size:14px;box-shadow:0 3px 14px rgb(0 0 0/.3)}
 .voltar{position:absolute;top:max(20px,env(safe-area-inset-top,0px));left:max(20px,env(safe-area-inset-left,0px));border:0;background:#fff;color:var(--tinta);border-radius:999px;padding:12px 20px 12px 16px;font-weight:600;font-size:15px;box-shadow:0 3px 14px rgb(0 0 0/.3)}
 .info{overflow-y:auto;padding:clamp(28px,5vh,64px) clamp(24px,4vw,64px);padding-right:max(clamp(24px,4vw,64px),env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
 .info>*{flex-shrink:0}
@@ -901,6 +903,7 @@ button:focus-visible{outline:3px solid var(--planta);outline-offset:2px}
     <button class="seta ant" id="f-ant" aria-label="Foto anterior">‹</button>
     <button class="seta prox" id="f-prox" aria-label="Próxima foto">›</button>
     <div class="miniaturas" id="f-minis"></div>
+    <span class="foto-legenda" id="f-legenda" hidden></span>
     <button class="voltar" id="f-voltar">← Ver no mapa</button>
   </div>
   <div class="info">
@@ -1103,7 +1106,7 @@ function abrir(s){
   d+=s.status==="entregue"?`<div><small>Entregue em</small><b>${s.ano}</b></div>`:`<div><small>Entrega prevista</small><b>${s.ano}</b></div>`;
   const ob=document.getElementById("f-obra");
   ob.hidden=s.status!=="obra";
-  ob.innerHTML=s.status!=="obra"?"":`<div class="linha1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20"/><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-5h6v5"/><path d="M14 4l6-2v6"/></svg>Em obras${s.pct>0?`<span class="pct">${Math.round(s.pct)}% concluída</span>`:""}</div>${s.pct>0?`<div class="barra"><span style="width:${s.pct}%"></span></div>`:""}`;
+  ob.innerHTML=s.status!=="obra"?"":`<div class="linha1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20"/><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-5h6v5"/><path d="M14 4l6-2v6"/></svg>Em obras${s.pct>0?`<span class="pct">${Math.floor(s.pct)}% concluída</span>`:""}</div>${s.pct>0?`<div class="barra"><span style="width:${s.pct}%"></span></div>`:""}`;
   if(s.status==="entregue") d+=`<div class="largo"><small>Situação</small><b>Pronto e operando</b></div>`;
   if(s.m2min==null) d=d.replace("<div><small>Metragem</small><b>—</b></div>","").replace(/^<div>/,'<div class="largo">');
   document.getElementById("f-dados").innerHTML=d;
@@ -1112,7 +1115,7 @@ function abrir(s){
   document.getElementById("f-tags").hidden=!tags.length;
   const perto=s.perto||[];
   document.getElementById("f-perto").innerHTML=perto.length?`<h3>Perto do SPOT</h3><ul>${perto.map(([n,dist])=>`<li><span>${n}</span><b>${dist}</b></li>`).join("")}</ul>`:"";
-  document.getElementById("f-minis").innerHTML=s.fotos.length>1?s.fotos.map((f,i)=>`<button data-i="${i}" aria-label="Foto ${i+1}"><img src="${f}" alt=""></button>`).join(""):"";
+  document.getElementById("f-minis").innerHTML=s.fotos.length>1?s.fotos.map((f,i)=>`<button data-i="${i}" aria-label="Foto ${i+1}"><img src="${s.obra&&i>=1&&i<=s.obra.n?s.obra.minis[i-1]:f}" alt="" loading="lazy"></button>`).join(""):"";
   document.getElementById("f-ant").hidden=document.getElementById("f-prox").hidden=s.fotos.length<2;
   mostrarFoto(0); ficha.hidden=false; document.getElementById("f-voltar").focus(); reiniciarOcioso();
 }
@@ -1120,6 +1123,9 @@ function mostrarFoto(i){
   fi=(i+atual.fotos.length)%atual.fotos.length;
   const img=document.getElementById("f-foto"); img.src=atual.fotos[fi]; img.alt="Foto "+(fi+1)+" do "+atual.nome;
   document.querySelectorAll("#f-minis button").forEach(b=>b.setAttribute("aria-current",+b.dataset.i===fi));
+  const ob=atual.obra&&fi>=1&&fi<=atual.obra.n, lg=document.getElementById("f-legenda");
+  lg.hidden=!ob; lg.textContent=ob?"Foto da obra · "+atual.obra.mes:"";
+  if(ob) img.alt="Foto da obra do "+atual.nome+", "+atual.obra.mes;
 }
 function fechar(){ficha.hidden=true}
 document.getElementById("f-ant").onclick=()=>mostrarFoto(fi-1);

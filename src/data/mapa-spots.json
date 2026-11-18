@@ -2002,7 +2002,11 @@
   "lon": -49.096,
   "dif": "Na serra catarinense, com vista panorâmica para o vale",
   "fotos": [
-   "fotos/s23-0.jpg"
+   "fotos/s23-0.jpg",
+   "fotos/s23-real0.jpg",
+   "fotos/s23-real1.jpg",
+   "fotos/s23-real2.jpg",
+   "fotos/s23-real3.jpg"
   ],
   "tags": [
    [
@@ -2209,7 +2213,9 @@
   "lon": -48.6577285,
   "dif": "Rooftop com vista para a Lagoa de Ibiraquera",
   "fotos": [
-   "fotos/s15-0.jpg"
+   "fotos/s15-real0.jpg",
+   "fotos/s15-real1.jpg",
+   "fotos/s15-real2.jpg"
   ],
   "tags": [
    [
@@ -2238,7 +2244,7 @@
   "reserva": {
    "status": "obra",
    "ano": 2026,
-   "pct": 76.52,
+   "pct": 100,
    "preco": 408584.73,
    "m2min": 30.62,
    "m2max": 43.13
@@ -2254,9 +2260,10 @@
   "lon": -48.6110592,
   "dif": "Perto do Beto Carrero World e das praias de Penha",
   "fotos": [
-   "fotos/s30-0.jpg",
-   "fotos/s30-1.jpg",
-   "fotos/s30-2.jpg"
+   "fotos/s30-real0.jpg",
+   "fotos/s30-real1.jpg",
+   "fotos/s30-real2.jpg",
+   "fotos/s30-real3.jpg"
   ],
   "tags": [
    [
@@ -2305,10 +2312,9 @@
   "lon": -49.5860797,
   "dif": "Na Serra Catarinense, com espaço de convívio e lareira",
   "fotos": [
-   "fotos/s20-0.jpg",
-   "fotos/s20-1.jpg",
    "fotos/s20-2.jpg",
-   "fotos/s20-3.jpg"
+   "fotos/s20-3.jpg",
+   "fotos/s20-1.jpg"
   ],
   "tags": [
    [
