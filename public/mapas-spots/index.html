@@ -9,9 +9,6 @@
 <meta property="og:title" content="SPOTs Seazone · mapa interativo">
 <meta property="og:description" content="Imóveis feitos para o Airbnb, desde a planta. Veja todos os SPOTs no mapa.">
 <link rel="icon" href="/favicon.ico">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap">
 <style>
 /* Mesmo azul e coral dos mapas (brasil-src.html), em versão mais contida */
 :root{
@@ -20,8 +17,8 @@
   --planta:#6fd3ff; --entregue:#3ddc97; --obra:#ffb020;
   --t1:#f4efe7; --t2:rgb(244 239 231/.66); --t3:rgb(244 239 231/.42);
   --fio:rgb(244 239 231/.12);
-  --f-serif:"Instrument Serif",Georgia,serif;
-  --f-texto:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+  --f-serif:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --f-texto:"Helvetica Neue",Helvetica,Arial,sans-serif;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -40,21 +37,33 @@ a{color:inherit}
 
 /* ---------- topo em duas colunas ---------- */
 .topo{position:relative;isolation:isolate}
-.topo::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:radial-gradient(60% 80% at 85% 0%,rgb(111 211 255/.07),transparent 70%),radial-gradient(50% 70% at 0% 100%,rgb(255 91 77/.06),transparent 70%)}
+/* fundo: rooftop do Natal Spot (render do projeto), com véu azul para o texto ler bem */
+.topo{background:var(--mar)}
+.topo::before{content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;
+  background:url(/mapas-spots/hero-natal-rooftop.jpg) center 62%/cover no-repeat;
+  animation:aproxima 24s ease-out both}
+@keyframes aproxima{from{transform:scale(1.08)}to{transform:scale(1)}}
+.topo{overflow:hidden}
+.topo::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(90deg,rgb(10 31 48/.93) 0%,rgb(10 31 48/.78) 45%,rgb(10 31 48/.62) 100%),
+    linear-gradient(180deg,rgb(10 31 48/.35) 0%,transparent 30%,transparent 70%,var(--mar) 100%)}
+.credito{position:absolute;right:20px;bottom:12px;font-size:10.5px;color:var(--t3);letter-spacing:.02em}
 .duas{display:grid;grid-template-columns:1.05fr 1fr;gap:72px;align-items:center;padding:64px 0 60px}
-h1{font-family:var(--f-serif);font-weight:400;font-size:clamp(34px,4vw,52px);line-height:1.05;letter-spacing:-.01em;margin:14px 0 18px}
-h1 em{font-style:italic;color:var(--areia)}
+h1{font-family:var(--f-serif);font-weight:300;font-size:clamp(30px,3.4vw,46px);line-height:1.08;letter-spacing:-.03em;margin:14px 0 18px}
+h1 em{font-style:normal;font-weight:500;color:var(--areia)}
 .sub{font-size:16px;color:var(--t2);max-width:470px;margin:0 0 28px}
 .botao{display:inline-flex;align-items:center;gap:10px;background:var(--t1);color:var(--mar);font-size:14px;font-weight:600;text-decoration:none;padding:12px 20px;border-radius:6px;transition:background .25s,gap .25s}
 .botao:hover{background:#fff;gap:14px}
 .botao svg{width:15px;height:15px}
 
 .painel{border-top:1px solid var(--fio)}
-.nums{display:grid;grid-template-columns:repeat(3,1fr)}
-.num{padding:22px 0 20px 0;border-bottom:1px solid var(--fio)}
-.num:not(:nth-child(3n+1)){padding-left:22px;border-left:1px solid var(--fio)}
-.num b{display:block;font-family:var(--f-serif);font-weight:400;font-size:clamp(30px,3vw,40px);line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+/* 4 em cima (SPOTs), 3 embaixo (gestão) */
+.nums{display:grid;grid-template-columns:repeat(12,1fr)}
+.num{grid-column:span 3;padding:22px 0 20px 0;border-bottom:1px solid var(--fio)}
+.num:nth-child(n+5){grid-column:span 4}
+.num:not(:nth-child(1)):not(:nth-child(5)){padding-left:20px;border-left:1px solid var(--fio)}
+.num b{display:block;font-family:var(--f-serif);font-weight:300;font-size:clamp(26px,2.6vw,36px);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .num span{display:block;margin-top:8px;font-size:12.5px;color:var(--t2);line-height:1.35}
 .fases{padding-top:22px}
 .fases-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
@@ -71,13 +80,13 @@ h1 em{font-style:italic;color:var(--areia)}
 .pilar{padding:28px 26px 30px 0}
 .pilar+.pilar{padding-left:26px;border-left:1px solid var(--fio)}
 .pilar svg{width:22px;height:22px;color:var(--areia);margin-bottom:16px;stroke-width:1.4}
-.pilar h3{font-family:var(--f-serif);font-weight:400;font-size:21px;line-height:1.15;margin:0 0 6px}
+.pilar h3{font-family:var(--f-serif);font-weight:500;font-size:16px;line-height:1.25;letter-spacing:-.01em;margin:0 0 6px}
 .pilar p{margin:0;font-size:13.5px;color:var(--t2)}
 
 /* ---------- mapas ---------- */
 .mapas{padding:56px 0 24px}
 .mapas-topo{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
-h2{font-family:var(--f-serif);font-weight:400;font-size:clamp(26px,2.6vw,34px);line-height:1.1;margin:8px 0 4px}
+h2{font-family:var(--f-serif);font-weight:300;font-size:clamp(24px,2.3vw,30px);line-height:1.15;letter-spacing:-.025em;margin:8px 0 4px}
 .mapas-topo p{margin:0;font-size:14px;color:var(--t2)}
 .acoes{display:flex;gap:10px;align-items:center}
 .abas{position:relative;display:inline-flex;padding:3px;border:1px solid var(--fio);border-radius:8px}
@@ -107,18 +116,19 @@ footer{padding:28px 0 36px}
   .pilar:nth-child(n+3){border-top:1px solid var(--fio)}
 }
 @media (max-width:560px){
-  .nums{grid-template-columns:repeat(2,1fr)}
-  .num:not(:nth-child(3n+1)){padding-left:0;border-left:0}
+  .num,.num:nth-child(n+5){grid-column:span 6}
+  .num:not(:nth-child(1)):not(:nth-child(5)){padding-left:0;border-left:0}
   .num:nth-child(even){padding-left:18px;border-left:1px solid var(--fio)}
+  .num:nth-child(7){grid-column:span 12}
   .pilar{padding:20px 14px 20px 0}
   .pilar:nth-child(even){padding-left:14px}
   .pilar svg{margin-bottom:10px}
-  .pilar h3{font-size:18px}
+  .pilar h3{font-size:15px}
   .pilar p{font-size:12.5px}
   .acoes{width:100%;justify-content:space-between}
 }
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{transition:none!important}
+  *,*::before,*::after{transition:none!important;animation:none!important}
   .surge{opacity:1;transform:none}
 }
 </style>
@@ -146,6 +156,7 @@ footer{padding:28px 0 36px}
         <div class="num"><b data-conta="spots" data-alvo="46">46</b><span>SPOTs</span></div>
         <div class="num"><b data-conta="cidades" data-alvo="18">18</b><span>cidades</span></div>
         <div class="num"><b data-conta="estados" data-alvo="9">9</b><span>estados</span></div>
+        <div class="num"><b data-conta="vendidas" data-alvo="3.6" data-prefixo="+" data-sufixo=" mil" data-casas="1">+3,6 mil</b><span>cotas comercializadas</span></div>
         <div class="num"><b data-alvo="4.3" data-prefixo="+" data-sufixo=" mil" data-casas="1">+4,3 mil</b><span>propriedades sob gestão</span></div>
         <div class="num"><b data-alvo="4.76" data-casas="2">4,76</b><span>nota média no Airbnb</span></div>
         <div class="num"><b data-alvo="120" data-prefixo="+" data-sufixo=" mil">+120 mil</b><span>avaliações de hóspedes</span></div>
@@ -167,6 +178,7 @@ footer{padding:28px 0 36px}
       </div>
     </div>
   </div>
+  <span class="credito">Rooftop do Natal Spot · imagem ilustrativa</span>
 </header>
 
 <main>
@@ -271,6 +283,8 @@ footer{padding:28px 0 36px}
       spots: s.length,
       cidades: new Set(s.map(x => x.cidade + "|" + x.uf)).size,
       estados: new Set(s.map(x => x.uf)).size,
+      // "+3,6 mil": arredonda para baixo, nunca a favor da casa
+      vendidas: d.vendidas ? Math.floor(d.vendidas / 100) / 10 : 3.6,
     };
     document.querySelectorAll("b[data-conta]").forEach(b => {
       b.dataset.alvo = vals[b.dataset.conta];

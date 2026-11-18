@@ -1174,6 +1174,11 @@ fetch(PUBLICO?"/api/mapa-spots/publico":"/api/mapa-spots",PUBLICO?{}:{cache:"no-
   .then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
   .then(d=>{
     window.SPOTS=d.spots.filter(s=>s.cidade==="Florianópolis");
+    // página pública: sem o nome dos sistemas internos (o cliente não precisa saber de spotômetro/SZI)
+    if(PUBLICO){
+      rod.textContent=d.aoVivo?"Números atualizados em "+(d.atualizado||d.horario):"Números de 23/10/2026";
+      document.querySelectorAll(".nota").forEach(n=>n.textContent="Valores no momento em que o mapa foi aberto. A disponibilidade pode mudar a qualquer hora.");
+    } else
     rod.textContent=d.aoVivo?"Números do spotômetro e do SZI · atualizados "+(d.atualizado||d.horario):"⚠ Números de 23/10/2026 (a consulta ao vivo falhou)";
     if(!d.aoVivo) rod.classList.add("aviso");
     iniciar();
