@@ -11,143 +11,114 @@
 <link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap">
 <style>
-/* Mesmas cores e fontes dos mapas (brasil-src.html), para a página e o mapa parecerem uma coisa só */
+/* Mesmo azul e coral dos mapas (brasil-src.html), em versão mais contida */
 :root{
-  --mar:#0b2235; --mar-2:#10304a; --mar-3:#163d5c;
-  --coral:#ff5b4d; --coral-escuro:#d9402f;
+  --mar:#0a1f30;
+  --coral:#ff5b4d; --areia:#e9dfcf;
   --planta:#6fd3ff; --entregue:#3ddc97; --obra:#ffb020;
-  --papel:#f8f5ef; --tinta:#0f2134; --tinta-2:#4b5d70; --fio:#e2dccf;
-  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --t1:#f4efe7; --t2:rgb(244 239 231/.66); --t3:rgb(244 239 231/.42);
+  --fio:rgb(244 239 231/.12);
+  --f-serif:"Instrument Serif",Georgia,serif;
   --f-texto:"Instrument Sans","Segoe UI",system-ui,sans-serif;
-  color-scheme:light;
+  color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--mar);color:#fff;font-family:var(--f-texto);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{margin:0;background:var(--mar);color:var(--t1);font-family:var(--f-texto);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img{max-width:100%;display:block}
 a{color:inherit}
-.miolo{width:min(1180px,100% - 32px);margin-inline:auto}
+.miolo{width:min(1200px,100% - 40px);margin-inline:auto}
+.rotulo{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--t3)}
 
-/* ---------- topo ---------- */
-.topo{position:relative;min-height:min(88vh,760px);display:flex;flex-direction:column;overflow:hidden;isolation:isolate}
-.topo::before{content:"";position:absolute;inset:-20%;z-index:-2;
-  background:
-    radial-gradient(40% 50% at 18% 30%,rgb(255 91 77/.28),transparent 70%),
-    radial-gradient(45% 55% at 85% 20%,rgb(111 211 255/.22),transparent 70%),
-    radial-gradient(50% 60% at 60% 95%,rgb(61 220 151/.16),transparent 70%),
-    var(--mar);
-  animation:deriva 22s ease-in-out infinite alternate}
-@keyframes deriva{to{transform:translate3d(4%,-3%,0) rotate(4deg) scale(1.06)}}
-.ondas{position:absolute;left:0;right:0;bottom:-2px;z-index:-1;height:120px;width:200%;animation:onda 18s linear infinite;opacity:.55}
-.ondas.lenta{animation-duration:30s;opacity:.3;bottom:10px}
-@keyframes onda{to{transform:translateX(-50%)}}
-.barra{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-.barra img{height:30px;width:auto}
-.barra a{font-weight:600;font-size:14px;text-decoration:none;padding:9px 16px;border-radius:999px;border:1px solid rgb(255 255 255/.25);transition:background .2s,border-color .2s}
-.barra a:hover{background:rgb(255 255 255/.1);border-color:rgb(255 255 255/.5)}
-.chamada{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0 120px;max-width:820px}
-.selo{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--coral);background:rgb(255 91 77/.12);border:1px solid rgb(255 91 77/.35);padding:6px 12px;border-radius:999px}
-.selo i{width:7px;height:7px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 0 rgb(255 91 77/.7);animation:pulso 2s infinite}
-@keyframes pulso{70%{box-shadow:0 0 0 10px rgb(255 91 77/0)}100%{box-shadow:0 0 0 0 rgb(255 91 77/0)}}
-h1{font-family:var(--f-display);font-weight:800;font-size:clamp(38px,6.4vw,76px);line-height:1.02;letter-spacing:-.025em;margin:22px 0 18px}
-h1 .destaque{background:linear-gradient(90deg,var(--coral),#ff9a6b,var(--coral));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brilho 6s linear infinite}
-@keyframes brilho{to{background-position:200% center}}
-.sub{font-size:clamp(17px,2vw,20px);color:rgb(255 255 255/.78);max-width:600px;margin:0 0 32px}
-.botao{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;background:var(--coral);color:#fff;font-weight:600;text-decoration:none;padding:15px 26px;border-radius:999px;box-shadow:0 10px 30px -8px rgb(255 91 77/.6);transition:transform .2s,box-shadow .2s,background .2s}
-.botao:hover{transform:translateY(-2px);background:var(--coral-escuro);box-shadow:0 16px 36px -10px rgb(255 91 77/.7)}
-.botao svg{animation:desce 1.6s ease-in-out infinite}
-@keyframes desce{50%{transform:translateY(3px)}}
-/* pinos flutuando no topo */
-.pinos{position:absolute;inset:0;z-index:-1;pointer-events:none}
-.pinos span{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--c);box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 22%,transparent),0 0 24px var(--c);animation:boia var(--t,7s) ease-in-out infinite alternate;opacity:.85}
-@keyframes boia{to{transform:translateY(-18px)}}
-@media (max-width:760px){.pinos span:nth-child(n+2){display:none}.pinos span:first-child{top:10%;right:8%}}
+/* ---------- barra ---------- */
+.barra{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--fio)}
+.barra img{height:22px;width:auto}
+.barra a{font-size:13px;font-weight:500;color:var(--t2);text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:color .2s}
+.barra a:hover{color:var(--t1)}
 
-/* ---------- números ---------- */
-.numeros{position:relative;margin-top:-70px;z-index:2}
-.grade-num{display:grid;grid-template-columns:repeat(6,1fr);background:var(--papel);color:var(--tinta);border-radius:24px;box-shadow:0 30px 60px -30px rgb(0 0 0/.6);overflow:hidden}
-.num{padding:28px 18px 24px;text-align:center;position:relative}
-.num+.num::before{content:"";position:absolute;left:0;top:24%;bottom:24%;width:1px;background:var(--fio)}
-.num .ic{width:40px;height:40px;margin:0 auto 10px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,#fff);color:var(--c)}
-.num .ic svg{width:22px;height:22px}
-.num b{display:block;font-family:var(--f-display);font-weight:800;font-size:clamp(28px,3.2vw,40px);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.num span{display:block;margin-top:6px;font-size:13.5px;color:var(--tinta-2);line-height:1.3}
-.ao-vivo{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;font-size:12.5px;color:rgb(255 255 255/.6)}
-.ao-vivo i{width:7px;height:7px;border-radius:50%;background:var(--entregue);animation:pulso-v 2s infinite}
-@keyframes pulso-v{0%{box-shadow:0 0 0 0 rgb(61 220 151/.7)}70%{box-shadow:0 0 0 8px rgb(61 220 151/0)}}
-@media (max-width:900px){.grade-num{grid-template-columns:repeat(3,1fr)}.num:nth-child(4)::before{display:none}.num:nth-child(n+4){border-top:1px solid var(--fio)}}
-@media (max-width:480px){.grade-num{grid-template-columns:repeat(2,1fr)}.num::before{display:none}.num:nth-child(n+3){border-top:1px solid var(--fio)}.num:nth-child(even){border-left:1px solid var(--fio)}}
+/* ---------- topo em duas colunas ---------- */
+.topo{position:relative;isolation:isolate}
+.topo::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(60% 80% at 85% 0%,rgb(111 211 255/.07),transparent 70%),radial-gradient(50% 70% at 0% 100%,rgb(255 91 77/.06),transparent 70%)}
+.duas{display:grid;grid-template-columns:1.05fr 1fr;gap:72px;align-items:center;padding:64px 0 60px}
+h1{font-family:var(--f-serif);font-weight:400;font-size:clamp(34px,4vw,52px);line-height:1.05;letter-spacing:-.01em;margin:14px 0 18px}
+h1 em{font-style:italic;color:var(--areia)}
+.sub{font-size:16px;color:var(--t2);max-width:470px;margin:0 0 28px}
+.botao{display:inline-flex;align-items:center;gap:10px;background:var(--t1);color:var(--mar);font-size:14px;font-weight:600;text-decoration:none;padding:12px 20px;border-radius:6px;transition:background .25s,gap .25s}
+.botao:hover{background:#fff;gap:14px}
+.botao svg{width:15px;height:15px}
 
-/* ---------- por que ---------- */
-.secao{padding:96px 0 0}
-.titulo{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,4vw,44px);line-height:1.08;letter-spacing:-.02em;margin:0 0 12px}
-.legenda-sec{color:rgb(255 255 255/.68);margin:0 0 36px;font-size:17px;max-width:620px}
-.pilares{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.pilar{position:relative;padding:26px 22px 24px;border-radius:20px;background:linear-gradient(180deg,var(--mar-2),var(--mar));border:1px solid rgb(255 255 255/.09);overflow:hidden;transition:transform .3s,border-color .3s}
-.pilar::after{content:"";position:absolute;inset:auto -40% -60% auto;width:180px;height:180px;border-radius:50%;background:var(--c);filter:blur(60px);opacity:.18;transition:opacity .3s}
-.pilar:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--c) 60%,transparent)}
-.pilar:hover::after{opacity:.4}
-.pilar .ic{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c);margin-bottom:18px;transition:transform .4s}
-.pilar:hover .ic{transform:rotate(-8deg) scale(1.08)}
-.pilar .ic svg{width:27px;height:27px}
-.pilar h3{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1.15;margin:0 0 8px}
-.pilar p{margin:0;color:rgb(255 255 255/.7);font-size:15px}
-@media (max-width:980px){.pilares{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:540px){.pilares{grid-template-columns:1fr}}
+.painel{border-top:1px solid var(--fio)}
+.nums{display:grid;grid-template-columns:repeat(3,1fr)}
+.num{padding:22px 0 20px 0;border-bottom:1px solid var(--fio)}
+.num:not(:nth-child(3n+1)){padding-left:22px;border-left:1px solid var(--fio)}
+.num b{display:block;font-family:var(--f-serif);font-weight:400;font-size:clamp(30px,3vw,40px);line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.num span{display:block;margin-top:8px;font-size:12.5px;color:var(--t2);line-height:1.35}
+.fases{padding-top:22px}
+.fases-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.fases-topo small{font-size:11.5px;color:var(--t3)}
+.trilho{display:flex;height:4px;gap:2px;background:var(--fio)}
+.trilho span{width:0;background:var(--c);transition:width 1.6s cubic-bezier(.2,.7,.2,1)}
+.chaves{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:12px;font-size:12.5px;color:var(--t2)}
+.chaves span{display:inline-flex;align-items:center;gap:7px}
+.chaves i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+.chaves b{color:var(--t1);font-weight:600;font-variant-numeric:tabular-nums}
 
-/* ---------- fases ---------- */
-.fases{margin-top:56px;padding:26px;border-radius:20px;background:rgb(255 255 255/.04);border:1px solid rgb(255 255 255/.08)}
-.fases-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.fases-topo strong{font-family:var(--f-display);font-size:19px}
-.fases-topo small{color:rgb(255 255 255/.55);font-size:13px}
-.trilho{display:flex;height:14px;border-radius:999px;overflow:hidden;background:rgb(255 255 255/.08);gap:3px}
-.trilho span{width:0;background:var(--c);transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
-.chaves{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:16px;font-size:14.5px;color:rgb(255 255 255/.8)}
-.chaves span{display:inline-flex;align-items:center;gap:8px}
-.chaves i{width:10px;height:10px;border-radius:50%;background:var(--c)}
-.chaves b{font-family:var(--f-display);font-size:17px;color:#fff;font-variant-numeric:tabular-nums}
-
-/* ---------- cidades correndo ---------- */
-.esteira{margin-top:56px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
-.esteira-faixa{display:flex;gap:12px;width:max-content;animation:corre 45s linear infinite}
-.esteira:hover .esteira-faixa{animation-play-state:paused}
-@keyframes corre{to{transform:translateX(-50%)}}
-.esteira-faixa span{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding:10px 18px;border-radius:999px;background:rgb(255 255 255/.06);border:1px solid rgb(255 255 255/.1);font-weight:500;font-size:15px}
-.esteira-faixa span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--coral)}
-.esteira-faixa small{color:rgb(255 255 255/.5);font-size:12.5px}
+/* ---------- pilares numa faixa ---------- */
+.pilares{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--fio);border-bottom:1px solid var(--fio)}
+.pilar{padding:28px 26px 30px 0}
+.pilar+.pilar{padding-left:26px;border-left:1px solid var(--fio)}
+.pilar svg{width:22px;height:22px;color:var(--areia);margin-bottom:16px;stroke-width:1.4}
+.pilar h3{font-family:var(--f-serif);font-weight:400;font-size:21px;line-height:1.15;margin:0 0 6px}
+.pilar p{margin:0;font-size:13.5px;color:var(--t2)}
 
 /* ---------- mapas ---------- */
-.mapas{padding:96px 0 40px}
-.mapas-topo{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
-.mapas-topo .legenda-sec{margin:0}
-.abas{position:relative;display:inline-flex;padding:5px;border-radius:999px;background:rgb(255 255 255/.07);border:1px solid rgb(255 255 255/.12)}
-.abas button{position:relative;z-index:1;font:inherit;font-weight:600;font-size:15px;color:rgb(255 255 255/.75);background:none;border:0;padding:10px 20px;border-radius:999px;cursor:pointer;transition:color .3s}
-.abas button[aria-selected="true"]{color:#fff}
-.abas button small{font-weight:500;opacity:.75;margin-left:4px}
-.abas button:focus-visible{outline:3px solid var(--planta);outline-offset:2px}
-.abas .bolinha{position:absolute;z-index:0;top:5px;bottom:5px;left:5px;border-radius:999px;background:var(--coral);box-shadow:0 6px 20px -6px rgb(255 91 77/.7);transition:transform .45s cubic-bezier(.3,1.3,.5,1),width .45s cubic-bezier(.3,1.3,.5,1)}
-.acoes{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.cheia{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;text-decoration:none;padding:11px 16px;border-radius:999px;border:1px solid rgb(255 255 255/.2);transition:background .2s}
-.cheia:hover{background:rgb(255 255 255/.08)}
-.moldura{position:relative;border-radius:22px;overflow:hidden;border:1px solid rgb(255 255 255/.12);box-shadow:0 40px 80px -40px rgb(0 0 0/.8);background:var(--mar)}
-.moldura iframe{display:block;width:100%;height:calc(100vh - 120px);min-height:560px;max-height:900px;border:0;transition:opacity .35s}
+.mapas{padding:56px 0 24px}
+.mapas-topo{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+h2{font-family:var(--f-serif);font-weight:400;font-size:clamp(26px,2.6vw,34px);line-height:1.1;margin:8px 0 4px}
+.mapas-topo p{margin:0;font-size:14px;color:var(--t2)}
+.acoes{display:flex;gap:10px;align-items:center}
+.abas{position:relative;display:inline-flex;padding:3px;border:1px solid var(--fio);border-radius:8px}
+.abas button{position:relative;z-index:1;font:inherit;font-size:13px;font-weight:500;color:var(--t2);background:none;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;transition:color .3s}
+.abas button[aria-selected="true"]{color:var(--mar)}
+.abas button small{opacity:.6;margin-left:3px;font-variant-numeric:tabular-nums}
+.abas button:focus-visible,.cheia:focus-visible,.botao:focus-visible{outline:2px solid var(--planta);outline-offset:2px}
+.abas .corredica{position:absolute;z-index:0;top:3px;bottom:3px;left:3px;border-radius:6px;background:var(--t1);transition:transform .4s cubic-bezier(.4,0,.2,1),width .4s cubic-bezier(.4,0,.2,1)}
+.cheia{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--t2);text-decoration:none;padding:9px 13px;border:1px solid var(--fio);border-radius:8px;transition:color .2s,border-color .2s}
+.cheia:hover{color:var(--t1);border-color:rgb(244 239 231/.3)}
+.moldura{border-radius:10px;overflow:hidden;border:1px solid var(--fio);background:#0b2235}
+.moldura iframe{display:block;width:100%;height:calc(100vh - 110px);min-height:560px;max-height:860px;border:0;transition:opacity .3s}
 .moldura iframe.trocando{opacity:0}
-.dica{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:13.5px;color:rgb(255 255 255/.6)}
-.dica span{display:inline-flex;align-items:center;gap:7px}
-.dica svg{width:16px;height:16px;color:var(--coral)}
 
-/* ---------- rodapé ---------- */
-footer{padding:40px 0 48px;border-top:1px solid rgb(255 255 255/.08);margin-top:40px}
-.rod{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:rgb(255 255 255/.5)}
-.rod img{height:22px;width:auto;opacity:.85}
+footer{padding:28px 0 36px}
+.rod{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--t3);border-top:1px solid var(--fio);padding-top:22px}
+.rod img{height:16px;width:auto;opacity:.7}
 
-/* ---------- aparecer ao rolar ---------- */
-.surge{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
+/* ---------- entrada suave ---------- */
+.surge{opacity:0;transform:translateY(12px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
 .surge.visto{opacity:1;transform:none}
+
+@media (max-width:960px){
+  .duas{grid-template-columns:1fr;gap:40px;padding:44px 0 44px}
+  .pilares{grid-template-columns:repeat(2,1fr)}
+  .pilar:nth-child(3){padding-left:0;border-left:0}
+  .pilar:nth-child(n+3){border-top:1px solid var(--fio)}
+}
+@media (max-width:560px){
+  .nums{grid-template-columns:repeat(2,1fr)}
+  .num:not(:nth-child(3n+1)){padding-left:0;border-left:0}
+  .num:nth-child(even){padding-left:18px;border-left:1px solid var(--fio)}
+  .pilar{padding:20px 14px 20px 0}
+  .pilar:nth-child(even){padding-left:14px}
+  .pilar svg{margin-bottom:10px}
+  .pilar h3{font-size:18px}
+  .pilar p{font-size:12.5px}
+  .acoes{width:100%;justify-content:space-between}
+}
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
+  *,*::before,*::after{transition:none!important}
   .surge{opacity:1;transform:none}
 }
 </style>
@@ -155,90 +126,32 @@ footer{padding:40px 0 48px;border-top:1px solid rgb(255 255 255/.08);margin-top:
 <body>
 
 <header class="topo">
-  <svg class="ondas lenta" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#10304a" d="M0 60c120 30 240 30 360 0s240-30 360 0 240 30 360 0 240-30 360 0v60H0z"/><path fill="#10304a" transform="translate(1440 0)" d="M0 60c120 30 240 30 360 0s240-30 360 0 240 30 360 0 240-30 360 0v60H0z"/></svg>
-  <svg class="ondas" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#0b2235" d="M0 70c180-40 360-40 540 0s360 40 540 0 270-30 360-10v60H0z"/><path fill="#0b2235" transform="translate(1440 0)" d="M0 70c180-40 360-40 540 0s360 40 540 0 270-30 360-10v60H0z"/></svg>
-  <div class="pinos" aria-hidden="true">
-    <span style="--c:var(--coral);top:22%;right:12%;--t:6s"></span>
-    <span style="--c:var(--entregue);top:58%;right:22%;--t:8s"></span>
-    <span style="--c:var(--planta);top:36%;right:30%;--t:7s"></span>
-    <span style="--c:var(--obra);top:70%;right:8%;--t:9s"></span>
-    <span style="--c:var(--coral);top:14%;right:40%;--t:10s"></span>
-  </div>
   <div class="miolo barra">
     <img src="/mapas-spots/logo-seazone.png" alt="Seazone" width="600" height="99">
-    <a href="#mapas">Ver o mapa</a>
+    <a href="#mapas">Ver o mapa
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
   </div>
-  <div class="miolo chamada">
-    <span class="selo surge"><i></i>Seazone Investimentos</span>
-    <h1 class="surge" style="--d:.1s">Imóveis feitos para o Airbnb, <span class="destaque">desde a planta.</span></h1>
-    <p class="sub surge" style="--d:.2s">SPOTs em destinos com demanda comprovada de aluguel por temporada, operados pela Seazone depois da entrega.</p>
-    <a class="botao surge" style="--d:.3s" href="#mapas">Explorar os SPOTs no mapa
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>
-  </div>
-</header>
 
-<main>
-  <section class="numeros">
-    <div class="miolo">
-      <div class="grade-num surge">
-        <div class="num" style="--c:var(--coral)">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></div>
-          <b data-conta="spots" data-alvo="46">46</b><span>SPOTs no mapa</span>
-        </div>
-        <div class="num" style="--c:var(--planta)">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
-          <b data-conta="cidades" data-alvo="18">18</b><span>cidades</span>
-        </div>
-        <div class="num" style="--c:var(--entregue)">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></div>
-          <b data-conta="estados" data-alvo="9">9</b><span>estados</span>
-        </div>
-        <div class="num" style="--c:var(--obra)">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg></div>
-          <b data-alvo="4.3" data-prefixo="+" data-sufixo=" mil" data-casas="1">+4,3 mil</b><span>propriedades sob gestão</span>
-        </div>
-        <div class="num" style="--c:var(--coral)">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1 6.3L12 17.2l-5.6 2.9 1-6.3L3 9.4l6.3-.9z"/></svg></div>
-          <b data-alvo="4.76" data-casas="2">4,76</b><span>nota média no Airbnb</span>
-        </div>
-        <div class="num" style="--c:var(--planta)">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg></div>
-          <b data-alvo="120" data-prefixo="+" data-sufixo=" mil">+120 mil</b><span>avaliações de hóspedes</span>
-        </div>
-      </div>
-      <p class="ao-vivo"><i></i><span id="vivo-txt">SPOTs, cidades e estados contados ao vivo a partir do mapa</span></p>
+  <div class="miolo duas">
+    <div>
+      <span class="rotulo surge">Seazone Investimentos</span>
+      <h1 class="surge" style="--d:.08s">Imóveis feitos para o Airbnb, <em>desde a planta.</em></h1>
+      <p class="sub surge" style="--d:.16s">SPOTs em destinos com demanda comprovada de aluguel por temporada, operados pela Seazone depois da entrega.</p>
+      <a class="botao surge" style="--d:.24s" href="#mapas">Explorar os SPOTs no mapa
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </div>
-  </section>
 
-  <section class="secao" id="porque">
-    <div class="miolo">
-      <h2 class="titulo surge">Por que a Seazone</h2>
-      <p class="legenda-sec surge" style="--d:.08s">Quem projeta o SPOT é quem opera o aluguel.</p>
-      <div class="pilares">
-        <article class="pilar surge" style="--c:var(--coral);--d:.05s">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h8v12M11 14h10M15 3v6"/></svg></div>
-          <h3>Pensado para temporada</h3>
-          <p>Planta, mobília e enxoval desenhados para o hóspede desde o primeiro traço.</p>
-        </article>
-        <article class="pilar surge" style="--c:var(--planta);--d:.15s">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg></div>
-          <h3>Demanda comprovada</h3>
-          <p>Destinos escolhidos com dados de ocupação e diária de milhares de imóveis que já operamos.</p>
-        </article>
-        <article class="pilar surge" style="--c:var(--entregue);--d:.25s">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M17 6l3 3M14.5 8.5l2 2"/></svg></div>
-          <h3>Gestão completa</h3>
-          <p>Anúncio, preço, hóspedes, limpeza e manutenção: a Seazone opera, você acompanha.</p>
-        </article>
-        <article class="pilar surge" style="--c:var(--obra);--d:.35s">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
-          <h3>Obra à vista</h3>
-          <p>Informativo mensal com o avanço físico e fotos de cada SPOT em obra.</p>
-        </article>
+    <div class="painel surge" style="--d:.2s" id="painel">
+      <div class="nums">
+        <div class="num"><b data-conta="spots" data-alvo="46">46</b><span>SPOTs</span></div>
+        <div class="num"><b data-conta="cidades" data-alvo="18">18</b><span>cidades</span></div>
+        <div class="num"><b data-conta="estados" data-alvo="9">9</b><span>estados</span></div>
+        <div class="num"><b data-alvo="4.3" data-prefixo="+" data-sufixo=" mil" data-casas="1">+4,3 mil</b><span>propriedades sob gestão</span></div>
+        <div class="num"><b data-alvo="4.76" data-casas="2">4,76</b><span>nota média no Airbnb</span></div>
+        <div class="num"><b data-alvo="120" data-prefixo="+" data-sufixo=" mil">+120 mil</b><span>avaliações de hóspedes</span></div>
       </div>
-
-      <div class="fases surge">
-        <div class="fases-topo"><strong>Onde estão os SPOTs agora</strong><small id="fases-hora">atualizado ao abrir a página</small></div>
+      <div class="fases">
+        <div class="fases-topo"><span class="rotulo">Onde estão os SPOTs agora</span><small id="fases-hora"></small></div>
         <div class="trilho" id="trilho" role="img" aria-label="SPOTs por fase">
           <span style="--c:var(--entregue)" data-fase="entregue"></span>
           <span style="--c:var(--obra)" data-fase="obra"></span>
@@ -253,35 +166,53 @@ footer{padding:40px 0 48px;border-top:1px solid rgb(255 255 255/.08);margin-top:
         </div>
       </div>
     </div>
+  </div>
+</header>
 
-    <div class="esteira surge" aria-label="Cidades com SPOT">
-      <div class="esteira-faixa" id="esteira"></div>
-    </div>
+<main>
+  <section class="miolo pilares" aria-label="Por que a Seazone">
+    <article class="pilar surge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 10h8v11M11 15h10M15 3v7"/></svg>
+      <h3>Pensado para temporada</h3>
+      <p>Planta, mobília e enxoval desenhados para o hóspede desde o primeiro traço.</p>
+    </article>
+    <article class="pilar surge" style="--d:.08s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg>
+      <h3>Demanda comprovada</h3>
+      <p>Destinos escolhidos com dados de ocupação e diária de milhares de imóveis que já operamos.</p>
+    </article>
+    <article class="pilar surge" style="--d:.16s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M17 6l3 3M14.5 8.5l2 2"/></svg>
+      <h3>Gestão completa</h3>
+      <p>Anúncio, preço, hóspedes, limpeza e manutenção: a Seazone opera, você acompanha.</p>
+    </article>
+    <article class="pilar surge" style="--d:.24s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      <h3>Obra à vista</h3>
+      <p>Informativo mensal com o avanço físico e fotos de cada SPOT em obra.</p>
+    </article>
   </section>
 
   <section class="mapas" id="mapas">
     <div class="miolo">
       <div class="mapas-topo">
-        <div>
-          <h2 class="titulo surge">Explore os SPOTs</h2>
-          <p class="legenda-sec surge" style="--d:.08s">Toque em um ponto: o mapa voa até o prédio e abre a ficha.</p>
+        <div class="surge">
+          <span class="rotulo">Mapa interativo</span>
+          <h2>Explore os SPOTs</h2>
+          <p>Toque em um ponto: o mapa voa até o prédio e abre a ficha.</p>
         </div>
-        <div class="acoes surge" style="--d:.12s">
+        <div class="acoes surge" style="--d:.08s">
           <div class="abas" role="tablist" aria-label="Escolha o mapa">
-            <span class="bolinha" aria-hidden="true"></span>
+            <span class="corredica" aria-hidden="true"></span>
             <button role="tab" aria-selected="true" data-mapa="/mapas-spots/brasil.html">Brasil <small data-n="brasil">46</small></button>
             <button role="tab" aria-selected="false" data-mapa="/mapas-spots/floripa.html">Florianópolis <small data-n="floripa">23</small></button>
           </div>
           <a class="cheia" id="cheia" href="/mapas-spots/brasil.html?publico" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Tela cheia</a>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Tela cheia</a>
         </div>
       </div>
-      <div class="moldura surge">
+      <div class="moldura surge" style="--d:.12s">
         <iframe id="mapa" src="/mapas-spots/brasil.html?publico" title="Mapa dos SPOTs Seazone" allow="fullscreen" loading="lazy"></iframe>
-      </div>
-      <div class="dica">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Toque no ponto para ver fotos, valores e o que tem perto</span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/></svg>O botão acima do + troca satélite e terreno</span>
       </div>
     </div>
   </section>
@@ -304,81 +235,70 @@ footer{padding:40px 0 48px;border-top:1px solid rgb(255 255 255/.08);margin-top:
     const alvo = parseFloat(el.dataset.alvo), casas = +(el.dataset.casas || 0);
     const pre = el.dataset.prefixo || "", suf = el.dataset.sufixo || "";
     if (reduzir){ el.textContent = pre + fmt(alvo, casas) + suf; return; }
-    const t0 = performance.now(), dur = 1600;
+    const t0 = performance.now(), dur = 1400;
     (function passo(t){
-      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 4);
       el.textContent = pre + fmt(alvo * e, casas) + suf;
       if (p < 1) requestAnimationFrame(passo);
     })(t0);
   }
 
-  // aparece ao rolar
-  const vistos = new IntersectionObserver(es => es.forEach(e => {
-    if (!e.isIntersecting) return;
-    e.target.classList.add("visto");
-    if (e.target.classList.contains("grade-num")) e.target.querySelectorAll("b[data-alvo]").forEach(contar);
-    if (e.target.classList.contains("fases")) encherTrilho();
-    vistos.unobserve(e.target);
-  }), {threshold: .18});
-  document.querySelectorAll(".surge").forEach(el => vistos.observe(el));
-
-  // fases e esteira de cidades (valores do mapa; os do HTML valem até a resposta chegar)
-  let fases = {entregue: 7, obra: 13, planta: 21, lancamento: 5}, trilhoCheio = false;
+  // fases (os valores do HTML valem até a resposta do mapa chegar)
+  let fases = {entregue: 7, obra: 13, planta: 21, lancamento: 5}, painelVisto = false;
   function encherTrilho(){
-    trilhoCheio = true;
     const total = Object.values(fases).reduce((a, b) => a + b, 0) || 1;
     document.querySelectorAll("#trilho span").forEach(s => s.style.width = (fases[s.dataset.fase] / total * 100) + "%");
     document.querySelectorAll("[data-fase-n]").forEach(b => b.textContent = fases[b.dataset.faseN]);
   }
-  let cidades = [["Florianópolis","SC"],["Salvador","BA"],["Natal","RN"],["Fortaleza","CE"],["Foz do Iguaçu","PR"],["Bonito","MS"],["Itacaré","BA"],["Goiânia","GO"],["Curitiba","PR"],["Porto Seguro","BA"],["Japaratinga","AL"],["Caraguatatuba","SP"],["Penha","SC"],["Urubici","SC"],["Imbituba","SC"],["Maraú","BA"],["Mata de São João","BA"],["Anitápolis","SC"]];
-  function montarEsteira(){
-    const um = cidades.map(([c, uf]) => `<span>${c} <small>${uf}</small></span>`).join("");
-    document.getElementById("esteira").innerHTML = um + um; // duas voltas = laço contínuo
-  }
-  montarEsteira();
+
+  // entrada suave ao rolar
+  const vistos = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("visto");
+    if (e.target.id === "painel"){
+      painelVisto = true;
+      e.target.querySelectorAll("b[data-alvo]").forEach(contar);
+      setTimeout(encherTrilho, reduzir ? 0 : 300);
+    }
+    vistos.unobserve(e.target);
+  }), {threshold: .15});
+  document.querySelectorAll(".surge").forEach(el => vistos.observe(el));
 
   fetch("/api/mapa-spots/publico").then(r => r.ok ? r.json() : Promise.reject(r.status)).then(d => {
     const s = d.spots || [];
     if (!s.length) return;
-    const porCidade = new Map();
-    s.forEach(x => porCidade.set(x.cidade + "|" + x.uf, (porCidade.get(x.cidade + "|" + x.uf) || 0) + 1));
     const vals = {
       spots: s.length,
-      cidades: porCidade.size,
+      cidades: new Set(s.map(x => x.cidade + "|" + x.uf)).size,
       estados: new Set(s.map(x => x.uf)).size,
     };
     document.querySelectorAll("b[data-conta]").forEach(b => {
       b.dataset.alvo = vals[b.dataset.conta];
-      if (b.closest(".grade-num").classList.contains("visto")) contar(b);
+      if (painelVisto) contar(b);
     });
     document.querySelector('[data-n="brasil"]').textContent = s.length;
     document.querySelector('[data-n="floripa"]').textContent = s.filter(x => x.cidade === "Florianópolis").length;
     fases = {entregue: 0, obra: 0, planta: 0, lancamento: 0};
     s.forEach(x => { if (x.status in fases) fases[x.status]++; });
-    if (trilhoCheio) encherTrilho();
-    // cidades: as com mais SPOTs primeiro
-    cidades = [...porCidade.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k.split("|"));
-    montarEsteira();
-    if (d.aoVivo && (d.atualizado || d.horario)) {
-      document.getElementById("fases-hora").textContent = "atualizado " + (d.atualizado || d.horario);
-    }
+    if (painelVisto) encherTrilho();
+    if (d.aoVivo && (d.atualizado || d.horario)) document.getElementById("fases-hora").textContent = "atualizado " + (d.atualizado || d.horario);
   }).catch(() => {});
 
-  // abas Brasil / Florianópolis, com a bolinha deslizando
-  const abas = [...document.querySelectorAll(".abas button")], bolinha = document.querySelector(".abas .bolinha");
+  // abas Brasil / Florianópolis
+  const abas = [...document.querySelectorAll(".abas button")], corredica = document.querySelector(".abas .corredica");
   const mapa = document.getElementById("mapa"), cheia = document.getElementById("cheia");
-  function moverBolinha(b){ bolinha.style.width = b.offsetWidth + "px"; bolinha.style.transform = `translateX(${b.offsetLeft - 5}px)`; }
+  function mover(b){ corredica.style.width = b.offsetWidth + "px"; corredica.style.transform = `translateX(${b.offsetLeft - 3}px)`; }
   abas.forEach(b => b.addEventListener("click", () => {
     if (b.getAttribute("aria-selected") === "true") return;
     abas.forEach(x => x.setAttribute("aria-selected", x === b));
-    moverBolinha(b);
+    mover(b);
     const src = b.dataset.mapa + "?publico";
     cheia.href = src;
     mapa.classList.add("trocando");
-    setTimeout(() => { mapa.src = src; }, reduzir ? 0 : 250);
+    setTimeout(() => { mapa.src = src; }, reduzir ? 0 : 220);
   }));
   mapa.addEventListener("load", () => mapa.classList.remove("trocando"));
-  const ajustar = () => moverBolinha(abas.find(b => b.getAttribute("aria-selected") === "true"));
+  const ajustar = () => mover(abas.find(b => b.getAttribute("aria-selected") === "true"));
   addEventListener("resize", ajustar);
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(ajustar);
   ajustar();
