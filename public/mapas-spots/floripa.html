@@ -1124,8 +1124,8 @@ function mostrarFoto(i){
   const img=document.getElementById("f-foto"); img.src=atual.fotos[fi]; img.alt="Foto "+(fi+1)+" do "+atual.nome;
   document.querySelectorAll("#f-minis button").forEach(b=>b.setAttribute("aria-current",+b.dataset.i===fi));
   const ob=atual.obra&&fi>=1&&fi<=atual.obra.n, lg=document.getElementById("f-legenda");
-  lg.hidden=!ob; lg.textContent=ob?"Foto da obra · "+atual.obra.mes:"";
-  if(ob) img.alt="Foto da obra do "+atual.nome+", "+atual.obra.mes;
+  lg.hidden=!ob; lg.textContent=ob?"Foto da obra · "+atual.obra.meses[fi-1]:"";
+  if(ob) img.alt="Foto da obra do "+atual.nome+", "+atual.obra.meses[fi-1];
 }
 function fechar(){ficha.hidden=true}
 document.getElementById("f-ant").onclick=()=>mostrarFoto(fi-1);

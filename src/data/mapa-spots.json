@@ -49,6 +49,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-beach-spot-fachada-vista-da-praia.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-beach-spot-vista-da-praia-a-partir-do-rooftop.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -121,6 +122,11 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-spot-fachada-vitrine-lp.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/cachoeira-spot-piscina-de-borda-infinita-com-vista-para-o-mar-vitrine-lp.jpg"
   ],
+  "obraAprovadas": [
+   "01M6HVEJN0S4ZMMVW94MW2Z5F7.jpg",
+   "01M6HVAD0252BK63P7Q0PB6YQ2.jpg",
+   "01M6HV5G9P3FTVX0KZ1XDN3BFH.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -177,6 +183,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/santo-antnio-spot-fachada-vitrine-lp.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/santo-antnio-spot-rooftop-com-piscina-e-vista-para-a-baa-norte-vitrine-lp.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -247,6 +254,12 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_5.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canasvieiras-spot-fachada.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canasvieiras-spot-vista-area-com-a-praia.jpg"
+  ],
+  "obraAprovadas": [
+   "01M6K40237XZ2A24K2271GKJWY.jpg",
+   "01M6K3ZBEYQX8FZS02G6M3QM2F.jpg",
+   "01M6K3ZJ6X1GF09900E40RAGHP.jpg",
+   "01M6K3Z2PYYZ4SH0M2JMRHVFH2.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -320,6 +333,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-spot-vista-aerea-com-a-ilha.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-spot-vista-lateral-com-o-mar-e-a-ilha-do-campeche-ao-fundo.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -363,6 +377,12 @@
   ],
   "origens": [
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/8/01KVXKCXM09EFEV6Y0EEJ8Q2TF.png"
+  ],
+  "obraAprovadas": [
+   "01M6K665J2E4P2GVJRVE4YRS1J.jpg",
+   "01M6K661MKQZ61CSF15M17E5FQ.jpg",
+   "01M6K66EA5VYZ57MPXF3W7NHJ6.jpg",
+   "01M4EFGXDWEVZRM6XGPD24M9GC.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -432,6 +452,11 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-beach-spot-fachada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-beach-spot-rooftop-com-vista-para-o-mar.png"
   ],
+  "obraAprovadas": [
+   "01M4986RFT3Y4TWYGHJH59SR58.jpg",
+   "01M6K4G2P6BJA768XKMCMHX6PH.jpg",
+   "01M6K4GABKWH7ACJ1QBMF2MK6Q.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2027,
@@ -487,6 +512,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/lagoa-spot-entregue-e-em-operao-florianpolis.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/case-lagoa-spot.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "entregue",
    "ano": 2025,
@@ -554,6 +580,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/morro-das-pedras-spot-fachada-vitrine-lp.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/morro-das-pedras-spot-piscina-de-borda-infinita-com-vista-para-o-mar-vitrine-lp.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -620,6 +647,11 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/campeche-spot/campeche1-t.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/campeche-spot-fachada.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/campeche-spot-rooftop-com-piscina-e-vista-para-o-mar.jpg"
+  ],
+  "obraAprovadas": [
+   "01M6K3FD11KQM6DT317PJKJ25V.jpg",
+   "01M6K3F6YAF28Y0AZZK9MB9ZFZ.jpg",
+   "01M6K3DQRWCE14WPMT3PTHS1PX.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -688,6 +720,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/sul-da-ilha-spot-fachada-vitrine-lp.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/sul-da-ilha-spot-rooftop-com-piscina-e-vista-para-o-mar-vitrine-lp.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -752,6 +785,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/barra-spot-fachada-na-barra-da-lagoa.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/barra-spot-jardim-e-fachada-ao-entardecer.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -806,6 +840,7 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/25/01M4B94ZWZQ97RGFSDT9Y6NE78.webp",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/santinho-spot-rooftop-com-espreguiadeiras-e-vista-para-a-praia.webp"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -857,6 +892,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-ii-spot-fachada-vitrine-lp.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ilha-do-campeche-ii-spot-rooftop-com-vista-para-o-mar-vitrine-lp.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -904,6 +940,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-ii-fachada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-ii-rooftop-com-piscina-e-vista-para-a-praia-de-jurer.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -968,6 +1005,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-fachada-com-a-placa.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-rooftop-com-piscina.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1028,6 +1066,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canas-beach-spot-fachada-vitrine-lp.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/canas-beach-spot-rooftop-com-piscina-e-vista-para-o-mar-vitrine-lp.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1092,6 +1131,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-ii-fachada-vista-da-praia.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/ponta-das-canas-spot-ii-rooftop-com-piscina-e-vista.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1158,6 +1198,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-vista-area-do-prdio-com-a-praia-do-novo-campeche-ao-fundo.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot_rooftop_01.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1217,6 +1258,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-iii-fachada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/jurer-spot-iii-rooftop-com-piscina-e-vista-para-o-mar.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -1277,6 +1319,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-ii-fachada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-ii-rooftop-com-piscina.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "lancamento",
    "ano": 2030,
@@ -1337,6 +1380,7 @@
    "https://seazone.com.br/image/6ad164be08a6dd0db0777fb1",
    "https://seazone.com.br/image/6aa4678a70127a0b417c301d"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "entregue",
    "ano": 2023,
@@ -1399,6 +1443,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-iii-piscina-do-rooftop-de-frente-para-o-mar.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/novo-campeche-spot-iii-terrao-com-hidromassagem-privativa-e-vista-para-o-mar.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "lancamento",
    "ano": 2030,
@@ -1465,6 +1510,12 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_9.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/japaratinga-spot-seazone.png"
   ],
+  "obraAprovadas": [
+   "01M6RY2P6M3SSGAG5S42601XAT.jpg",
+   "01M6RY20ABSB3FPX2FCVZKQBT3.jpg",
+   "01M6RY159VC1W0X7A7NXFD2Y04.jpg",
+   "01M6RSHNF5KYGKWKYZNXNAAEP7.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2026,
@@ -1524,6 +1575,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/itacar-spot-entrada-com-a-praia-ao-fundo.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/itacar-spot-rooftop-com-piscina-ao-pr-do-sol.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -1573,6 +1625,7 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/barra-grande-spot/fotos/externas/barra_grande_spot_0.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/barra-grande-spot-fachada-do-empreendimento-pennsula-de-mara.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -1629,6 +1682,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/imbassa-spot-fachada-entre-coqueiros.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/imbassa-spot-rea-de-lazer-com-piscina.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2028,
@@ -1675,6 +1729,11 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_19.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/trancoso-spot-costa-do-descobrimento-bahia.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/trancoso-spot-seazone.jpg"
+  ],
+  "obraAprovadas": [
+   "01M4V8MX50J2Q7A0AVPY09MRHT.jpg",
+   "01M4V8S8YTC39VEJ4XN6YZDCG8.jpg",
+   "01M4938DV4318VWDFEBYDJQTDJ.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -1741,6 +1800,10 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/salvador-spot-rooftop-com-piscina-de-borda-infinita-visto-de-cima.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/salvador-spot-rooftop-piscina.jpg"
   ],
+  "obraAprovadas": [
+   "01M6RMGQRT08S9HN0R6RAVP5C7.jpg",
+   "01M5A9D9B0R22NN0WRS8WCD64T.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -1797,6 +1860,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/meireles-spot-fachada-no-meireles-fortaleza.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/meireles-spot-rooftop-com-piscina.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -1853,6 +1917,11 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/marista-144-spot-fachada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/marista-144-spot-rooftop-com-piscina-e-vista-da-cidade.png"
   ],
+  "obraAprovadas": [
+   "01M7NDSZWB930GNC4GPVSJSJZ3.jpg",
+   "01M6GPZQJTDPSJ2JXW58C7DF78.jpg",
+   "01M66SPQ5CV23GX1GG77EQRECB.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -1901,6 +1970,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-fachada-no-bairro-alvorada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-rooftop-com-piscina-e-vista.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2029,
@@ -1949,6 +2019,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-ii-fachada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/bonito-spot-ii-rooftop-com-piscina.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "lancamento",
    "ano": 2029,
@@ -2013,6 +2084,11 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/batel-spot-fachada-ao-entardecer.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/batel-spot-rooftop-com-piscina.png"
   ],
+  "obraAprovadas": [
+   "01M70PBTT4M6RQ3PRFS31M5WKK.jpg",
+   "01M6RG05CZZB2V9KYGKNNA847D.jpg",
+   "01M5HV7WCGY7WECC2C03ETRSSY.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -2068,6 +2144,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/foz-spot-fachada-do-prdio-no-centro-de-foz-do-iguau.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/foz-spot-rooftop-com-piscina.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -2116,6 +2193,7 @@
   "origens": [
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/natal-spot/fotos/externas/natal_spot_0.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "planta",
    "ano": 2030,
@@ -2164,6 +2242,7 @@
   "origens": [
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_22.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "entregue",
    "ano": 2023,
@@ -2220,6 +2299,7 @@
    "https://drive.google.com/thumbnail?id=1AzmlDsKBqwzpbw9iRiig1sZvHnC9Pwbu&sz=w1600",
    "https://drive.google.com/thumbnail?id=18lZGU62d-Fb68OQ2QIB6F1Ag3-R_Tmgb&sz=w1600"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "entregue",
    "ano": null,
@@ -2268,6 +2348,7 @@
   "origens": [
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/photo/external/47/01KWF7Y21DNE8VPJH9N8S0XKY0.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "lancamento",
    "ano": 2030,
@@ -2339,6 +2420,12 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-norte-spot-fachada-vitrine-lp.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-norte-spot-rooftop-com-piscina-de-borda-infinita-vitrine-lp.jpg"
   ],
+  "obraAprovadas": [
+   "01M6RM7ZA6ZSHWHCAZMG8EEYKS.jpg",
+   "01M6RM7BGYCSTREC2C3S504FE9.jpg",
+   "01M5G2GSX39YGTQQPATFE44GZB.jpg",
+   "01M6RM87FB33471Y2EFAB7KDTA.jpg"
+  ],
   "reserva": {
    "status": "obra",
    "ano": 2028,
@@ -2396,6 +2483,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-spot-ambiente-11-12-25-003-scaled.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/rosa-spot-fachada-recortada.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "entregue",
    "ano": 2025,
@@ -2447,6 +2535,9 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/construction/15/01M6RT141V2JAXVYXR89EAVTXX.jpg",
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/construction/15/01M6RT1RHYRG52W0WJKVBH9PXP.jpg",
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/construction/15/01M4G8TQ2VV3BJKXWRXHXJN0ZQ.jpg"
+  ],
+  "obraAprovadas": [
+   "01M6RT3N6Y8KC28D4Z82B8RRR3.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -2506,6 +2597,7 @@
    "https://drive.google.com/thumbnail?id=1LoTD_FRwZHs2Guid6VTHQfDQ4m2-D7tx&sz=w1600",
    "https://drive.google.com/thumbnail?id=1unzg8nEJfjY8ADNNN0BL72b0NjX4CMne&sz=w1600"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "entregue",
    "ano": 2025,
@@ -2554,6 +2646,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-deck-com-fireplace.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-rea-de-convivncia-do-trreo-com-bar-e-mesas-prdio-em-operao.jpg"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "entregue",
    "ano": 2026,
@@ -2604,6 +2697,12 @@
    "https://vqwgsgwbetfyoybdjmbs.supabase.co/storage/v1/object/public/spot-photos/covers/emp_21.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-ii-fachada-com-a-placa.jpg",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/urubici-spot-ii-rooftop-com-vista-para-a-serra.jpg"
+  ],
+  "obraAprovadas": [
+   "01M6K2YJV6E3ABJ30JXSRZ3X9E.jpg",
+   "01M6K2ZFR79JV7PP424XX9YDME.jpg",
+   "01M6K2ZQZCVE72W4QTPFK4FW1V.jpg",
+   "01M495P1T45SC9DXCCNA6C9Q9M.jpg"
   ],
   "reserva": {
    "status": "obra",
@@ -2657,6 +2756,7 @@
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/caragu-spot-fachada.png",
    "https://jjdulakciihexvezfdcq.supabase.co/storage/v1/object/public/spots/caragu-spot-rooftop-com-piscina-e-vista-para-o-mar.png"
   ],
+  "obraAprovadas": [],
   "reserva": {
    "status": "lancamento",
    "ano": 2030,

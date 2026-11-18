@@ -25,14 +25,17 @@ export interface SpotMapa {
   preco: Preco;
   m2min: number | null;
   m2max: number | null;
-  // SPOT em obra: fotos de obra do mês mais recente do informativo, já colocadas em fotos[1..n]
-  obra?: { mes: string; n: number; minis: string[] };
+  // SPOT em obra: fotos de obra aprovadas na curadoria, já colocadas em fotos[1..n]; meses[i] = mês da foto i+1
+  obra?: { n: number; minis: string[]; meses: string[] };
 }
 
 // Novo Campeche Spot III: 100% vendido, revenda "em breve no marketplace" (decisão da Laura, 23/10/2026)
 const VENDIDO = new Set([50]);
 
-// Fotos de obra por SPOT no carrossel: as primeiras do mês mais recente, na ordem do informativo.
+// Fotos de obra: só as APROVADAS na curadoria (projects/mapas-spots/motor/curar_obra.py →
+// obra-aprovadas.json → obraAprovadas no mapa-spots.json), na ordem de lá. Critério da Laura (18/11/2026):
+// só foto ampla (prédio ou pavimento inteiro), nada tremido, nada de detalhe, sem repetir ângulo.
+// Foto nova do informativo só aparece depois de passar pela curadoria.
 const FOTOS_OBRA = 4;
 
 const IDS = fixos.map((s) => s.id).join(",");
@@ -96,11 +99,11 @@ LEFT JOIN inf ON inf.sid = b.id AND inf.rn = 1
 WHERE b.id IN (${IDS})
 `;
 
-// Fotos de obra do informativo (mesma tabela da tela de informativos do spotsys).
+// Fotos de obra do informativo (mesma tabela da tela de informativos do spotsys): endereço e mês de cada uma.
 // reference_month vem como "10/2026" (as novas) ou "Out/2026" (as importadas); "Atual" = foto de entregue.
 const SQL_FOTOS = `
 WITH c AS (
-  SELECT spot_building_id sid, image_url u, sort_order so, id,
+  SELECT spot_building_id sid, image_url u,
          CASE WHEN regexp_like(reference_month, '^\\d{2}/\\d{4}$')
                 THEN concat(substr(reference_month, 4, 4), '-', substr(reference_month, 1, 2))
               WHEN regexp_like(reference_month, '^[A-Za-z]{3}/\\d{4}$')
@@ -109,9 +112,8 @@ WITH c AS (
          END ym
   FROM nekt_operacional_bronze.sup_bd_szi_szi_spot_building_construction_images
   WHERE spot_building_id IN (${IDS}) AND image_url LIKE 'https://%'
-), m AS (SELECT sid, MAX(ym) ym FROM c WHERE ym IS NOT NULL GROUP BY 1)
-SELECT c.sid, c.ym, c.u, ROW_NUMBER() OVER (PARTITION BY c.sid ORDER BY c.so, c.id) ordem
-FROM c JOIN m ON m.sid = c.sid AND m.ym = c.ym
+)
+SELECT sid, ym, u FROM c WHERE ym IS NOT NULL
 `;
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -126,25 +128,28 @@ function tamanho(u: string, px: number): string {
   return u;
 }
 
-async function fotosDeObra(): Promise<Map<number, { mes: string; grandes: string[]; minis: string[] }>> {
+type FotosObra = { grandes: string[]; minis: string[]; meses: string[] };
+
+async function fotosDeObra(): Promise<Map<number, FotosObra>> {
   const { rows } = await queryNekt(SQL_FOTOS);
-  const porSpot = new Map<number, { mes: string; grandes: string[]; minis: string[] }>();
-  // não repete foto que já está fixa no carrossel do SPOT (mesmo arquivo); outro ângulo entra normal
   const arquivo = (u: string) => u.split("?")[0].split("/").pop() ?? u;
-  const jaTem = new Map(fixos.map((s) => [s.id, new Set((s.origens ?? []).map(arquivo))]));
-  rows
-    .sort((a, b) => Number(a.ordem) - Number(b.ordem))
-    .forEach((r) => {
-      const id = Number(r.sid);
-      if (jaTem.get(id)?.has(arquivo(String(r.u)))) return;
-      const [ano, mes] = String(r.ym).split("-");
-      const item = porSpot.get(id) ?? { mes: `${MESES[Number(mes) - 1]}/${ano}`, grandes: [], minis: [] };
-      if (item.grandes.length < FOTOS_OBRA) {
-        item.grandes.push(tamanho(String(r.u), 1400));
-        item.minis.push(tamanho(String(r.u), 240));
-      }
-      porSpot.set(id, item);
-    });
+  // endereço e mês de cada foto, por SPOT e nome do arquivo
+  const naNekt = new Map(rows.map((r) => [`${r.sid}/${arquivo(String(r.u))}`, { u: String(r.u), ym: String(r.ym) }]));
+  const porSpot = new Map<number, FotosObra>();
+  for (const s of fixos) {
+    // não repete foto que já está fixa no carrossel do SPOT (mesmo arquivo); outro ângulo entra normal
+    const jaTem = new Set((s.origens ?? []).map(arquivo));
+    const item: FotosObra = { grandes: [], minis: [], meses: [] };
+    for (const a of s.obraAprovadas ?? []) {
+      const f = naNekt.get(`${s.id}/${a}`);
+      if (!f || jaTem.has(a) || item.grandes.length >= FOTOS_OBRA) continue;
+      const [ano, mes] = f.ym.split("-");
+      item.grandes.push(tamanho(f.u, 1400));
+      item.minis.push(tamanho(f.u, 240));
+      item.meses.push(`${MESES[Number(mes) - 1]}/${ano}`);
+    }
+    if (item.grandes.length) porSpot.set(s.id, item);
+  }
   return porSpot;
 }
 
@@ -166,7 +171,7 @@ function fase(building: string | null, comercial: string | null, reserva: Status
 
 const somenteReserva = (): SpotMapa[] =>
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- origens é só para o servidor
-  fixos.map(({ reserva, origens: _o, ...f }) => ({ ...f, ...reserva, status: reserva.status as Status, preco: reserva.preco as Preco }));
+  fixos.map(({ reserva, origens: _o, obraAprovadas: _a, ...f }) => ({ ...f, ...reserva, status: reserva.status as Status, preco: reserva.preco as Preco }));
 
 // Hora em que a Nekt copiou o spotômetro pela última vez (a cópia roda várias vezes ao dia).
 // O mapa consulta a Nekt toda vez que abre; o número é o desta cópia, não o do segundo exato.
@@ -175,7 +180,7 @@ export async function carregarSpots(): Promise<{ spots: SpotMapa[]; aoVivo: bool
   // fotos de obra são extra: se a consulta delas falhar, o mapa abre igual, só sem elas
   const obraP = fotosDeObra().catch((e) => {
     console.error("[mapa-spots] fotos de obra indisponíveis:", e);
-    return new Map<number, { mes: string; grandes: string[]; minis: string[] }>();
+    return new Map<number, FotosObra>();
   });
   try {
     ({ rows } = await queryNekt(SQL));
@@ -186,7 +191,7 @@ export async function carregarSpots(): Promise<{ spots: SpotMapa[]; aoVivo: bool
   const porId = new Map(rows.map((r) => [Number(r.id), r]));
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- origens é só para o servidor
-  const spots = fixos.map(({ reserva, origens: _o, ...f }): SpotMapa => {
+  const spots = fixos.map(({ reserva, origens: _o, obraAprovadas: _a, ...f }): SpotMapa => {
     const r = porId.get(f.id);
     const base: SpotMapa = { ...f, ...reserva, status: reserva.status as Status, preco: reserva.preco as Preco };
     if (!r) return base;
@@ -214,11 +219,11 @@ export async function carregarSpots(): Promise<{ spots: SpotMapa[]; aoVivo: bool
     // % da obra: a do informativo; sem informativo publicado, a do SZI
     const pct = status === "obra" ? num(r.pct_informativo) ?? num(r.pct_szi) ?? 0 : status === "entregue" ? 100 : 0;
 
-    // Em obra: fotos de obra do mês mais recente logo depois da capa
+    // Em obra: fotos de obra aprovadas logo depois da capa
     const of = status === "obra" ? obraFotos.get(f.id) : undefined;
     if (of && of.grandes.length) {
       const fotos = [base.fotos[0], ...of.grandes, ...base.fotos.slice(1)];
-      return { ...base, status, preco, m2min, m2max, ano, pct, fotos, obra: { mes: of.mes, n: of.grandes.length, minis: of.minis } };
+      return { ...base, status, preco, m2min, m2max, ano, pct, fotos, obra: { n: of.grandes.length, minis: of.minis, meses: of.meses } };
     }
     return { ...base, status, preco, m2min, m2max, ano, pct };
   });
