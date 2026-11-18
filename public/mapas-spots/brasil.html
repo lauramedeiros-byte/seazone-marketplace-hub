@@ -1176,17 +1176,24 @@ const q=new URLSearchParams(location.search);
 window.ESTANDE=q.has("estande"); window.AJUSTE=q.has("ajuste");
 if(!window.AJUSTE) document.getElementById("aj-entrar").hidden=true;
 const rod=document.getElementById("fonte");
-fetch("/api/mapa-spots",{cache:"no-store",credentials:"same-origin"})
+// ?publico = dentro da página pública /spots (sem login): números pela rota aberta, guardada 5 min
+const PUBLICO=q.has("publico");
+fetch(PUBLICO?"/api/mapa-spots/publico":"/api/mapa-spots",PUBLICO?{}:{cache:"no-store",credentials:"same-origin"})
   .then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
   .then(d=>{
     window.SPOTS=d.spots.filter(s=>true);
+    // página pública: sem o nome dos sistemas internos (o cliente não precisa saber de spotômetro/SZI)
+    if(PUBLICO){
+      rod.textContent=d.aoVivo?"Números atualizados em "+(d.atualizado||d.horario):"Números de 23/10/2026";
+      document.querySelectorAll(".nota").forEach(n=>n.textContent="Valores no momento em que o mapa foi aberto. A disponibilidade pode mudar a qualquer hora.");
+    } else
     rod.textContent=d.aoVivo?"Números do spotômetro e do SZI · atualizados "+(d.atualizado||d.horario):"⚠ Números de 23/10/2026 (a consulta ao vivo falhou)";
     if(!d.aoVivo) rod.classList.add("aviso");
     iniciar();
   })
   .catch(()=>{
     document.getElementById("carregando").hidden=false;
-    document.getElementById("carregando").textContent="Não consegui carregar os SPOTs. Entre no hub de novo e recarregue a página.";
+    document.getElementById("carregando").textContent=PUBLICO?"Não consegui carregar os SPOTs. Recarregue a página em instantes.":"Não consegui carregar os SPOTs. Entre no hub de novo e recarregue a página.";
   });
 })();
 </script>
